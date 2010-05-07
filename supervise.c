@@ -99,6 +99,7 @@ void trystart(void)
     case 0:
       sig_uncatch(sig_child);
       sig_unblock(sig_child);
+      setsid();			/* shouldn't fail; if it does, too bad */
       execve(*run,run,environ);
       strerr_die4sys(111,FATAL,"unable to start ",dir,"/run: ");
   }
