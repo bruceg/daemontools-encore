@@ -82,10 +82,9 @@ chkshsgr: chkshsgr.o load
 chkshsgr.o: chkshsgr.c compile
 	./compile chkshsgr.c
 
-choose: choose.sh home warn-auto.sh
+choose: choose.sh warn-auto.sh
 	rm -f choose
 	cat warn-auto.sh choose.sh \
-	| sed s}HOME}"`head -1 home`"}g \
 	> choose
 	chmod 555 choose
 
@@ -387,10 +386,9 @@ svscan.o: byte.h coe.h compile direntry.h env.h error.h fd.h \
 pathexec.h str.h strerr.h svscan.c wait.h
 	./compile svscan.c
 
-svscanboot: home svscanboot.sh warn-auto.sh
+svscanboot: svscanboot.sh warn-auto.sh
 	rm -f svscanboot
 	cat warn-auto.sh svscanboot.sh \
-	| sed s}HOME}"`head -1 home`"}g \
 	> svscanboot
 	chmod 555 svscanboot
 
