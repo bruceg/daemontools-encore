@@ -118,6 +118,7 @@ void doit(void)
   int wstat;
   int r;
   char ch;
+  int killpid;
 
   announce();
 
@@ -154,12 +155,16 @@ void doit(void)
       }
     }
 
-    if (read(fdcontrol,&ch,1) == 1)
+    killpid = pid;
+    while (read(fdcontrol,&ch,1) == 1)
       switch(ch) {
+        case '+':
+	  killpid = -pid;
+	  break;
 	case 'd':
 	  flagwant = 1;
 	  flagwantup = 0;
-	  if (pid) { kill(pid,SIGTERM); kill(pid,SIGCONT); flagpaused = 0; }
+	  if (pid) { kill(killpid,SIGTERM); kill(killpid,SIGCONT); flagpaused = 0; }
 	  announce();
 	  break;
 	case 'u':
@@ -174,38 +179,38 @@ void doit(void)
 	  if (!pid) trystart();
 	  break;
 	case 'a':
-	  if (pid) kill(pid,SIGALRM);
+	  if (pid) kill(killpid,SIGALRM);
 	  break;
 	case 'h':
-	  if (pid) kill(pid,SIGHUP);
+	  if (pid) kill(killpid,SIGHUP);
 	  break;
 	case 'k':
 	  if (pid) kill(pid,SIGKILL);
 	  break;
 	case 't':
-	  if (pid) kill(pid,SIGTERM);
+	  if (pid) kill(killpid,SIGTERM);
 	  break;
 	case 'i':
-	  if (pid) kill(pid,SIGINT);
+	  if (pid) kill(killpid,SIGINT);
 	  break;
 	case 'q':
-	  if (pid) kill(pid,SIGQUIT);
+	  if (pid) kill(killpid,SIGQUIT);
 	  break;
 	case '1':
-	  if (pid) kill(pid,SIGUSR1);
+	  if (pid) kill(killpid,SIGUSR1);
 	  break;
 	case '2':
-	  if (pid) kill(pid,SIGUSR2);
+	  if (pid) kill(killpid,SIGUSR2);
 	  break;
 	case 'p':
 	  flagpaused = 1;
 	  announce();
-	  if (pid) kill(pid,SIGSTOP);
+	  if (pid) kill(killpid,SIGSTOP);
 	  break;
 	case 'c':
 	  flagpaused = 0;
 	  announce();
-	  if (pid) kill(pid,SIGCONT);
+	  if (pid) kill(killpid,SIGCONT);
 	  break;
 	case 'x':
 	  flagexit = 1;
