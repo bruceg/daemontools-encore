@@ -2,6 +2,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include "env.h"
 #include "pathexec.h"
 #include "sgetopt.h"
 #include "strerr.h"
@@ -10,12 +11,12 @@
 
 #define FATAL "softlimit: fatal: "
 
-void die_usage(void)
+static void die_usage(void)
 {
   strerr_die1x(100,"softlimit: usage: softlimit [-a allbytes] [-c corebytes] [-d databytes] [-f filebytes] [-l lockbytes] [-m membytes] [-o openfiles] [-p processes] [-r residentbytes] [-s stackbytes] [-t cpusecs] child");
 }
 
-void doit(int resource,const char *arg)
+static void doit(int resource,const char *arg)
 {
   unsigned long u;
   struct rlimit r;
@@ -36,10 +37,63 @@ void doit(int resource,const char *arg)
     strerr_die2sys(111,FATAL,"setrlimit failed: ");
 }
 
+static void doenv(int resource,const char *name)
+{
+  const char *arg;
+  if ((arg = env_get(name)) != 0)
+    doit(resource,arg);
+}
+
+static int doallenv(void)
+{
+#ifdef RLIMIT_AS
+  doenv(RLIMIT_AS,"SOFTLIMIT_ALLBYTES");
+  doenv(RLIMIT_AS,"SOFTLIMIT_MEMBYTES");
+#endif
+#ifdef RLIMIT_VMEM
+  doenv(RLIMIT_VMEM,"SOFTLIMIT_ALLBYTES");
+  doenv(RLIMIT_VMEM,"SOFTLIMIT_MEMBYTES");
+#endif
+#ifdef RLIMIT_CORE
+  doenv(RLIMIT_CORE,"SOFTLIMIT_COREBYTES");
+#endif
+#ifdef RLIMIT_DATA
+  doenv(RLIMIT_DATA,"SOFTLIMIT_DATABYTES");
+  doenv(RLIMIT_DATA,"SOFTLIMIT_MEMBYTES");
+#endif
+#ifdef RLIMIT_FSIZE
+  doenv(RLIMIT_FSIZE,"SOFTLIMIT_FILEBYTES");
+#endif
+#ifdef RLIMIT_MEMLOCK
+  doenv(RLIMIT_MEMLOCK,"SOFTLIMIT_LOCKEDBYTES");
+  doenv(RLIMIT_MEMLOCK,"SOFTLIMIT_MEMBYTES");
+#endif
+#ifdef RLIMIT_STACK
+  doenv(RLIMIT_STACK,"SOFTLIMIT_STACKBYTES");
+  doenv(RLIMIT_STACK,"SOFTLIMIT_MEMBYTES");
+#endif
+#ifdef RLIMIT_NOFILE
+  doenv(RLIMIT_NOFILE,"SOFTLIMIT_OPENFILES");
+#endif
+#ifdef RLIMIT_OFILE
+  doenv(RLIMIT_OFILE,"SOFTLIMIT_OPENFILES");
+#endif
+#ifdef RLIMIT_NPROC
+  doenv(RLIMIT_NPROC,"SOFTLIMIT_PROCS");
+#endif
+#ifdef RLIMIT_RSS
+  doenv(RLIMIT_RSS,"SOFTLIMIT_RSSBYTES");
+#endif
+#ifdef RLIMIT_CPU
+  doenv(RLIMIT_CPU,"SOFTLIMIT_CPUSECS");
+#endif
+}
+
 int main(int argc,const char *const *argv,const char *const *envp)
 {
   int opt;
 
+  doallenv();
   while ((opt = getopt(argc,argv,"a:c:d:f:l:m:o:p:r:s:t:")) != opteof)
     switch(opt) {
       case '?':
