@@ -8,18 +8,20 @@ supervise \- starts and monitors a service.
 .B supervise
 switches to the directory named
 .I s
-and starts ./run in a new process group.
+and starts the service there by executing first ./start (if it is
+executable), and then ./run.
 It restarts ./run if ./run exits. It pauses for a second
 after starting ./run, so that it does not loop too quickly if ./run exits
 immediately. 
+All processes are run in a new process group.
 
 If the file
 .IR s /down
 exists,
 .B supervise
-does not start ./run immediately. You can use
+does not start the service immediately. You can use
 .BR svc (8)
-to start ./run and to give other commands to
+to start the service and to give other commands to
 .BR supervise .
 
 .B supervise

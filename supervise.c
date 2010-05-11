@@ -31,6 +31,7 @@ int flagwant = 1;
 int flagwantup = 1;
 int pid = 0; /* 0 means down */
 int flagpaused; /* defined if(pid) */
+int firstrun = 1;
 
 char status[18];
 
@@ -84,12 +85,14 @@ void trigger(void)
   write(selfpipe[1],"",1);
 }
 
-const char *run[2] = { "./run", 0 };
+const char *run[2] = { 0,0 };
 
 void trystart(void)
 {
   int f;
 
+  if (access("start", X_OK) != 0) firstrun = 0;
+  run[0] = firstrun ? "./start" : "./run";
   switch(f = fork()) {
     case -1:
       strerr_warn4(WARNING,"unable to fork for ",dir,", sleeping 60 seconds: ",&strerr_sys);
@@ -101,7 +104,7 @@ void trystart(void)
       sig_unblock(sig_child);
       setsid();			/* shouldn't fail; if it does, too bad */
       execve(*run,run,environ);
-      strerr_die4sys(111,FATAL,"unable to start ",dir,"/run: ");
+      strerr_die4sys(111,FATAL,"unable to start ",dir,firstrun?"/start: ":"/run: ");
   }
   flagpaused = 0;
   pid = f;
@@ -149,6 +152,7 @@ void doit(void)
 	pid = 0;
 	pidchange();
 	announce();
+	firstrun = 0;
 	if (flagexit) return;
 	if (flagwant && flagwantup) trystart();
 	break;
@@ -168,6 +172,7 @@ void doit(void)
 	  announce();
 	  break;
 	case 'u':
+	  firstrun = !flagwantup;
 	  flagwant = 1;
 	  flagwantup = 1;
 	  announce();
