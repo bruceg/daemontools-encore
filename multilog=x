@@ -1,0 +1,6 @@
+deepsleep.o
+match.o
+timestamp.o
+time.a
+unix.a
+byte.a

@@ -1,5 +1,8 @@
 *.a
 *.o
+SOURCES
+TARGETS
+Makefile
 chkshsgr
 choose
 compile

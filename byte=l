@@ -1,0 +1,13 @@
+byte_chr.o
+byte_copy.o
+byte_cr.o
+byte_diff.o
+byte_rchr.o
+fmt_uint.o
+fmt_uint0.o
+fmt_ulong.o
+scan_ulong.o
+str_chr.o
+str_diff.o
+str_len.o
+str_start.o
