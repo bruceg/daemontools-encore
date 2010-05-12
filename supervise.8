@@ -10,9 +10,9 @@ switches to the directory named
 .I s
 and starts the service there by executing first ./start (if it is
 executable), and then ./run.
-It restarts ./run if ./run exits. It pauses for a second
-after starting ./run, so that it does not loop too quickly if ./run exits
-immediately. 
+It restarts ./run if ./start or ./run exit with any value other than 100.
+It pauses for a second after starting ./run, so that it does not loop
+too quickly if ./run exits immediately.
 All processes are run in a new process group.
 
 If the file

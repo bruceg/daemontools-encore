@@ -150,6 +150,8 @@ void doit(void)
       if ((r == -1) && (errno != error_intr)) break;
       if (r == pid) {
 	pid = 0;
+	if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100)
+	  flagwantup = 0;
 	pidchange();
 	announce();
 	firstrun = 0;
