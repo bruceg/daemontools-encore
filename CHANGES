@@ -19,3 +19,6 @@ Added support to multilog for "accustamp" time stamps.
 
 Added support to supervise for storing the status files in an alternate
 directory specified by $SUPERVISEDIR.
+
+Modified multilog to support specifying an alternate "safely written"
+filename extension (useful for compressed logs).

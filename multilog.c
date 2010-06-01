@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include "direntry.h"
 #include "alloc.h"
+#include "stralloc.h"
 #include "buffer.h"
 #include "strerr.h"
 #include "error.h"
@@ -77,6 +78,7 @@ struct cyclog {
   unsigned long num;
   unsigned long size;
   const char *processor;
+  const char *code_finished;
   const char *dir;
   int fddir;
   int fdlock;
@@ -84,7 +86,7 @@ struct cyclog {
 } *c;
 int cnum;
 
-char fn[40];
+stralloc fn = {0};
 
 int filesfit(struct cyclog *d)
 {
@@ -96,9 +98,9 @@ int filesfit(struct cyclog *d)
   dir = opendir(".");
   if (!dir) return -1;
 
-  fn[0] = '@';
-  fn[1] = 'z';
-  fn[2] = 0;
+  fn.s[0] = '@';
+  fn.s[1] = 'z';
+  fn.s[2] = 0;
 
   count = 0;
   for (;;) {
@@ -108,10 +110,10 @@ int filesfit(struct cyclog *d)
     if (x->d_name[0] == '@')
       if (str_len(x->d_name) >= 25) {
         ++count;
-        if (str_diff(x->d_name,fn) < 0) {
+        if (str_diff(x->d_name,fn.s) < 0) {
           for (i = 0;i < 25;++i)
-            fn[i] = x->d_name[i];
-          fn[25] = 0;
+            fn.s[i] = x->d_name[i];
+          fn.s[25] = 0;
         }
       }
   }
@@ -129,7 +131,7 @@ int filesfit(struct cyclog *d)
     if (!x) break;
     if (x->d_name[0] == '@')
       if (str_len(x->d_name) >= 25)
-        if (str_start(x->d_name,fn)) {
+        if (str_start(x->d_name,fn.s)) {
 	  unlink(x->d_name);
 	  break;
         }
@@ -152,13 +154,14 @@ void finish(struct cyclog *d,const char *file,const char *code)
 
   if (st.st_nlink == 1)
     for (;;) {
-      fnlen = fmt_tai64nstamp(fn);
-      fn[fnlen++] = '.';
-      fn[fnlen++] = code[0];
-      fn[fnlen] = 0;
+      fnlen = fmt_tai64nstamp(fn.s);
+      fn.s[fnlen++] = '.';
+      do {
+	fn.s[fnlen++] = *code;
+      } while (*code++ != 0);
 
-      if (link(file,fn) == 0) break;
-      pause5("unable to link to ",d->dir,"/",fn,", pausing: ");
+      if (link(file,fn.s) == 0) break;
+      pause5("unable to link to ",d->dir,"/",fn.s,", pausing: ");
     }
 
   while (unlink(file) == -1)
@@ -227,7 +230,7 @@ void fullcurrent(struct cyclog *d)
     pause3("unable to set mode of ",d->dir,"/previous, pausing: ");
 
   if (!d->processor)
-    finish(d,"previous","s");
+    finish(d,"previous",d->code_finished);
   else {
     for (;;) {
       while ((pid = fork()) == -1)
@@ -264,7 +267,7 @@ void fullcurrent(struct cyclog *d)
       pause3("unable to remove ",d->dir,"/previous, pausing: ");
     while (rename("newstate","state") == -1)
       pause3("unable to rename newstate to state in directory ",d->dir,", pausing: ");
-    finish(d,"processed","s");
+    finish(d,"processed",d->code_finished);
   }
 }
 
@@ -351,7 +354,7 @@ void restart(struct cyclog *d)
 
   if (flagprocessed) {
     unlink("previous");
-    finish(d,"processed","s");
+    finish(d,"processed",d->code_finished);
   }
   else {
     unlink("processed");
@@ -381,6 +384,7 @@ void c_init(char **script)
   const char *processor;
   unsigned long num;
   unsigned long size;
+  const char *code_finished = "s";
 
   cnum = 0;
   for (i = 0;script[i];++i)
@@ -408,10 +412,16 @@ void c_init(char **script)
     else if (script[i][0] == '!') {
       processor = script[i] + 1;
     }
+    else if (script[i][0] == '+') {
+      code_finished = script[i] + 1;
+      if (!stralloc_ready(&fn,str_len(code_finished)+TIMESTAMP+1))
+	strerr_die2sys(111,FATAL,"unable to allocate memory: ");
+    }
     else if ((script[i][0] == '.') || (script[i][0] == '/')) {
       d->num = num;
       d->size = size;
       d->processor = processor;
+      d->code_finished = code_finished;
       d->dir = script[i];
       buffer_init(&d->ss,c_write,d - c,d->buf,sizeof d->buf);
       restart(d);
@@ -599,6 +609,9 @@ void doit(char **script)
 int main(int argc,char **argv)
 {
   umask(022);
+
+  if (!stralloc_ready(&fn,40))
+    strerr_die2sys(111,FATAL,"unable to allocate memory: ");
 
   fdstartdir = open_read(".");
   if (fdstartdir == -1)

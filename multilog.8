@@ -171,7 +171,8 @@ continuing with a precise timestamp showing when the file was finished, and
 ending with one of the following codes:
 .TP
 .B .s
-This file is completely processed and safely written to disk. 
+This file is completely processed and safely written to disk.  This code
+may be changed as described below.
 .TP
 .B .u
 This file was being created at the moment of an outage. It may have been
@@ -275,6 +276,18 @@ will then run it again. Note that running
 .I processor
 may block any program feeding input to
 .BR multilog .
+.TP
+.B +\fIcode
+Changes the "safely written" code from
+.B .s
+as described above to
+.B .\fIcode
+for subsequent
+.I dir
+actions.  This is useful when using a
+.I processor
+that compresses or otherwise translates the completed log file into a
+different file format.
 .SH SEE ALSO
 supervise(8),
 svc(8),
