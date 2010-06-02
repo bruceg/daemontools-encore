@@ -8,7 +8,8 @@ supervise \- starts and monitors a service.
 .B supervise
 switches to the directory named
 .I s
-and starts ./run. It restarts ./run if ./run exits. It pauses for a second
+and starts ./run in a new process group.
+It restarts ./run if ./run exits. It pauses for a second
 after starting ./run, so that it does not loop too quickly if ./run exits
 immediately. 
 
