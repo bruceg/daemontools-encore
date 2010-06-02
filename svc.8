@@ -19,6 +19,10 @@ applies all the options to each
 in turn.
 .SH OPTIONS
 .TP
+.B \-\+
+Send all subsequent signals to the entire process group instead of just
+the parent process.
+.TP
 .B \-u
 Up. If the
 .I service
@@ -71,6 +75,21 @@ a TERM signal.
 Kill. Send the
 .I service
 a KILL signal. 
+.TP
+.B \-q
+Quit. Send the
+.I service
+a QUIT signal.
+.TP
+.B \-1
+User 1. Send the
+.I service
+a USR1 signal.
+.TP
+.B \-2
+User 2. Send the
+.I service
+a USR2 signal.
 .TP
 .B \-x
 Exit.
