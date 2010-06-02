@@ -1,0 +1,285 @@
+.TH multilog 8
+.SH NAME
+multilog \- reads a sequence of lines from stdin and appends selected lines to
+any number of logs.
+.SH SYNOPSIS
+.B multilog
+.I script
+.SH DESCRIPTION
+.I script
+consists of any number of arguments. Each argument specifies one action. The
+actions are carried out in order for each line of input. Note that actions may
+contain shell metacharacters that need to be quoted when
+.B multilog
+is run from a shell. 
+
+.B multilog
+exits 0 when it sees the end of stdin. If stdin has a partial final line then
+.B multilog
+inserts a final newline. 
+
+.B multilog
+writes a message to stderr and exits 111, without reading any input, if it
+runs out of memory or if another
+.B multilog
+process is writing to one of the same automatically rotated logs.
+
+If
+.B multilog
+has trouble writing to disk after it starts reading input, it writes a message
+to stderr, pauses, and tries again, without losing any data. Note that this
+may block any program feeding input to
+.BR multilog .
+
+If
+.B multilog
+receives a TERM signal, it will read and process data until the next newline,
+and then exit, leaving stdin at the first byte of data it has not processed.
+.SH SELECTING LINES
+Each line is initially selected. The action 
+.TP
+.B -\fIpattern
+deselects the line if
+.I pattern
+matches the line. The action 
+.TP
+.B +\fIpattern
+selects the line if
+.I pattern
+matches the line. 
+.PP
+.I pattern
+is a string of stars and non-stars. It matches any concatenation of strings
+matched by all the stars and non-stars in the same order. A non-star matches
+itself. A star before the end of
+.I pattern
+matches any string that does not include the next character in
+.IR pattern .
+A star at the end of
+.I pattern
+matches any string. 
+
+For example, the action 
+
+  +hello
+
+selects hello. It does not select hello world. 
+
+The action 
+
+  -named[*]: Cleaned cache *
+
+deselects named[135]: Cleaned cache of 3121 RRs. The first star matches any
+string that does not include a right bracket. 
+
+The action 
+
+  -*
+
+deselects every line. 
+
+To save memory,
+.B multilog
+actually checks pattern against only the first 1000 characters of each line.
+.SH ALERTS
+The action 
+.TP
+.B e
+prints (the first 200 bytes of) each selected line to stderr.
+.SH STATUS FILES
+The action 
+.TP
+.B =\fIfile
+replaces the contents of
+.I file
+with (the first 1000 bytes of) each selected line, padded with newlines to
+1001 bytes. There is no protection of
+.I file
+against power outages. 
+
+For example, the sequence of actions 
+
+     -*
+     +STAT*
+     =log/status
+
+maintains log/status as a copy of the most recent line starting with STAT. 
+.SH TIMESTAMPING
+The action 
+.TP
+.B t
+inserts an @, a precise timestamp, and a space in front of each line, using
+the same format as
+.BR tai64n (8).
+This is required to be the first action.
+.PP
+Patterns apply to the line after the timestamp is inserted. For example, if
+
+  multilog t '-*' '+* fatal: *' ./main
+
+reads the line
+
+  fatal: out of memory
+
+then it will log a line such as
+
+  @400000003b4a39c23294b13c fatal: out of memory
+
+with the first * matching the timestamp.
+
+You can use
+.BR tai64nlocal (8)
+to convert these timestamps to human-readable form.
+.SH AUTOMATICALLY ROTATED LOGS
+If
+.I dir
+starts with a dot or slash then the action 
+.TP
+.I dir
+appends each selected line to a log named
+.IR dir .
+If
+.I dir
+does not exist,
+.B multilog
+creates it. 
+
+Do not attempt to write to one log from two simultaneous
+.B multilog
+processes, or two actions in one process.
+
+The log format is as follows.
+.I dir
+is a directory containing some number of old log files, a log file named
+.IR current ,
+and other files for
+.B multilog
+to keep track of its actions. Each old log file has a name beginning with @,
+continuing with a precise timestamp showing when the file was finished, and
+ending with one of the following codes:
+.TP
+.B .s
+This file is completely processed and safely written to disk. 
+.TP
+.B .u
+This file was being created at the moment of an outage. It may have been
+truncated and has not been processed. 
+
+Beware that NFS, async filesystems, and softupdates filesystems may discard
+files that were not safely written to disk before an outage.
+
+While
+.B multilog
+is running,
+.I current
+has mode 644. If
+.B multilog
+sees the end of stdin, it writes
+.I current
+safely to disk, and sets the mode of
+.I current
+to 744. When it restarts, it sets the mode of
+.I current
+back to 644 and continues writing new lines. 
+
+When
+.B multilog
+decides that
+.I current
+is big enough, it writes
+.I current
+safely to disk, sets the mode of
+.I current
+to 744, and renames
+.I current
+as an old log file. The action 
+.TP
+.B s\fIsize
+sets the maximum file size for subsequent
+.I dir
+actions.
+.B multilog
+will decide that
+.I current
+is big enough if
+.I current
+has
+.I size
+bytes.
+.RB ( multilog
+will also decide that
+.I current
+is big enough if it sees a newline within 2000 bytes of the maximum file size;
+it tries to finish log files at line boundaries.)
+.I size
+must be between 4096 and 16777215. The default maximum file size is 99999. 
+
+In versions 0.75 and above: If
+.B multilog
+receives an ALRM signal, it immediately decides that
+.I current
+is big enough, if
+.I current
+is nonempty.
+The action 
+.TP
+.B n\fInum
+sets the number of log files for subsequent
+.I dir
+actions. After renaming
+.IR current ,
+if
+.B multilog
+sees
+.I num
+or more old log files, it removes the old log file with the smallest
+timestamp.
+.I num
+must be at least 2. The default number of log files is 10. The action 
+.TP
+.B !\fIprocessor
+sets a
+.I processor
+for subsequent
+.I dir
+actions.
+.B multilog
+will feed
+.I current
+through
+.I processor
+and save the output as an old log file instead of
+.IR current .
+.B multilog
+will also save any output that
+.I processor
+writes to descriptor 5, and make that output readable on descriptor 4 when it
+runs
+.I processor
+on the next log file. For reliability,
+.I processor
+must exit nonzero if it has any trouble creating its output;
+.B multilog
+will then run it again. Note that running
+.I processor
+may block any program feeding input to
+.BR multilog .
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svstat(8),
+svscanboot(8),
+svscan(8),
+readproctitle(8),
+fghack(8),  
+pgrphack(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+softlimit(8),
+setlock(8)
+
+http://cr.yp.to/daemontools.html

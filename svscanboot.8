@@ -1,0 +1,55 @@
+.TH svscanboot 8
+.SH NAME
+svscanboot \- starts
+.BR svscan (8)
+in the /service directory, with output and error messages logged through
+.BR readproctitle (8).
+
+svscanboot is available in daemontools 0.75 and above.
+.SH SYNOPSIS
+.B svscanboot
+.SH DESCRIPTION
+.B svscanboot
+runs the pipeline
+
+svscan /service 2>&1 | readproctitle service errors: .....
+
+with 400 dots. The last 400 bytes of error messages from
+.BR svscan (8)
+will be visible to
+.BR ps (1)
+through
+.BR readproctitle (8).
+
+.B svscanboot
+sets $PATH to
+
+ /command:/usr/local/bin:/usr/local/sbin:
+ /bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin
+
+(all in one line, no space)
+
+and clears all other environment variables. Program writers are encouraged to
+use globally allocated names in
+.BR /command .
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svstat(8),
+svscan(8),
+readproctitle(8),
+fghack(8),  
+pgrphack(8),
+multilog(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+softlimit(8),
+setlock(8),
+ps(1)
+
+ http://cr.yp.to/daemontools.html
+ http://cr.yp.to/slashcommand.html

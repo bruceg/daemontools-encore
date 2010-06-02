@@ -1,0 +1,35 @@
+.TH svstat 8
+.SH NAME
+svstat \- prints the status of services monitored by
+.BR supervise (8).
+.SH SYNOPSIS
+.B svstat
+.I services
+.SH DESCRIPTION
+.I services
+consists of any number of arguments, each argument naming a directory.
+.B svstat
+prints one human-readable line for each directory, saying whether
+.BR supervise (8)
+is successfully running in that directory, and reporting the status
+information maintained by
+.BR supervise (8).
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svscanboot(8),
+svscan(8),
+readproctitle(8),
+fghack(8),  
+pgrphack(8),
+multilog(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+softlimit(8),
+setlock(8)
+
+http://cr.yp.to/daemontools.html

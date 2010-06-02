@@ -1,0 +1,76 @@
+.TH envdir 8
+.SH NAME
+envdir \- runs another program with environment modified according to files
+in a specified directory.
+.SH SYNOPSIS
+.B envdir
+.I d
+.I child
+.SH DESCRIPTION
+.I d
+is a single argument.
+.I child
+consists of one or more arguments. 
+
+.B envdir
+sets various environment variables as specified by files in the directory
+named
+.IR d .
+It then runs
+.IR child .
+
+If
+.I d
+contains a file named
+.I s
+whose first line is
+.IR t ,
+.B envdir
+removes an environment variable named
+.I s
+if one exists, and then adds an environment variable named
+.I s
+with value
+.IR t .
+The name
+.I s
+must not contain =. Spaces and tabs at the end of
+.I t
+are removed. Nulls in
+.I t
+are changed to newlines in the environment variable. 
+
+If the file
+.I s
+is completely empty (0 bytes long),
+.B envdir
+removes an environment variable named
+.I s
+if one exists, without adding a new variable.
+.SH EXIT CODES
+.B envdir
+exits 111 if it has trouble reading
+.IR d ,
+if it runs out of memory for environment variables, or if it cannot run
+.IR child .
+Otherwise its exit code is the same as that of
+.IR child .
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svstat(8),
+svscanboot(8),
+svscan(8),
+readproctitle(8),
+fghack(8),
+pgrphack(8),
+multilog(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+softlimit(8),
+setlock(8)
+
+http://cr.yp.to/daemontools.html

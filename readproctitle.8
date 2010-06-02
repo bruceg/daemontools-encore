@@ -1,0 +1,77 @@
+.TH readproctitle 8
+.SH NAME
+readproctitle \- maintains an automatically rotated log in memory for
+inspection by
+.BR ps (1).
+
+readproctitle is available in daemontools 0.75 and above.
+.SH SYNOPSIS
+.B readproctitle
+.I L
+.I D
+.SH DESCRIPTION
+.I L
+consists of any number of arguments.
+.I D
+is one argument consisting of at least five dots.
+
+.B readproctitle
+reads data into the end of
+.IR D ,
+shifting
+.I D
+to the left to make room. This means that the most recent data is visible
+to process-listing tools such as
+.BR ps (1).
+.B readproctitle
+always leaves three dots at the left of
+.IR D .
+
+For example, if
+
+ readproctitle io errors: ....................
+
+reads the data
+
+ fatal error xyz
+ warning abc
+
+then its command-line arguments change to
+
+ readproctitle io errors: ... xyz!warning abc!
+
+with a newline character in place of each !. Process-listing tools typically
+show the newline character as ? or \\n.
+
+.B readproctitle
+exits when it reaches the end of input.
+
+Beware that most implementations of
+.BR ps (1)
+have small argument-length limits. These limits apply to the total length
+of
+.B readproctitle
+.I L
+.IR D .
+I have not seen a system with a limit below 512 bytes.
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svstat(8),
+svscanboot(8),
+svscan(8),
+fghack(8),  
+pgrphack(8),
+multilog(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+softlimit(8),
+setlock(8),
+ps(1)
+
+ http://cr.yp.to/daemontools.html
+ http://cr.yp.to/slashcommand.html

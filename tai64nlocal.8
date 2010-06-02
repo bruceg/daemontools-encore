@@ -1,0 +1,60 @@
+.TH tai64nlocal 8
+.SH NAME
+tai64nlocal \- converts precise TAI64N timestamps to a human-readable format.
+.SH SYNOPSIS
+.B tai64nlocal
+.SH DESCRIPTION
+.B tai64nlocal
+reads lines from stdin. If a line does not begin with @,
+.B tai64nlocal
+writes it to stdout without change. If a line begins with @,
+.B tai64nlocal
+looks for a timestamp after the @, in the format printed by
+.BR tai64n (8),
+and writes the line to stdout with the timestamp converted to local time in
+ISO format: YYYY-MM-DD HH:MM:SS.SSSSSSSSS. 
+
+For example, in the US/Pacific time zone, the input line 
+
+  @4000000037c219bf2ef02e94 mark
+
+should be printed as 
+
+  1999-08-23 21:03:43.787492500 mark
+
+Beware, however, that the current implementation of
+.B tai64nlocal
+relies on the UNIX localtime library routine to find the local time. Some
+localtime implementations use a broken time scale that does not account for
+leap seconds. On systems that use the Olson tz library (with an up-to-date
+leap-second table), you can fix this problem by setting your time zone to,
+e.g, right/US/Pacific instead of US/Pacific.
+
+Beware also that most localtime implementations are not Y2038-compliant.
+
+.B tai64nlocal
+does not allocate any memory after it starts, except possibly
+inside localtime.
+.SH EXIT CODES
+.B tai64nlocal
+exits 0 when it sees end of input. It exits 111 without an error message if it
+has trouble reading stdin or writing stdout. 
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svstat(8),
+svscanboot(8),
+svscan(8),
+readproctitle(8),
+fghack(8),  
+pgrphack(8),
+multilog(8),
+tai64n(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+softlimit(8),
+setlock(8)
+
+http://cr.yp.to/daemontools.html

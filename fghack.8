@@ -1,0 +1,36 @@
+.TH fghack 8
+.SH NAME
+fghack \- is an anti-backgrounding tool.
+.SH SYNOPSIS
+.B fghack
+.I child
+.SH DESCRIPTION
+.B fghack
+runs
+.I child
+with many extra descriptors writing to a pipe.
+.B fghack
+reads and discards any data written to the pipe. After
+.I child
+has exited and the pipe has been closed,
+.B fghack
+exits. 
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svstat(8),
+svscanboot(8),
+svscan(8),
+readproctitle(8),
+pgrphack(8),
+multilog(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+softlimit(8),
+setlock(8)
+
+http://cr.yp.to/daemontools.html

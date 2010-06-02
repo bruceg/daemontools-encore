@@ -1,0 +1,118 @@
+.TH softlimit 8
+.SH NAME
+softlimit \- runs another program with new resource limits.
+.SH SYNOPSIS
+.B softlimit
+[
+.I opts
+]
+.I child
+.SH DESCRIPTION
+.I opts
+is a series of getopt-style options.
+.I child
+consists of one or more arguments. 
+
+.B softlimit
+sets soft resource limits as specified by
+.IR opts .
+It then runs
+.IR child .
+.SH OPTIONS
+In each of the following
+.IB opts ,
+.I n
+may be =, indicating that the soft limit should be set equal to the hard
+limit. 
+
+.I opts
+.B controlling memory use: 
+
+.TP
+.B \-m \fIn
+Same as
+.B \-d
+.I n
+.B \-s
+.I n
+.B \-l
+.I n
+.B \-a
+.IR n .
+.TP
+.B \-d \fIn
+Limit the data segment per process to
+.I n
+bytes.
+.TP
+.B \-s \fIn
+Limit the stack segment per process to
+.I n
+bytes.
+.TP 
+.B \-l \fIn
+Limit the locked physical pages per process to
+.I n
+bytes. This option has no effect on some operating systems.
+.TP
+.B \-a \fIn
+Limit the total of all segments per process to
+.I n
+bytes. This option has no effect on some operating systems. 
+.TP
+.B \-o \fIn
+Limit the number of open file descriptors per process to
+.IR n .
+This option has no effect on some operating systems. 
+.TP
+.B \-p \fIn
+Limit the number of processes per uid to
+.IR n .
+.P
+.I opts
+.B controlling file sizes: 
+.TP
+.B \-f \fIn
+Limit output file sizes to
+.I n
+bytes.
+.TP
+.B \-c \fIn
+Limit core file sizes to
+.I n
+bytes.
+.P
+.B Efficiency
+.I opts:
+.TP
+.B \-r \fIn
+Limit the resident set size to
+.I n
+bytes. This limit is not enforced unless physical memory is full.
+.TP
+.B \-t \fIn
+Limit the CPU time to
+.I n
+seconds. This limit is not enforced except that the process receives a
+SIGXCPU signal after
+.I n
+seconds. 
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svok(8),
+svstat(8),
+svscanboot(8),
+svscan(8),
+readproctitle(8),
+fghack(8),  
+pgrphack(8),
+multilog(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+setlock(8)
+
+http://cr.yp.to/daemontools.html

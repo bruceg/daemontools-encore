@@ -1,0 +1,69 @@
+.TH supervise 8
+.SH NAME
+supervise \- starts and monitors a service.
+.SH SYNOPSIS
+.B supervise
+.I s
+.SH DESCRIPTION
+.B supervise
+switches to the directory named
+.I s
+and starts ./run. It restarts ./run if ./run exits. It pauses for a second
+after starting ./run, so that it does not loop too quickly if ./run exits
+immediately. 
+
+If the file
+.IR s /down
+exists,
+.B supervise
+does not start ./run immediately. You can use
+.BR svc (8)
+to start ./run and to give other commands to
+.BR supervise .
+
+.B supervise
+maintains status information in a binary format inside the directory
+.IR s /supervise,
+which must be writable to
+.BR supervise .
+The status information can be read by
+.BR svstat (8).
+
+.B supervise
+may exit immediately after startup if it cannot find the files it needs in
+.I s
+or if another copy of
+.B supervise
+is already running in
+.IR s .
+Once
+.B supervise
+is successfully running, it will not exit unless it is killed or specifically
+asked to exit. You can use
+.BR svok (8)
+to check whether
+.B supervise
+is successfully running. You can use
+.BR svscan (8)
+to reliably start a collection of
+.B supervise
+processes. 
+.SH SEE ALSO
+svc(8),
+svok(8),
+svstat(8),
+svscanboot(8),
+svscan(8),
+readproctitle(8),
+fghack(8),  
+pgrphack(8),
+multilog(8),
+tai64n(8),
+tai64nlocal(8),
+setuidgid(8),
+envuidgid(8),
+envdir(8),
+softlimit(8),
+setlock(8)
+
+http://cr.yp.to/daemontools.html
