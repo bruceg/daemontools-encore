@@ -8,15 +8,27 @@ supervise \- starts and monitors a service.
 .B supervise
 switches to the directory named
 .I s
-and starts the service there by executing first ./start (if it is
-executable), and then ./run.
-It restarts ./run if ./start or ./run exit with any value other than 100.
-It pauses for a second after starting ./run, so that it does not loop
-too quickly if ./run exits immediately.
+and starts the service there by executing first
+.B ./start
+(if it is executable), and then
+.BR ./run .
+It restarts
+.B ./run
+if
+.B ./start
+or
+.B ./run
+exit with any value other than 100.
+It pauses for a second after starting
+.BR ./run ,
+so that it does not loop
+too quickly if
+.B ./run
+exits immediately.
 All processes are run in a new process group.
 
 If the file
-.IR s /down
+.IB s /down
 exists,
 .B supervise
 does not start the service immediately. You can use
@@ -26,7 +38,7 @@ to start the service and to give other commands to
 
 .B supervise
 maintains status information in a binary format inside the directory
-.IR s /supervise,
+.IB s /supervise,
 which must be writable to
 .BR supervise .
 The status information can be read by
