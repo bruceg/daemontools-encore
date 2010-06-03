@@ -3,7 +3,7 @@
 
 static char hex[16] = "0123456789abcdef";
 
-void tai64nstamp(char s[TIMESTAMP])
+int fmt_tai64nstamp(char s[TIMESTAMP])
 {
   struct taia now;
   char nowpack[TAIA_PACK];
@@ -17,4 +17,5 @@ void tai64nstamp(char s[TIMESTAMP])
     s[i * 2 + 1] = hex[(nowpack[i] >> 4) & 15];
     s[i * 2 + 2] = hex[nowpack[i] & 15];
   }
+  return 25;
 }

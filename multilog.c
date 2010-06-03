@@ -142,6 +142,7 @@ int filesfit(struct cyclog *d)
 void finish(struct cyclog *d,const char *file,const char *code)
 {
   struct stat st;
+  int fnlen;
 
   for (;;) {
     if (stat(file,&st) == 0) break;
@@ -151,10 +152,10 @@ void finish(struct cyclog *d,const char *file,const char *code)
 
   if (st.st_nlink == 1)
     for (;;) {
-      tai64nstamp(fn);
-      fn[25] = '.';
-      fn[26] = code[0];
-      fn[27] = 0;
+      fnlen = fmt_tai64nstamp(fn);
+      fn[fnlen++] = '.';
+      fn[fnlen++] = code[0];
+      fn[fnlen] = 0;
 
       if (link(file,fn) == 0) break;
       pause5("unable to link to ",d->dir,"/",fn,", pausing: ");
@@ -514,9 +515,8 @@ void doit(char **script)
       }
       if (!linelen)
         if (flagtimestamp) {
-          tai64nstamp(line);
-          line[25] = ' ';
-          linelen = 26;
+          linelen = fmt_tai64nstamp(line);
+          line[linelen++] = ' ';
         }
       if (ch == '\n')
         break;

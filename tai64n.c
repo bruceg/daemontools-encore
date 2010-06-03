@@ -30,13 +30,14 @@ char stamp[TIMESTAMP + 1];
 int main()
 {
   char ch;
+  int len;
 
   for (;;) {
     if (buffer_GETC(&in,&ch) != 1) _exit(0);
 
-    tai64nstamp(stamp);
-    stamp[TIMESTAMP] = ' ';
-    buffer_put(&out,stamp,TIMESTAMP + 1);
+    len = fmt_tai64nstamp(stamp);
+    stamp[len] = ' ';
+    buffer_put(&out,stamp,len + 1);
 
     for (;;) {
       buffer_PUTC(&out,ch);

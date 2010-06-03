@@ -3,6 +3,6 @@
 
 #define TIMESTAMP 25
 
-extern void tai64nstamp(char *);
+extern int fmt_tai64nstamp(char *);
 
 #endif
