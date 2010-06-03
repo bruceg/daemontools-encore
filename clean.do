@@ -1,1 +1,1 @@
-formake 'rm -f $( cat TARGETS )'
+formake 'rm -f $$( cat TARGETS )'
