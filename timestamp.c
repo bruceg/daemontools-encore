@@ -1,3 +1,4 @@
+#include "fmt.h"
 #include "taia.h"
 #include "timestamp.h"
 
@@ -18,4 +19,17 @@ int fmt_tai64nstamp(char s[TIMESTAMP])
     s[i * 2 + 2] = hex[nowpack[i] & 15];
   }
   return 25;
+}
+
+int fmt_accustamp(char s[TIMESTAMP])
+{
+  struct taia now;
+  int len;
+
+  taia_now(&now);
+
+  len = fmt_ulong(s,(unsigned long)tai_tounix(&now.sec));
+  s[len++] = '.';
+  len += fmt_uint0(s+len,now.nano / 1000,6);
+  return len;
 }

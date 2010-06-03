@@ -10,6 +10,7 @@ struct tai {
 } ;
 
 #define tai_unix(t,u) ((void) ((t)->x = 4611686018427387914ULL + (uint64) (u)))
+#define tai_tounix(t) ((t)->x - 4611686018427387914ULL)
 
 extern void tai_now(struct tai *);
 

@@ -111,7 +111,19 @@ The action
 inserts an @, a precise timestamp, and a space in front of each line, using
 the same format as
 .BR tai64n (8).
-This is required to be the first action.
+.TP
+.B T
+inserts an accustamp-style timestamp and a space in front of each line,
+formatted as
+.IB S . M
+where
+.I S
+is the number of seconds since the UNIX epoch (midnight January 1
+1970-01-01 UTC) and
+.I M
+is the number of microseconds.
+.PP
+These are required to be the first action.
 .PP
 Patterns apply to the line after the timestamp is inserted. For example, if
 

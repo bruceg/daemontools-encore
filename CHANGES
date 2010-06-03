@@ -13,3 +13,6 @@ for single-shot initialization.
 
 Modified supervise to stop trying to restart the service if it exits 100.
 (semantics borrowed from qmail control files)
+
+Added support to multilog for "accustamp" time stamps.
+(derived from patch by Matthias Andree)

@@ -496,8 +496,8 @@ void doit(char **script)
 
   flagtimestamp = 0;
   if (script[0])
-    if (script[0][0] == 't')
-      flagtimestamp = 1;
+    if (script[0][0] == 't' || script[0][0] == 'T')
+      flagtimestamp = script[0][0];
 
   for (i = 0;i <= 1000;++i) line[i] = '\n';
   linelen = 0;
@@ -515,7 +515,9 @@ void doit(char **script)
       }
       if (!linelen)
         if (flagtimestamp) {
-          linelen = fmt_tai64nstamp(line);
+	  linelen = (flagtimestamp == 't')
+	    ? fmt_tai64nstamp(line)
+	    : fmt_accustamp(line);
           line[linelen++] = ' ';
         }
       if (ch == '\n')
