@@ -3,7 +3,7 @@
 
 static char hex[16] = "0123456789abcdef";
 
-void timestamp(char s[TIMESTAMP])
+void tai64nstamp(char s[TIMESTAMP])
 {
   struct taia now;
   char nowpack[TAIA_PACK];

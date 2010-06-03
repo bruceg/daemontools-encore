@@ -151,7 +151,7 @@ void finish(struct cyclog *d,const char *file,const char *code)
 
   if (st.st_nlink == 1)
     for (;;) {
-      timestamp(fn);
+      tai64nstamp(fn);
       fn[25] = '.';
       fn[26] = code[0];
       fn[27] = 0;
@@ -514,7 +514,7 @@ void doit(char **script)
       }
       if (!linelen)
         if (flagtimestamp) {
-          timestamp(line);
+          tai64nstamp(line);
           line[25] = ' ';
           linelen = 26;
         }

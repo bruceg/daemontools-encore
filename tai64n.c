@@ -34,7 +34,7 @@ int main()
   for (;;) {
     if (buffer_GETC(&in,&ch) != 1) _exit(0);
 
-    timestamp(stamp);
+    tai64nstamp(stamp);
     stamp[TIMESTAMP] = ' ';
     buffer_put(&out,stamp,TIMESTAMP + 1);
 
