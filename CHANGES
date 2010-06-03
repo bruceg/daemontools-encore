@@ -1,0 +1,15 @@
+Added support to supervise/svc for sending SIGQUIT/USR1/USR2.
+(original patch by Wayne Marshall, based on patch by Scott Gifford)
+
+Modified supervise to automatically put the forked service into its own
+process group to facilitate sending signals to the group.
+
+Added support to supervise/svc for sending signals to the group.
+
+Added support to softlimit for reading limits from environment variables.
+
+Modified supervise to run "start" once before executing "run" to allow
+for single-shot initialization.
+
+Modified supervise to stop trying to restart the service if it exits 100.
+(semantics borrowed from qmail control files)
