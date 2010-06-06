@@ -15,11 +15,16 @@
 #include "iopause.h"
 #include "taia.h"
 #include "deepsleep.h"
+#include "stralloc.h"
 
 #define FATAL "supervise: fatal: "
 #define WARNING "supervise: warning: "
 
-char *dir;
+const char *dir;
+stralloc svdir = {0};
+stralloc fntemp = {0};
+stralloc fn_status = {0};
+stralloc fn_status_new = {0};
 int selfpipe[2];
 int fdlock;
 int fdcontrolwrite;
@@ -34,6 +39,11 @@ int flagpaused; /* defined if(pid) */
 int firstrun = 1;
 
 char status[18];
+
+static void die_nomem(void)
+{
+  strerr_die2sys(111,FATAL,"unable to allocate memory");
+}
 
 void pidchange(void)
 {
@@ -58,26 +68,26 @@ void announce(void)
   status[16] = (pid ? flagpaused : 0);
   status[17] = (flagwant ? (flagwantup ? 'u' : 'd') : 0);
 
-  fd = open_trunc("supervise/status.new");
+  fd = open_trunc(fn_status_new.s);
   if (fd == -1) {
-    strerr_warn4(WARNING,"unable to open ",dir,"/supervise/status.new: ",&strerr_sys);
+    strerr_warn4(WARNING,"unable to open ",fn_status_new.s,": ",&strerr_sys);
     return;
   }
 
   r = write(fd,status,sizeof status);
   if (r == -1) {
-    strerr_warn4(WARNING,"unable to write ",dir,"/supervise/status.new: ",&strerr_sys);
+    strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": ",&strerr_sys);
     close(fd);
     return;
   }
   close(fd);
   if (r < sizeof status) {
-    strerr_warn4(WARNING,"unable to write ",dir,"/supervise/status.new: partial write",0);
+    strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": partial write",0);
     return;
   }
 
-  if (rename("supervise/status.new","supervise/status") == -1)
-    strerr_warn4(WARNING,"unable to rename ",dir,"/supervise/status.new to status: ",&strerr_sys);
+  if (rename(fn_status_new.s,fn_status.s) == -1)
+    strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
 void trigger(void)
@@ -227,6 +237,37 @@ void doit(void)
   }
 }
 
+void make_filename(stralloc *s, const char *suffix)
+{
+  if (!stralloc_copy(s,&svdir)
+      || !stralloc_cats(s,suffix)
+      || !stralloc_0(s))
+    die_nomem();
+}
+
+void make_filenames(void)
+{
+  const char *base;
+  base = env_get("SUPERVISEDIR");
+  if (base == 0)
+    base = "supervise";
+  if (!stralloc_copys(&svdir,base))
+    die_nomem();
+  if (base[0] == '/') {
+    char cwd[8192];
+    char *ptr;
+    if (getcwd(cwd,sizeof cwd) == 0)
+      strerr_die2sys(111,FATAL,"unable to determine cwd");
+    for (ptr = cwd+1; *ptr != 0; ++ptr)
+      if (*ptr == '/')
+	*ptr = ':';
+    if (!stralloc_cats(&svdir, cwd))
+      die_nomem();
+  }
+  make_filename(&fn_status,"/status");
+  make_filename(&fn_status_new,"/status.new");
+}
+
 int main(int argc,char **argv)
 {
   struct stat st;
@@ -247,6 +288,7 @@ int main(int argc,char **argv)
 
   if (chdir(dir) == -1)
     strerr_die4sys(111,FATAL,"unable to chdir to ",dir,": ");
+  make_filenames();
 
   if (stat("down",&st) != -1)
     flagwantup = 0;
@@ -254,30 +296,35 @@ int main(int argc,char **argv)
     if (errno != error_noent)
       strerr_die4sys(111,FATAL,"unable to stat ",dir,"/down: ");
 
-  mkdir("supervise",0700);
-  fdlock = open_append("supervise/lock");
+  make_filename(&fntemp,"");
+  if (mkdir(fntemp.s,0700) != 0 && errno != error_exist)
+    strerr_die4sys(111,FATAL,"unable to create ",fntemp.s,": ");
+  make_filename(&fntemp,"/lock");
+  fdlock = open_append(fntemp.s);
   if ((fdlock == -1) || (lock_exnb(fdlock) == -1))
-    strerr_die4sys(111,FATAL,"unable to acquire ",dir,"/supervise/lock: ");
+    strerr_die4sys(111,FATAL,"unable to acquire ",fntemp.s,": ");
   coe(fdlock);
 
-  fifo_make("supervise/control",0600);
-  fdcontrol = open_read("supervise/control");
+  make_filename(&fntemp,"/control");
+  fifo_make(fntemp.s,0600);
+  fdcontrol = open_read(fntemp.s);
   if (fdcontrol == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",dir,"/supervise/control: ");
+    strerr_die4sys(111,FATAL,"unable to read ",fntemp.s,": ");
   coe(fdcontrol);
   ndelay_on(fdcontrol); /* shouldn't be necessary */
-  fdcontrolwrite = open_write("supervise/control");
+  fdcontrolwrite = open_write(fntemp.s);
   if (fdcontrolwrite == -1)
-    strerr_die4sys(111,FATAL,"unable to write ",dir,"/supervise/control: ");
+    strerr_die4sys(111,FATAL,"unable to write ",fntemp.s,": ");
   coe(fdcontrolwrite);
 
   pidchange();
   announce();
 
-  fifo_make("supervise/ok",0600);
-  fdok = open_read("supervise/ok");
+  make_filename(&fntemp,"/ok");
+  fifo_make(fntemp.s,0600);
+  fdok = open_read(fntemp.s);
   if (fdok == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",dir,"/supervise/ok: ");
+    strerr_die4sys(111,FATAL,"unable to read ",fntemp.s,": ");
   coe(fdok);
 
   if (!flagwant || flagwantup) trystart();

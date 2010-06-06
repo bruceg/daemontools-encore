@@ -16,3 +16,6 @@ Modified supervise to stop trying to restart the service if it exits 100.
 
 Added support to multilog for "accustamp" time stamps.
 (derived from patch by Matthias Andree)
+
+Added support to supervise for storing the status files in an alternate
+directory specified by $SUPERVISEDIR.

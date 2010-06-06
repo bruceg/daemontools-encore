@@ -38,7 +38,7 @@ to start the service and to give other commands to
 
 .B supervise
 maintains status information in a binary format inside the directory
-.IB s /supervise,
+.IR s\fB/supervise ,
 which must be writable to
 .BR supervise .
 The status information can be read by
@@ -63,6 +63,16 @@ is successfully running. You can use
 to reliably start a collection of
 .B supervise
 processes. 
+.SH ENVIRONMENT
+.TP
+.B SUPERVISEDIR
+If set, the named directory is used instead of
+.B supervise
+for the status information and control files.  If
+.B $SUPERVISEDIR
+is an absolute path, it is suffixed with the path to
+.I s
+with all slashes ("/") replaced with colons (":").
 .SH SEE ALSO
 svc(8),
 svok(8),
