@@ -192,7 +192,7 @@ void doit(void)
 	  if (pid) kill(killpid,SIGHUP);
 	  break;
 	case 'k':
-	  if (pid) kill(pid,SIGKILL);
+	  if (pid) kill(killpid,SIGKILL);
 	  break;
 	case 't':
 	  if (pid) kill(killpid,SIGTERM);
