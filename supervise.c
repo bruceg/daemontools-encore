@@ -104,7 +104,7 @@ void trystart(void)
       sig_unblock(sig_child);
       setsid();			/* shouldn't fail; if it does, too bad */
       execve(*run,run,environ);
-      strerr_die4sys(111,FATAL,"unable to start ",dir,firstrun?"/start: ":"/run: ");
+      strerr_die5sys(111,FATAL,"unable to start ",dir,run[0]+1,": ");
   }
   flagpaused = 0;
   pid = f;
