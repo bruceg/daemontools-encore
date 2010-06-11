@@ -8,6 +8,7 @@
 #include "tai.h"
 #include "buffer.h"
 #include "svpath.h"
+#include "svstatus.h"
 
 #define FATAL "svstat: fatal: "
 #define WARNING "svstat: warning: "
@@ -15,13 +16,14 @@
 char bspace[1024];
 buffer b = BUFFER_INIT(buffer_unixwrite,1,bspace,sizeof bspace);
 
-char status[18];
+char status[19];
 char strnum[FMT_ULONG];
 
 unsigned long pid;
 unsigned char normallyup;
 unsigned char want;
 unsigned char paused;
+enum svstatus statusflag;
 
 static void die_nomem(void)
 {
@@ -91,7 +93,7 @@ void doit(char *dir)
   }
   r = buffer_unixread(fd,status,sizeof status);
   close(fd);
-  if (r < sizeof status) {
+  if (r < 18) {
     if (r == -1)
       x = error_str(errno);
     else
@@ -110,6 +112,7 @@ void doit(char *dir)
 
   paused = status[16];
   want = status[17];
+  statusflag = status[18];
 
   tai_unpack(status,&when);
   tai_now(&now);
@@ -137,6 +140,19 @@ void doit(char *dir)
     buffer_puts(&b,", want up");
   if (pid && (want == 'd'))
     buffer_puts(&b,", want down");
+  if (r > 18) {
+    switch (statusflag) {
+    case svstatus_stopped: x = ", stopped"; break;
+    case svstatus_starting: x = ", starting"; break;
+    case svstatus_started: x = ", started"; break;
+    case svstatus_running: x = ", running"; break;
+    case svstatus_stopping: x = ", stopping"; break;
+    case svstatus_failed: x=", failed"; break;
+    default: x = ", status unknown";
+    }
+    if (x)
+      buffer_puts(&b,x);
+  }
 }
 
 int main(int argc,char **argv)
