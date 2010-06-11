@@ -17,6 +17,7 @@
 #include "deepsleep.h"
 #include "stralloc.h"
 #include "svpath.h"
+#include "svstatus.h"
 
 #define FATAL "supervise: fatal: "
 #define WARNING "supervise: warning: "
@@ -36,8 +37,9 @@ int flagwantup = 1;
 int pid = 0; /* 0 means down */
 int flagpaused; /* defined if(pid) */
 int firstrun = 1;
+enum svstatus flagstatus = svstatus_starting;
 
-char status[18];
+char status[19];
 
 static void die_nomem(void)
 {
@@ -66,6 +68,7 @@ void announce(void)
 
   status[16] = (pid ? flagpaused : 0);
   status[17] = (flagwant ? (flagwantup ? 'u' : 'd') : 0);
+  status[18] = flagstatus;
 
   fd = open_trunc(fn_status_new.s);
   if (fd == -1) {
@@ -100,8 +103,10 @@ void trystart(void)
 {
   int f;
 
-  if (access("start", X_OK) != 0) firstrun = 0;
+  if (firstrun && access("start", X_OK) != 0)
+    firstrun = 0;
   run[0] = firstrun ? "./start" : "./run";
+  flagstatus = firstrun ? svstatus_starting : svstatus_running;
   switch(f = fork()) {
     case -1:
       strerr_warn4(WARNING,"unable to fork for ",dir,", sleeping 60 seconds: ",&strerr_sys);
@@ -159,8 +164,10 @@ void doit(void)
       if ((r == -1) && (errno != error_intr)) break;
       if (r == pid) {
 	pid = 0;
-	if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100)
+	if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
 	  flagwantup = 0;
+	  flagstatus = svstatus_failed;
+	}
 	pidchange();
 	announce();
 	firstrun = 0;
@@ -179,13 +186,21 @@ void doit(void)
 	case 'd':
 	  flagwant = 1;
 	  flagwantup = 0;
-	  if (pid) { kill(killpid,SIGTERM); kill(killpid,SIGCONT); flagpaused = 0; }
+	  if (pid) {
+	    kill(killpid,SIGTERM);
+	    kill(killpid,SIGCONT);
+	    flagpaused = 0;
+	    flagstatus = svstatus_stopping;
+	  }
+	  else
+	    flagstatus = svstatus_stopped;
 	  announce();
 	  break;
 	case 'u':
 	  firstrun = !flagwantup;
 	  flagwant = 1;
 	  flagwantup = 1;
+	  if (!pid) flagstatus = svstatus_starting;
 	  announce();
 	  if (!pid) trystart();
 	  break;

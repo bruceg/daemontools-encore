@@ -22,3 +22,5 @@ directory specified by $SUPERVISEDIR.
 
 Modified multilog to support specifying an alternate "safely written"
 filename extension (useful for compressed logs).
+
+Added extended status information to the supervise/status file.
