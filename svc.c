@@ -7,6 +7,7 @@
 #include "buffer.h"
 #include "byte.h"
 #include "sig.h"
+#include "svpath.h"
 
 #define FATAL "svc: fatal: "
 #define WARNING "svc: warning: "
@@ -24,6 +25,7 @@ int main(int argc,const char *const *argv)
   int opt;
   int fd;
   const char *dir;
+  const char *fncontrol;
 
   sig_ignore(sig_pipe);
 
@@ -43,8 +45,11 @@ int main(int argc,const char *const *argv)
   while (dir = *argv++) {
     if (chdir(dir) == -1)
       strerr_warn4(WARNING,"unable to chdir to ",dir,": ",&strerr_sys);
+    else if (!svpath_init()
+	     || (fncontrol = svpath_make("/control")) == 0)
+      strerr_warn4(WARNING,"unable to setup control path for ",dir,": ",&strerr_sys);
     else {
-      fd = open_write("supervise/control");
+      fd = open_write(fncontrol);
       if (fd == -1)
         if (errno == error_nodevice)
           strerr_warn4(WARNING,"unable to control ",dir,": supervise not running",0);
