@@ -7,6 +7,7 @@
 #include "fmt.h"
 #include "tai.h"
 #include "buffer.h"
+#include "svpath.h"
 
 #define FATAL "svstat: fatal: "
 #define WARNING "svstat: warning: "
@@ -22,6 +23,11 @@ unsigned char normallyup;
 unsigned char want;
 unsigned char paused;
 
+static void die_nomem(void)
+{
+  strerr_die2sys(111,FATAL,"unable to allocate memory");
+}
+
 void doit(char *dir)
 {
   struct stat st;
@@ -30,6 +36,7 @@ void doit(char *dir)
   const char *x;
   struct tai when;
   struct tai now;
+  const char *fntemp;
 
   buffer_puts(&b,dir);
   buffer_puts(&b,": ");
@@ -38,6 +45,10 @@ void doit(char *dir)
     x = error_str(errno);
     buffer_puts(&b,"unable to chdir: ");
     buffer_puts(&b,x);
+    return;
+  }
+  if (!svpath_init()) {
+    strerr_warn4(WARNING,"unable to set up control path for ",dir,": ",&strerr_sys);
     return;
   }
 
@@ -52,23 +63,29 @@ void doit(char *dir)
     normallyup = 1;
   }
 
-  fd = open_write("supervise/ok");
+  if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
+  fd = open_write(fntemp);
   if (fd == -1) {
     if (errno == error_nodevice) {
       buffer_puts(&b,"supervise not running");
       return;
     }
     x = error_str(errno);
-    buffer_puts(&b,"unable to open supervise/ok: ");
+    buffer_puts(&b,"unable to open ");
+    buffer_puts(&b,fntemp);
+    buffer_puts(&b,": ");
     buffer_puts(&b,x);
     return;
   }
   close(fd);
 
-  fd = open_read("supervise/status");
+  if ((fntemp = svpath_make("/status")) == 0) die_nomem();
+  fd = open_read(fntemp);
   if (fd == -1) {
     x = error_str(errno);
-    buffer_puts(&b,"unable to open supervise/status: ");
+    buffer_puts(&b,"unable to open ");
+    buffer_puts(&b,fntemp);
+    buffer_puts(&b,": ");
     buffer_puts(&b,x);
     return;
   }
@@ -79,7 +96,9 @@ void doit(char *dir)
       x = error_str(errno);
     else
       x = "bad format";
-    buffer_puts(&b,"unable to read supervise/status: ");
+    buffer_puts(&b,"unable to read ");
+    buffer_puts(&b,fntemp);
+    buffer_puts(&b,": ");
     buffer_puts(&b,x);
     return;
   }
