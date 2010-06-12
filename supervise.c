@@ -16,13 +16,12 @@
 #include "taia.h"
 #include "deepsleep.h"
 #include "stralloc.h"
+#include "svpath.h"
 
 #define FATAL "supervise: fatal: "
 #define WARNING "supervise: warning: "
 
 const char *dir;
-stralloc svdir = {0};
-stralloc fntemp = {0};
 stralloc fn_status = {0};
 stralloc fn_status_new = {0};
 int selfpipe[2];
@@ -237,40 +236,17 @@ void doit(void)
   }
 }
 
-void make_filename(stralloc *s, const char *suffix)
+void make_svpaths(void)
 {
-  if (!stralloc_copy(s,&svdir)
-      || !stralloc_cats(s,suffix)
-      || !stralloc_0(s))
+  if (!svpath_copy(&fn_status,"/status")
+      || !svpath_copy(&fn_status_new,"/status.new"))
     die_nomem();
-}
-
-void make_filenames(void)
-{
-  const char *base;
-  base = env_get("SUPERVISEDIR");
-  if (base == 0)
-    base = "supervise";
-  if (!stralloc_copys(&svdir,base))
-    die_nomem();
-  if (base[0] == '/') {
-    char cwd[8192];
-    char *ptr;
-    if (getcwd(cwd,sizeof cwd) == 0)
-      strerr_die2sys(111,FATAL,"unable to determine cwd");
-    for (ptr = cwd+1; *ptr != 0; ++ptr)
-      if (*ptr == '/')
-	*ptr = ':';
-    if (!stralloc_cats(&svdir, cwd))
-      die_nomem();
-  }
-  make_filename(&fn_status,"/status");
-  make_filename(&fn_status_new,"/status.new");
 }
 
 int main(int argc,char **argv)
 {
   struct stat st;
+  const char *fntemp;
 
   dir = argv[1];
   if (!dir || argv[2])
@@ -288,7 +264,7 @@ int main(int argc,char **argv)
 
   if (chdir(dir) == -1)
     strerr_die4sys(111,FATAL,"unable to chdir to ",dir,": ");
-  make_filenames();
+  make_svpaths();
 
   if (stat("down",&st) != -1)
     flagwantup = 0;
@@ -296,35 +272,35 @@ int main(int argc,char **argv)
     if (errno != error_noent)
       strerr_die4sys(111,FATAL,"unable to stat ",dir,"/down: ");
 
-  make_filename(&fntemp,"");
-  if (mkdir(fntemp.s,0700) != 0 && errno != error_exist)
-    strerr_die4sys(111,FATAL,"unable to create ",fntemp.s,": ");
-  make_filename(&fntemp,"/lock");
-  fdlock = open_append(fntemp.s);
+  if ((fntemp = svpath_make("")) == 0) die_nomem();
+  if (mkdir(fntemp,0700) != 0 && errno != error_exist)
+    strerr_die4sys(111,FATAL,"unable to create ",fntemp,": ");
+  if ((fntemp = svpath_make("/lock")) == 0) die_nomem();
+  fdlock = open_append(fntemp);
   if ((fdlock == -1) || (lock_exnb(fdlock) == -1))
-    strerr_die4sys(111,FATAL,"unable to acquire ",fntemp.s,": ");
+    strerr_die4sys(111,FATAL,"unable to acquire ",fntemp,": ");
   coe(fdlock);
 
-  make_filename(&fntemp,"/control");
-  fifo_make(fntemp.s,0600);
-  fdcontrol = open_read(fntemp.s);
+  if ((fntemp = svpath_make("/control")) == 0) die_nomem();
+  fifo_make(fntemp,0600);
+  fdcontrol = open_read(fntemp);
   if (fdcontrol == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",fntemp.s,": ");
+    strerr_die4sys(111,FATAL,"unable to read ",fntemp,": ");
   coe(fdcontrol);
   ndelay_on(fdcontrol); /* shouldn't be necessary */
-  fdcontrolwrite = open_write(fntemp.s);
+  fdcontrolwrite = open_write(fntemp);
   if (fdcontrolwrite == -1)
-    strerr_die4sys(111,FATAL,"unable to write ",fntemp.s,": ");
+    strerr_die4sys(111,FATAL,"unable to write ",fntemp,": ");
   coe(fdcontrolwrite);
 
   pidchange();
   announce();
 
-  make_filename(&fntemp,"/ok");
-  fifo_make(fntemp.s,0600);
-  fdok = open_read(fntemp.s);
+  if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
+  fifo_make(fntemp,0600);
+  fdok = open_read(fntemp);
   if (fdok == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",fntemp.s,": ");
+    strerr_die4sys(111,FATAL,"unable to read ",fntemp,": ");
   coe(fdok);
 
   if (!flagwant || flagwantup) trystart();

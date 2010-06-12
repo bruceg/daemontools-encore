@@ -6,6 +6,7 @@ Makefile
 chkshsgr
 choose
 compile
+conf_supervise.c
 direntry.h
 envdir
 envuidgid

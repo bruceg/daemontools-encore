@@ -1,0 +1,4 @@
+supervise
+
+This will be the default (sub)directory into which supervise stores its
+control and status files.
