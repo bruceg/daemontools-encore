@@ -1,9 +1,9 @@
 /* Public domain. */
 
 #include <fcntl.h>
-#include "coe.h"
+#include "closeonexec.h"
 
-int coe(int fd)
+int closeonexec(int fd)
 {
   return fcntl(fd,F_SETFD,1);
 }

@@ -14,7 +14,7 @@
 #include "seek.h"
 #include "timestamp.h"
 #include "wait.h"
-#include "coe.h"
+#include "closeonexec.h"
 #include "env.h"
 #include "fd.h"
 #include "sig.h"
@@ -63,7 +63,7 @@ void f_init(char **script)
       fd = open_write(script[i] + 1);
       if (fd == -1)
         strerr_die4sys(111,FATAL,"unable to write ",script[i] + 1,": ");
-      coe(fd);
+      closeonexec(fd);
     }
     f[i] = fd;
   }
@@ -218,7 +218,7 @@ void fullcurrent(struct cyclog *d)
     pause3("unable to rename current to previous in directory ",d->dir,", pausing: ");
   while ((d->fdcurrent = open_append("current")) == -1)
     pause3("unable to create ",d->dir,"/current, pausing: ");
-  coe(d->fdcurrent);
+  closeonexec(d->fdcurrent);
   d->bytes = 0;
   while (fchmod(d->fdcurrent,0644) == -1)
     pause3("unable to set mode of ",d->dir,"/current, pausing: ");
@@ -314,12 +314,12 @@ void restart(struct cyclog *d)
   d->fddir = open_read(d->dir);
   if ((d->fddir == -1) || (fchdir(d->fddir) == -1))
     strerr_die4sys(111,FATAL,"unable to open directory ",d->dir,": ");
-  coe(d->fddir);
+  closeonexec(d->fddir);
 
   d->fdlock = open_append("lock");
   if ((d->fdlock == -1) || (lock_exnb(d->fdlock) == -1))
     strerr_die4sys(111,FATAL,"unable to lock directory ",d->dir,": ");
-  coe(d->fdlock);
+  closeonexec(d->fdlock);
 
   if (stat("current",&st) == -1) {
     if (errno != error_noent)
@@ -332,7 +332,7 @@ void restart(struct cyclog *d)
         strerr_die4sys(111,FATAL,"unable to append to ",d->dir,"/current: ");
       if (fchmod(fd,0644) == -1)
         strerr_die4sys(111,FATAL,"unable to set mode of ",d->dir,"/current: ");
-      coe(fd);
+      closeonexec(fd);
       d->fdcurrent = fd;
       d->bytes = st.st_size;
       return;
@@ -369,7 +369,7 @@ void restart(struct cyclog *d)
     strerr_die4sys(111,FATAL,"unable to write to ",d->dir,"/current: ");
   if (fchmod(fd,0644) == -1)
     strerr_die4sys(111,FATAL,"unable to set mode of ",d->dir,"/current: ");
-  coe(fd);
+  closeonexec(fd);
   d->fdcurrent = fd;
   d->bytes = 0;
 }
@@ -603,7 +603,7 @@ int main(int argc,char **argv)
   fdstartdir = open_read(".");
   if (fdstartdir == -1)
     strerr_die2sys(111,FATAL,"unable to switch to current directory: ");
-  coe(fdstartdir);
+  closeonexec(fdstartdir);
 
   sig_block(sig_term);
   sig_block(sig_alarm);

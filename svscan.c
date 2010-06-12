@@ -5,7 +5,7 @@
 #include "strerr.h"
 #include "error.h"
 #include "wait.h"
-#include "coe.h"
+#include "closeonexec.h"
 #include "fd.h"
 #include "env.h"
 #include "str.h"
@@ -81,8 +81,8 @@ void start(char *fn)
         strerr_warn4(WARNING,"unable to create pipe for ",fn,": ",&strerr_sys);
         return;
       }
-      coe(x[i].pi[0]);
-      coe(x[i].pi[1]);
+      closeonexec(x[i].pi[0]);
+      closeonexec(x[i].pi[1]);
     }
     ++numx;
   }

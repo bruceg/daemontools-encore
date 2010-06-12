@@ -9,7 +9,7 @@
 #include "open.h"
 #include "lock.h"
 #include "wait.h"
-#include "coe.h"
+#include "closeonexec.h"
 #include "ndelay.h"
 #include "env.h"
 #include "iopause.h"
@@ -254,8 +254,8 @@ int main(int argc,char **argv)
 
   if (pipe(selfpipe) == -1)
     strerr_die4sys(111,FATAL,"unable to create pipe for ",dir,": ");
-  coe(selfpipe[0]);
-  coe(selfpipe[1]);
+  closeonexec(selfpipe[0]);
+  closeonexec(selfpipe[1]);
   ndelay_on(selfpipe[0]);
   ndelay_on(selfpipe[1]);
 
@@ -281,19 +281,19 @@ int main(int argc,char **argv)
   fdlock = open_append(fntemp);
   if ((fdlock == -1) || (lock_exnb(fdlock) == -1))
     strerr_die4sys(111,FATAL,"unable to acquire ",fntemp,": ");
-  coe(fdlock);
+  closeonexec(fdlock);
 
   if ((fntemp = svpath_make("/control")) == 0) die_nomem();
   fifo_make(fntemp,0600);
   fdcontrol = open_read(fntemp);
   if (fdcontrol == -1)
     strerr_die4sys(111,FATAL,"unable to read ",fntemp,": ");
-  coe(fdcontrol);
+  closeonexec(fdcontrol);
   ndelay_on(fdcontrol); /* shouldn't be necessary */
   fdcontrolwrite = open_write(fntemp);
   if (fdcontrolwrite == -1)
     strerr_die4sys(111,FATAL,"unable to write ",fntemp,": ");
-  coe(fdcontrolwrite);
+  closeonexec(fdcontrolwrite);
 
   pidchange();
   announce();
@@ -303,7 +303,7 @@ int main(int argc,char **argv)
   fdok = open_read(fntemp);
   if (fdok == -1)
     strerr_die4sys(111,FATAL,"unable to read ",fntemp,": ");
-  coe(fdok);
+  closeonexec(fdok);
 
   if (!flagwant || flagwantup) trystart();
 
