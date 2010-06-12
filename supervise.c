@@ -264,6 +264,8 @@ int main(int argc,char **argv)
 
   if (chdir(dir) == -1)
     strerr_die4sys(111,FATAL,"unable to chdir to ",dir,": ");
+  if (!svpath_init())
+    strerr_die4sys(111,FATAL,"unable to setup control path for ",dir,": ");
   make_svpaths();
 
   if (stat("down",&st) != -1)

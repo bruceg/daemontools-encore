@@ -28,9 +28,6 @@ int svpath_init(void)
 
 int svpath_copy(stralloc *s,const char *suffix)
 {
-  if (svdir.s == 0)
-    if (!svpath_init())
-      return 0;
   return stralloc_copy(s,&svdir)
     && stralloc_cats(s,suffix)
     && stralloc_0(s);
