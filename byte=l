@@ -3,6 +3,7 @@ byte_copy.o
 byte_cr.o
 byte_diff.o
 byte_rchr.o
+byte_zero.o
 fmt_uint.o
 fmt_uint0.o
 fmt_ulong.o
