@@ -2,10 +2,7 @@
 
 #include "byte.h"
 
-void byte_copy(to,n,from)
-register char *to;
-register unsigned int n;
-register char *from;
+void byte_copy(char *to,unsigned int n,const char *from)
 {
   for (;;) {
     if (!n) return; *to++ = *from++; --n;

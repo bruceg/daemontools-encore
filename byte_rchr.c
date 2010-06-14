@@ -2,14 +2,11 @@
 
 #include "byte.h"
 
-unsigned int byte_rchr(s,n,c)
-char *s;
-register unsigned int n;
-int c;
+unsigned int byte_rchr(const char *s,unsigned int n,int c)
 {
-  register char ch;
-  register char *t;
-  register char *u;
+  char ch;
+  const char *t;
+  const char *u;
 
   ch = c;
   t = s;
