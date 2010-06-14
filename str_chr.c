@@ -2,10 +2,10 @@
 
 #include "str.h"
 
-unsigned int str_chr(register const char *s,int c)
+unsigned int str_chr(const char *s,int c)
 {
-  register char ch;
-  register const char *t;
+  char ch;
+  const char *t;
 
   ch = c;
   t = s;

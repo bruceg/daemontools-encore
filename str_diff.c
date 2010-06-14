@@ -2,9 +2,9 @@
 
 #include "str.h"
 
-int str_diff(register const char *s,register const char *t)
+int str_diff(const char *s,const char *t)
 {
-  register char x;
+  char x;
 
   for (;;) {
     x = *s; if (x != *t) break; if (!x) break; ++s; ++t;

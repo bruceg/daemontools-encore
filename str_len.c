@@ -4,7 +4,7 @@
 
 unsigned int str_len(const char *s)
 {
-  register const char *t;
+  const char *t;
 
   t = s;
   for (;;) {
