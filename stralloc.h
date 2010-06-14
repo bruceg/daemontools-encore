@@ -15,10 +15,10 @@ extern int stralloc_copys(stralloc *,const char *);
 extern int stralloc_cats(stralloc *,const char *);
 extern int stralloc_copyb(stralloc *,const char *,unsigned int);
 extern int stralloc_catb(stralloc *,const char *,unsigned int);
-extern int stralloc_append(stralloc *,const char *); /* beware: this takes a pointer to 1 char */
+extern int stralloc_append(stralloc *,char);
 extern int stralloc_starts(stralloc *,const char *);
 
-#define stralloc_0(sa) stralloc_append(sa,"")
+#define stralloc_0(sa) stralloc_append(sa,'\0')
 
 extern int stralloc_catulong0(stralloc *,unsigned long,unsigned int);
 extern int stralloc_catlong0(stralloc *,long,unsigned int);

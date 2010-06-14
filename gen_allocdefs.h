@@ -30,7 +30,7 @@ int ta_rplus(register ta *x,register unsigned int n) \
   return !!(x->field = (type *) alloc((x->a = n) * sizeof(type))); }
 
 #define GEN_ALLOC_append(ta,type,field,len,a,i,n,x,base,ta_rplus,ta_append) \
-int ta_append(register ta *x,register const type *i) \
-{ if (!ta_rplus(x,1)) return 0; x->field[x->len++] = *i; return 1; }
+int ta_append(register ta *x,register type i) \
+{ if (!ta_rplus(x,1)) return 0; x->field[x->len++] = i; return 1; }
 
 #endif
