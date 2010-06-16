@@ -32,11 +32,15 @@ setlock
 setuidgid
 softlimit
 supervise
+supervise.8
 svc
+svc.8
 svok
+svok.8
 svscan
 svscanboot
 svstat
+svstat.8
 sysdeps
 systype
 tai64n

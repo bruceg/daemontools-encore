@@ -18,7 +18,7 @@ information maintained by
 .TP
 .B SUPERVISEDIR
 If set, the named directory is used instead of
-.B supervise
+.B @SUPERVISEDIR@
 for the status information and control files.  If
 .B $SUPERVISEDIR
 is an absolute path, it is suffixed with the path to
