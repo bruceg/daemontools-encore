@@ -100,6 +100,16 @@ is down. If you use this option on a stable system, you're doing something
 wrong;
 .BR supervise (8)
 is designed to run forever.
+.SH ENVIRONMENT
+.TP
+.B SUPERVISEDIR
+If set, the named directory is used instead of
+.B supervise
+for the status information and control files.  If
+.B $SUPERVISEDIR
+is an absolute path, it is suffixed with the path to
+.I s
+with all slashes ("/") replaced with colons (":").
 .SH SEE ALSO
 supervise(8),
 svok(8),

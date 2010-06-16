@@ -14,6 +14,16 @@ prints one human-readable line for each directory, saying whether
 is successfully running in that directory, and reporting the status
 information maintained by
 .BR supervise (8).
+.SH ENVIRONMENT
+.TP
+.B SUPERVISEDIR
+If set, the named directory is used instead of
+.B supervise
+for the status information and control files.  If
+.B $SUPERVISEDIR
+is an absolute path, it is suffixed with the path to
+.I s
+with all slashes ("/") replaced with colons (":").
 .SH SEE ALSO
 supervise(8),
 svc(8),
