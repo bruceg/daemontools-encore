@@ -8,6 +8,7 @@ choose
 compile
 conf_supervise.c
 direntry.h
+dosubst
 envdir
 envuidgid
 fghack
