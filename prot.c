@@ -1,5 +1,7 @@
 /* Public domain. */
 
+#include <unistd.h>
+#include <grp.h>
 #include "hasshsgr.h"
 #include "prot.h"
 
