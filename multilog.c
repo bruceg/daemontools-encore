@@ -76,8 +76,8 @@ struct cyclog {
   unsigned long bytes;
   unsigned long num;
   unsigned long size;
-  char *processor;
-  char *dir;
+  const char *processor;
+  const char *dir;
   int fddir;
   int fdlock;
   int flagselected;
@@ -378,7 +378,7 @@ void c_init(char **script)
 {
   int i;
   struct cyclog *d;
-  char *processor;
+  const char *processor;
   unsigned long num;
   unsigned long size;
 
@@ -490,7 +490,7 @@ void doit(char **script)
   char ch;
   int j;
   int i;
-  char *action;
+  const char *action;
   int flagselected;
   int flagtimestamp;
 
