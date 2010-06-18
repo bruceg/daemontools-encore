@@ -155,7 +155,7 @@ If
 does not exist,
 .B multilog
 creates it. 
-
+.PP
 Do not attempt to write to one log from two simultaneous
 .B multilog
 processes, or two actions in one process.
@@ -176,7 +176,7 @@ This file is completely processed and safely written to disk.
 .B .u
 This file was being created at the moment of an outage. It may have been
 truncated and has not been processed. 
-
+.PP
 Beware that NFS, async filesystems, and softupdates filesystems may discard
 files that were not safely written to disk before an outage.
 
@@ -204,7 +204,7 @@ safely to disk, sets the mode of
 .I current
 to 744, and renames
 .I current
-as an old log file. The action 
+as an old log file.
 .TP
 .B s\fIsize
 sets the maximum file size for subsequent
@@ -233,7 +233,6 @@ receives an ALRM signal, it immediately decides that
 is big enough, if
 .I current
 is nonempty.
-The action 
 .TP
 .B n\fInum
 sets the number of log files for subsequent
@@ -247,7 +246,7 @@ sees
 or more old log files, it removes the old log file with the smallest
 timestamp.
 .I num
-must be at least 2. The default number of log files is 10. The action 
+must be at least 2. The default number of log files is 10.
 .TP
 .B !\fIprocessor
 sets a
