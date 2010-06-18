@@ -101,7 +101,7 @@ void start(char *fn)
         args[0] = "supervise";
         args[1] = fn;
         args[2] = 0;
-	pathexec_run(*args,args,environ);
+	pathexec_run(*args,args,(const char*const*)environ);
         strerr_die4sys(111,WARNING,"unable to start supervise ",fn,": ");
       default:
 	x[i].pid = child;
@@ -120,7 +120,7 @@ void start(char *fn)
         args[0] = "supervise";
         args[1] = "log";
         args[2] = 0;
-	pathexec_run(*args,args,environ);
+	pathexec_run(*args,args,(const char*const*)environ);
         strerr_die4sys(111,WARNING,"unable to start supervise ",fn,"/log: ");
       default:
 	x[i].pidlog = child;
