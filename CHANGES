@@ -24,3 +24,6 @@ Modified multilog to support specifying an alternate "safely written"
 filename extension (useful for compressed logs).
 
 Added extended state information to the supervise/status file and svstat.
+
+Added support for a "notify" script, executed whenever "run" or "start"
+is started or exits.

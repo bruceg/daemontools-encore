@@ -51,10 +51,10 @@ static void trigger(void)
   write(selfpipe[1],"",1);
 }
 
-static int forkexecve(const char *script)
+static int forkexecve(const char *script,const char *arg1)
 {
   int f;
-  const char *argv[2] = { script,0 };
+  const char *argv[3] = { script,arg1,0 };
 
   switch (f = fork()) {
     case -1:
@@ -103,7 +103,7 @@ void announce(void)
     strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
-void pidchange(void)
+void pidchange(const char *notice)
 {
   struct taia now;
   unsigned long u;
@@ -117,6 +117,8 @@ void pidchange(void)
   status[14] = u; u >>= 8;
   status[15] = u;
 
+  if (notice != 0 && access("notify",X_OK) == 0)
+    forkexecve("./notify",notice);
   announce();
 }
 
@@ -129,11 +131,11 @@ void trystart(void)
     firstrun = 0;
   run = firstrun ? "./start" : "./run";
   flagstatus = firstrun ? svstatus_starting : svstatus_running;
-  if ((f = forkexecve(run)) < 0)
+  if ((f = forkexecve(run,0)) < 0)
     return;
   pid = f;
   flagpaused = 0;
-  pidchange();
+  pidchange(run+2);
   deepsleep(1);
 }
 
@@ -178,7 +180,7 @@ void doit(void)
 	  flagwantup = 0;
 	  flagstatus = svstatus_failed;
 	}
-	pidchange();
+	pidchange(wait_crashed(wstat) ? "killed" : wait_exitcode(wstat) ? "error" : "exit");
 	firstrun = 0;
 	if (flagexit) return;
 	if (flagwant && flagwantup) trystart();
@@ -322,7 +324,7 @@ int main(int argc,char **argv)
     strerr_die4sys(111,FATAL,"unable to write ",fntemp,": ");
   closeonexec(fdcontrolwrite);
 
-  pidchange();
+  pidchange(0);
 
   if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
   fifo_make(fntemp,0600);
