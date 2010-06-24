@@ -72,21 +72,6 @@ static int forkexecve(const char *script)
   return f;
 }
 
-void pidchange(void)
-{
-  struct taia now;
-  unsigned long u;
-
-  taia_now(&now);
-  taia_pack(status,&now);
-
-  u = (unsigned long) pid;
-  status[12] = u; u >>= 8;
-  status[13] = u; u >>= 8;
-  status[14] = u; u >>= 8;
-  status[15] = u;
-}
-
 void announce(void)
 {
   int fd;
@@ -118,6 +103,23 @@ void announce(void)
     strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
+void pidchange(void)
+{
+  struct taia now;
+  unsigned long u;
+
+  taia_now(&now);
+  taia_pack(status,&now);
+
+  u = (unsigned long) pid;
+  status[12] = u; u >>= 8;
+  status[13] = u; u >>= 8;
+  status[14] = u; u >>= 8;
+  status[15] = u;
+
+  announce();
+}
+
 void trystart(void)
 {
   int f;
@@ -132,7 +134,6 @@ void trystart(void)
   pid = f;
   flagpaused = 0;
   pidchange();
-  announce();
   deepsleep(1);
 }
 
@@ -178,7 +179,6 @@ void doit(void)
 	  flagstatus = svstatus_failed;
 	}
 	pidchange();
-	announce();
 	firstrun = 0;
 	if (flagexit) return;
 	if (flagwant && flagwantup) trystart();
@@ -323,7 +323,6 @@ int main(int argc,char **argv)
   closeonexec(fdcontrolwrite);
 
   pidchange();
-  announce();
 
   if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
   fifo_make(fntemp,0600);
