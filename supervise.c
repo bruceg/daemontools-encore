@@ -46,6 +46,32 @@ static void die_nomem(void)
   strerr_die2sys(111,FATAL,"unable to allocate memory");
 }
 
+static void trigger(void)
+{
+  write(selfpipe[1],"",1);
+}
+
+static int forkexecve(const char *script)
+{
+  int f;
+  const char *argv[2] = { script,0 };
+
+  switch (f = fork()) {
+    case -1:
+      strerr_warn4(WARNING,"unable to fork for ",dir,", sleeping 60 seconds: ",&strerr_sys);
+      deepsleep(60);
+      trigger();
+      return -1;
+    case 0:
+      sig_uncatch(sig_child);
+      sig_unblock(sig_child);
+      setsid();			/* shouldn't fail; if it does, too bad */
+      execve(script,argv,environ);
+      strerr_die5sys(111,FATAL,"unable to start ",dir,script+1,": ");
+  }
+  return f;
+}
+
 void pidchange(void)
 {
   struct taia now;
@@ -92,36 +118,19 @@ void announce(void)
     strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
-void trigger(void)
-{
-  write(selfpipe[1],"",1);
-}
-
-const char *run[2] = { 0,0 };
-
 void trystart(void)
 {
   int f;
+  const char *run;
 
   if (firstrun && access("start", X_OK) != 0)
     firstrun = 0;
-  run[0] = firstrun ? "./start" : "./run";
+  run = firstrun ? "./start" : "./run";
   flagstatus = firstrun ? svstatus_starting : svstatus_running;
-  switch(f = fork()) {
-    case -1:
-      strerr_warn4(WARNING,"unable to fork for ",dir,", sleeping 60 seconds: ",&strerr_sys);
-      deepsleep(60);
-      trigger();
-      return;
-    case 0:
-      sig_uncatch(sig_child);
-      sig_unblock(sig_child);
-      setsid();			/* shouldn't fail; if it does, too bad */
-      execve(*run,run,environ);
-      strerr_die5sys(111,FATAL,"unable to start ",dir,run[0]+1,": ");
-  }
-  flagpaused = 0;
+  if ((f = forkexecve(run)) < 0)
+    return;
   pid = f;
+  flagpaused = 0;
   pidchange();
   announce();
   deepsleep(1);
