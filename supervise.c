@@ -52,10 +52,9 @@ static void trigger(void)
   write(selfpipe[1],"",1);
 }
 
-static int forkexecve(const char *script,const char *arg1,const char *arg2)
+static int forkexecve(const char *argv[])
 {
   int f;
-  const char *argv[] = { script,arg1,arg2,0 };
 
   switch (f = fork()) {
     case -1:
@@ -67,8 +66,8 @@ static int forkexecve(const char *script,const char *arg1,const char *arg2)
       sig_uncatch(sig_child);
       sig_unblock(sig_child);
       setsid();			/* shouldn't fail; if it does, too bad */
-      execve(script,argv,environ);
-      strerr_die5sys(111,FATAL,"unable to start ",dir,script+1,": ");
+      execve(argv[0],argv,environ);
+      strerr_die5sys(111,FATAL,"unable to start ",dir,argv[0]+1,": ");
   }
   return f;
 }
@@ -106,6 +105,7 @@ void announce(void)
 
 void pidchange(const char *notice)
 {
+  const char *argv[] = { "./notify", runscript+2, notice, 0 };
   struct taia now;
   unsigned long u;
 
@@ -119,19 +119,20 @@ void pidchange(const char *notice)
   status[15] = u;
 
   if (notice != 0 && access("notify",X_OK) == 0)
-    forkexecve("./notify",runscript+2,notice);
+    forkexecve(argv);
   announce();
 }
 
 void trystart(void)
 {
+  const char *argv[] = { 0,0 };
   int f;
 
   if (firstrun && access("start", X_OK) != 0)
     firstrun = 0;
-  runscript = firstrun ? "./start" : "./run";
+  argv[0] = runscript = firstrun ? "./start" : "./run";
   flagstatus = firstrun ? svstatus_starting : svstatus_running;
-  if ((f = forkexecve(runscript,0,0)) < 0)
+  if ((f = forkexecve(argv)) < 0)
     return;
   pid = f;
   flagpaused = 0;
