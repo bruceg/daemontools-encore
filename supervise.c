@@ -38,6 +38,7 @@ int pid = 0; /* 0 means down */
 int flagpaused; /* defined if(pid) */
 int firstrun = 1;
 enum svstatus flagstatus = svstatus_starting;
+const char *runscript = 0;
 
 char status[19];
 
@@ -51,10 +52,10 @@ static void trigger(void)
   write(selfpipe[1],"",1);
 }
 
-static int forkexecve(const char *script,const char *arg1)
+static int forkexecve(const char *script,const char *arg1,const char *arg2)
 {
   int f;
-  const char *argv[3] = { script,arg1,0 };
+  const char *argv[] = { script,arg1,arg2,0 };
 
   switch (f = fork()) {
     case -1:
@@ -118,24 +119,23 @@ void pidchange(const char *notice)
   status[15] = u;
 
   if (notice != 0 && access("notify",X_OK) == 0)
-    forkexecve("./notify",notice);
+    forkexecve("./notify",runscript+2,notice);
   announce();
 }
 
 void trystart(void)
 {
   int f;
-  const char *run;
 
   if (firstrun && access("start", X_OK) != 0)
     firstrun = 0;
-  run = firstrun ? "./start" : "./run";
+  runscript = firstrun ? "./start" : "./run";
   flagstatus = firstrun ? svstatus_starting : svstatus_running;
-  if ((f = forkexecve(run,0)) < 0)
+  if ((f = forkexecve(runscript,0,0)) < 0)
     return;
   pid = f;
   flagpaused = 0;
-  pidchange(run+2);
+  pidchange("start");
   deepsleep(1);
 }
 

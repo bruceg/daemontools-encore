@@ -40,17 +40,11 @@ If the file
 .IB s /notify
 exists and is executable,
 .B supervise
-executes it with a single command-line argument:
+executes it with a two command-line arguments.  The first is the name of
+the script being executed.  The second is a status code, one of:
 .TP
 .B start
-The
-.B start
-script was executed.
-.TP
-.B run
-The
-.B run
-script was executed.
+The script started executing.
 .TP
 .B exit
 The running script exited with no errors.
