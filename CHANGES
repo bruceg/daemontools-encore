@@ -1,4 +1,4 @@
-Added support to supervise/svc for sending SIGQUIT/USR1/USR2.
+Added support to supervise/svc for sending SIGQUIT/USR1/USR2/WINCH.
 (original patch by Wayne Marshall, based on patch by Scott Gifford)
 
 Modified supervise to automatically put the forked service into its own

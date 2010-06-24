@@ -91,6 +91,11 @@ User 2. Send the
 .I service
 a USR2 signal.
 .TP
+.B \-w
+Window resize.  Send the
+.I service
+a WINCH signal.
+.TP
 .B \-x
 Exit.
 .BR supervise (8)

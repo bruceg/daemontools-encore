@@ -233,6 +233,9 @@ void doit(void)
 	case '2':
 	  if (pid) kill(killpid,SIGUSR2);
 	  break;
+        case 'w':
+	  if (pid) kill(killpid,SIGWINCH);
+	  break;
 	case 'p':
 	  flagpaused = 1;
 	  announce();
