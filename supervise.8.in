@@ -40,21 +40,21 @@ If the file
 .IB s /notify
 exists and is executable,
 .B supervise
-executes it with a two command-line arguments.  The first is the name of
+executes it with three command-line arguments.  The first is the name of
 the script being executed.  The second is a status code, one of:
 .TP
 .B start
 The script started executing.
 .TP
 .B exit
-The running script exited with no errors.
-.TP
-.B error
-The running script exited with a non-zero exit code.
+The running script exited.
 .TP
 .B killed
 The running script was killed by a signal.
 .P
+The third is the exit code or kill signal number, or
+.B 0
+on start.
 
 .B supervise
 maintains status information in a binary format inside the directory

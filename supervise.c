@@ -6,6 +6,7 @@
 #include "strerr.h"
 #include "error.h"
 #include "fifo.h"
+#include "fmt.h"
 #include "open.h"
 #include "lock.h"
 #include "wait.h"
@@ -103,9 +104,10 @@ void announce(void)
     strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
-void pidchange(const char *notice)
+void pidchange(const char *notice,int code)
 {
-  const char *argv[] = { "./notify", runscript+2, notice, 0 };
+  char num[FMT_ULONG];
+  const char *argv[] = { "./notify",runscript+2,notice,num,0 };
   struct taia now;
   unsigned long u;
 
@@ -118,8 +120,10 @@ void pidchange(const char *notice)
   status[14] = u; u >>= 8;
   status[15] = u;
 
-  if (notice != 0 && access("notify",X_OK) == 0)
+  if (notice != 0 && access("notify",X_OK) == 0) {
+    num[fmt_uint(num,code)] = 0;
     forkexecve(argv);
+  }
   announce();
 }
 
@@ -136,7 +140,7 @@ void trystart(void)
     return;
   pid = f;
   flagpaused = 0;
-  pidchange("start");
+  pidchange("start",0);
   deepsleep(1);
 }
 
@@ -181,7 +185,8 @@ void doit(void)
 	  flagwantup = 0;
 	  flagstatus = svstatus_failed;
 	}
-	pidchange(wait_crashed(wstat) ? "killed" : wait_exitcode(wstat) ? "error" : "exit");
+	pidchange(wait_crashed(wstat) ? "killed" : "exit",
+		  wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat));
 	firstrun = 0;
 	if (flagexit) return;
 	if (flagwant && flagwantup) trystart();
@@ -325,7 +330,7 @@ int main(int argc,char **argv)
     strerr_die4sys(111,FATAL,"unable to write ",fntemp,": ");
   closeonexec(fdcontrolwrite);
 
-  pidchange(0);
+  pidchange(0,0);
 
   if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
   fifo_make(fntemp,0600);
