@@ -203,7 +203,7 @@ void doit(void)
 	case 'd':
 	  flagwant = 1;
 	  flagwantup = 0;
-	  if (pid) {
+	  if (killpid) {
 	    kill(killpid,SIGTERM);
 	    kill(killpid,SIGCONT);
 	    flagpaused = 0;
@@ -227,41 +227,41 @@ void doit(void)
 	  if (!pid) trystart();
 	  break;
 	case 'a':
-	  if (pid) kill(killpid,SIGALRM);
+	  if (killpid) kill(killpid,SIGALRM);
 	  break;
 	case 'h':
-	  if (pid) kill(killpid,SIGHUP);
+	  if (killpid) kill(killpid,SIGHUP);
 	  break;
 	case 'k':
-	  if (pid) kill(killpid,SIGKILL);
+	  if (killpid) kill(killpid,SIGKILL);
 	  break;
 	case 't':
-	  if (pid) kill(killpid,SIGTERM);
+	  if (killpid) kill(killpid,SIGTERM);
 	  break;
 	case 'i':
-	  if (pid) kill(killpid,SIGINT);
+	  if (killpid) kill(killpid,SIGINT);
 	  break;
 	case 'q':
-	  if (pid) kill(killpid,SIGQUIT);
+	  if (killpid) kill(killpid,SIGQUIT);
 	  break;
 	case '1':
-	  if (pid) kill(killpid,SIGUSR1);
+	  if (killpid) kill(killpid,SIGUSR1);
 	  break;
 	case '2':
-	  if (pid) kill(killpid,SIGUSR2);
+	  if (killpid) kill(killpid,SIGUSR2);
 	  break;
         case 'w':
-	  if (pid) kill(killpid,SIGWINCH);
+	  if (killpid) kill(killpid,SIGWINCH);
 	  break;
 	case 'p':
 	  flagpaused = 1;
 	  announce();
-	  if (pid) kill(killpid,SIGSTOP);
+	  if (killpid) kill(killpid,SIGSTOP);
 	  break;
 	case 'c':
 	  flagpaused = 0;
 	  announce();
-	  if (pid) kill(killpid,SIGCONT);
+	  if (killpid) kill(killpid,SIGCONT);
 	  break;
 	case 'x':
 	  flagexit = 1;
