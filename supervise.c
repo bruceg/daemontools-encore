@@ -23,6 +23,17 @@
 #define FATAL "supervise: fatal: "
 #define WARNING "supervise: warning: "
 
+struct svc
+{
+  int pid;
+  enum svstatus flagstatus;
+  int flagwant;
+  int flagwantup;
+  int flagpaused;
+  struct taia when;
+  char status[20];
+};
+
 const char *dir;
 stralloc fn_status = {0};
 stralloc fn_status_new = {0};
@@ -33,15 +44,20 @@ int fdcontrol;
 int fdok;
 
 int flagexit = 0;
-int flagwant = 1;
-int flagwantup = 1;
-int pid = 0; /* 0 means down */
-int flagpaused; /* defined if(pid) */
 int firstrun = 1;
-enum svstatus flagstatus = svstatus_starting;
 const char *runscript = 0;
 
-char status[19];
+int logpipe[2] = {-1,-1};
+struct svc svcmain = {0,svstatus_starting,1,1};
+struct svc svclog = {0,svstatus_starting,1,0};
+
+static int stat_isexec(const char *path)
+{
+  struct stat st;
+  if (stat(path,&st) == -1)
+    return -1;
+  return S_ISREG(st.st_mode) && (st.st_mode & 0100);
+}
 
 static void die_nomem(void)
 {
@@ -53,7 +69,7 @@ static void trigger(void)
   write(selfpipe[1],"",1);
 }
 
-static int forkexecve(const char *argv[])
+static int forkexecve(const char *argv[],int fd)
 {
   int f;
 
@@ -67,20 +83,26 @@ static int forkexecve(const char *argv[])
       sig_uncatch(sig_child);
       sig_unblock(sig_child);
       setsid();			/* shouldn't fail; if it does, too bad */
+      if (fd >= 0 && logpipe[0] >= 0) {
+	dup2(logpipe[fd],fd);
+	close(logpipe[0]);
+	close(logpipe[1]);
+      }
       execve(argv[0],argv,environ);
       strerr_die5sys(111,FATAL,"unable to start ",dir,argv[0]+1,": ");
   }
   return f;
 }
 
-void announce(void)
+void announce(struct svc *svc)
 {
   int fd;
   int r;
 
-  status[16] = (pid ? flagpaused : 0);
-  status[17] = (flagwant ? (flagwantup ? 'u' : 'd') : 0);
-  status[18] = flagstatus;
+  svc->status[16] = (svc->pid ? svc->flagpaused : 0);
+  svc->status[17] = (svc->flagwant ? (svc->flagwantup ? 'u' : 'd') : 0);
+  svc->status[18] = svc->flagstatus;
+  svc->status[19] = '\n';
 
   fd = open_trunc(fn_status_new.s);
   if (fd == -1) {
@@ -88,14 +110,16 @@ void announce(void)
     return;
   }
 
-  r = write(fd,status,sizeof status);
+  r = write(fd,svcmain.status,sizeof svcmain.status);
+  if (logpipe[0] >= 0 && r != -1)
+    r += write(fd,svclog.status,sizeof svclog.status);
+  close(fd);
   if (r == -1) {
     strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": ",&strerr_sys);
     close(fd);
     return;
   }
-  close(fd);
-  if (r < sizeof status) {
+  if (r < sizeof svcmain.status + (logpipe[0] >= 0 ? sizeof svclog.status : 0)) {
     strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": partial write",0);
     return;
   }
@@ -104,43 +128,55 @@ void announce(void)
     strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
-void pidchange(const char *notice,int code)
+void pidchange(struct svc *svc,const char *notice,int code)
 {
   char num[FMT_ULONG];
-  const char *argv[] = { "./notify",runscript+2,notice,num,0 };
-  struct taia now;
+  const char *argv[] = {
+    "./notify",
+    svc == &svclog ? "log" : runscript+2,
+    notice,num,0
+  };
   unsigned long u;
 
-  taia_now(&now);
-  taia_pack(status,&now);
+  taia_now(&svc->when);
+  taia_pack(svc->status,&svc->when);
 
-  u = (unsigned long) pid;
-  status[12] = u; u >>= 8;
-  status[13] = u; u >>= 8;
-  status[14] = u; u >>= 8;
-  status[15] = u;
+  u = (unsigned long) svc->pid;
+  svc->status[12] = u; u >>= 8;
+  svc->status[13] = u; u >>= 8;
+  svc->status[14] = u; u >>= 8;
+  svc->status[15] = u;
 
-  if (notice != 0 && access("notify",X_OK) == 0) {
+  if (notice != 0 && stat_isexec("notify") > 0) {
     num[fmt_uint(num,code)] = 0;
-    forkexecve(argv);
+    forkexecve(argv,-1);
   }
-  announce();
+  announce(svc);
 }
 
-void trystart(void)
+void trystart(struct svc *svc)
 {
   const char *argv[] = { 0,0 };
   int f;
+  int fd;
 
-  if (firstrun && access("start", X_OK) != 0)
-    firstrun = 0;
-  argv[0] = runscript = firstrun ? "./start" : "./run";
-  flagstatus = firstrun ? svstatus_starting : svstatus_running;
-  if ((f = forkexecve(argv)) < 0)
+  if (svc == &svclog) {
+    argv[0] = "./log";
+    svclog.flagstatus = svstatus_running;
+    fd = 0;
+  }
+  else {
+    if (firstrun && stat_isexec("start") == 0)
+      firstrun = 0;
+    argv[0] = runscript = firstrun ? "./start" : "./run";
+    svcmain.flagstatus = firstrun ? svstatus_starting : svstatus_running;
+    fd = 1;
+  }
+  if ((f = forkexecve(argv,fd)) < 0)
     return;
-  pid = f;
-  flagpaused = 0;
-  pidchange("start",0);
+  svc->pid = f;
+  svc->flagpaused = 0;
+  pidchange(svc,"start",0);
   deepsleep(1);
 }
 
@@ -153,11 +189,12 @@ void doit(void)
   int r;
   char ch;
   int killpid;
+  struct svc *svc;
 
-  announce();
+  announce(&svcmain);
 
   for (;;) {
-    if (flagexit && !pid) return;
+    if (flagexit && !svcmain.pid && !svclog.pid) return;
 
     sig_unblock(sig_child);
 
@@ -179,52 +216,62 @@ void doit(void)
       r = wait_nohang(&wstat);
       if (!r) break;
       if ((r == -1) && (errno != error_intr)) break;
-      if (r == pid) {
-	pid = 0;
-	if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
-	  flagwantup = 0;
-	  flagstatus = svstatus_failed;
-	}
-	pidchange(wait_crashed(wstat) ? "killed" : "exit",
-		  wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat));
-	firstrun = 0;
-	if (flagexit) return;
-	if (flagwant && flagwantup) trystart();
-	break;
+      if (r == svcmain.pid)
+	svc = &svcmain;
+      else if (r == svclog.pid)
+	svc = &svclog;
+      else
+	continue;
+      svc->pid = 0;
+      if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
+	svc->flagwantup = 0;
+	svc->flagstatus = svstatus_failed;
       }
+      pidchange(svc, wait_crashed(wstat) ? "killed" : "exit",
+		wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat));
+      firstrun = 0;
+      if (flagexit) return;
+      if (svc->flagwant && svc->flagwantup) trystart(svc);
     }
 
-    killpid = pid;
+    svc = &svcmain;
+    killpid = svc->pid;
     while (read(fdcontrol,&ch,1) == 1)
       switch(ch) {
         case '+':
-	  killpid = -pid;
+	  killpid = -svc->pid;
+	  break;
+        case 'L':
+	  svc = &svclog;
+	  killpid = svc->pid;
 	  break;
 	case 'd':
-	  flagwant = 1;
-	  flagwantup = 0;
+	  svc->flagwant = 1;
+	  svc->flagwantup = 0;
 	  if (killpid) {
 	    kill(killpid,SIGTERM);
 	    kill(killpid,SIGCONT);
-	    flagpaused = 0;
-	    flagstatus = svstatus_stopping;
+	    svc->flagpaused = 0;
+	    svc->flagstatus = svstatus_stopping;
 	  }
 	  else
-	    flagstatus = svstatus_stopped;
-	  announce();
+	    svc->flagstatus = svstatus_stopped;
+	  announce(svc);
 	  break;
 	case 'u':
-	  firstrun = !flagwantup;
-	  flagwant = 1;
-	  flagwantup = 1;
-	  if (!pid) flagstatus = svstatus_starting;
-	  announce();
-	  if (!pid) trystart();
+	  if (svc == &svcmain)
+	    firstrun = !svcmain.flagwantup;
+	  svc->flagwant = 1;
+	  svc->flagwantup = 1;
+	  if (!svc->pid)
+	    svc->flagstatus = svstatus_starting;
+	  announce(svc);
+	  if (!svc->pid) trystart(svc);
 	  break;
 	case 'o':
-	  flagwant = 0;
-	  announce();
-	  if (!pid) trystart();
+	  svc->flagwant = 0;
+	  announce(svc);
+	  if (!svc->pid) trystart(svc);
 	  break;
 	case 'a':
 	  if (killpid) kill(killpid,SIGALRM);
@@ -254,18 +301,19 @@ void doit(void)
 	  if (killpid) kill(killpid,SIGWINCH);
 	  break;
 	case 'p':
-	  flagpaused = 1;
-	  announce();
+	  svc->flagpaused = 1;
+	  announce(svc);
 	  if (killpid) kill(killpid,SIGSTOP);
 	  break;
 	case 'c':
-	  flagpaused = 0;
-	  announce();
+	  svc->flagpaused = 0;
+	  announce(svc);
 	  if (killpid) kill(killpid,SIGCONT);
 	  break;
 	case 'x':
 	  flagexit = 1;
-	  announce();
+	  announce(&svcmain);
+	  announce(&svclog);
 	  break;
       }
   }
@@ -303,8 +351,15 @@ int main(int argc,char **argv)
     strerr_die4sys(111,FATAL,"unable to setup control path for ",dir,": ");
   make_svpaths();
 
-  if (stat("down",&st) != -1)
-    flagwantup = 0;
+  if (stat_isexec("log") > 0) {
+    if (pipe(logpipe) != 0)
+      strerr_die4sys(111,FATAL,"unable to create pipe for ",dir,": ");
+    svclog.flagwantup = 1;
+  }
+  if (stat("down",&st) != -1) {
+    svcmain.flagwantup = 0;
+    svclog.flagwantup = 0;
+  }
   else
     if (errno != error_noent)
       strerr_die4sys(111,FATAL,"unable to stat ",dir,"/down: ");
@@ -330,7 +385,7 @@ int main(int argc,char **argv)
     strerr_die4sys(111,FATAL,"unable to write ",fntemp,": ");
   closeonexec(fdcontrolwrite);
 
-  pidchange(0,0);
+  pidchange(&svcmain,0,0);
 
   if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
   fifo_make(fntemp,0600);
@@ -339,9 +394,10 @@ int main(int argc,char **argv)
     strerr_die4sys(111,FATAL,"unable to read ",fntemp,": ");
   closeonexec(fdok);
 
-  if (!flagwant || flagwantup) trystart();
+  if (!svclog.flagwant || svclog.flagwantup) trystart(&svclog);
+  if (!svcmain.flagwant || svcmain.flagwantup) trystart(&svcmain);
 
   doit();
-  announce();
+  announce(&svcmain);
   _exit(0);
 }

@@ -27,3 +27,6 @@ Added extended state information to the supervise/status file and svstat.
 
 Added support for a "notify" script, executed whenever "run" or "start"
 is started or exits.
+
+Added support for piping to "log" within supervise.  This requires "log"
+to be an executable file (instead of a directory as for svscan).
