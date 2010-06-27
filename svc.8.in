@@ -5,7 +5,7 @@ svc \- controls services monitored by
 .SH SYNOPSIS
 .B svc
 [
-.B \-Ludopchaitkx
+.B \-+L12udopchaitkwx
 ]
 .I services
 .SH DESCRIPTION
