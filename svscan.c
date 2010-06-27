@@ -67,7 +67,7 @@ void start(char *fn)
     if (fnlen <= 255) {
       byte_copy(fnlog,fnlen,fn);
       byte_copy(fnlog + fnlen,5,"/log");
-      if (stat(fnlog,&st) == 0)
+      if (stat(fnlog,&st) == 0 && S_ISDIR(st.st_mode))
 	x[i].flaglog = 1;
       else
 	if (errno != error_noent) {
