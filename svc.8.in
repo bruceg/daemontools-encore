@@ -5,7 +5,7 @@ svc \- controls services monitored by
 .SH SYNOPSIS
 .B svc
 [
-.B \-udopchaitkx
+.B \-Ludopchaitkx
 ]
 .I services
 .SH DESCRIPTION
@@ -22,6 +22,11 @@ in turn.
 .B \-\+
 Send all subsequent signals to the entire process group instead of just
 the parent process.
+.TP
+.B \-L
+Send all subsequent signals to the running
+.B log
+process, if it exists.
 .TP
 .B \-u
 Up. If the
