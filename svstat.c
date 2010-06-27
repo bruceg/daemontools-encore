@@ -16,7 +16,6 @@
 char bspace[1024];
 buffer b = BUFFER_INIT(buffer_unixwrite,1,bspace,sizeof bspace);
 
-char status[19];
 char strnum[FMT_ULONG];
 
 unsigned long pid;
@@ -30,15 +29,70 @@ static void die_nomem(void)
   strerr_die2sys(111,FATAL,"unable to allocate memory");
 }
 
+static void showstatus(const char status[19], int r)
+{
+  const char *x;
+  struct tai when;
+  struct tai now;
+
+  pid = (unsigned char) status[15];
+  pid <<= 8; pid += (unsigned char) status[14];
+  pid <<= 8; pid += (unsigned char) status[13];
+  pid <<= 8; pid += (unsigned char) status[12];
+
+  paused = status[16];
+  want = status[17];
+  statusflag = status[18];
+
+  tai_unpack(status,&when);
+  tai_now(&now);
+  if (tai_less(&now,&when)) when = now;
+  tai_sub(&when,&now,&when);
+
+  if (pid) {
+    buffer_puts(&b,"up (pid ");
+    buffer_put(&b,strnum,fmt_ulong(strnum,pid));
+    buffer_puts(&b,") ");
+  }
+  else
+    buffer_puts(&b,"down ");
+
+  buffer_put(&b,strnum,fmt_ulong(strnum,tai_approx(&when)));
+  buffer_puts(&b," seconds");
+
+  if (pid && !normallyup)
+    buffer_puts(&b,", normally down");
+  if (!pid && normallyup)
+    buffer_puts(&b,", normally up");
+  if (pid && paused)
+    buffer_puts(&b,", paused");
+  if (!pid && (want == 'u'))
+    buffer_puts(&b,", want up");
+  if (pid && (want == 'd'))
+    buffer_puts(&b,", want down");
+  if (r > 18) {
+    switch (statusflag) {
+    case svstatus_stopped: x = ", stopped"; break;
+    case svstatus_starting: x = ", starting"; break;
+    case svstatus_started: x = ", started"; break;
+    case svstatus_running: x = ", running"; break;
+    case svstatus_stopping: x = ", stopping"; break;
+    case svstatus_failed: x=", failed"; break;
+    default: x = ", status unknown";
+    }
+    if (x)
+      buffer_puts(&b,x);
+  }
+}
+
 void doit(char *dir)
 {
   struct stat st;
   int r;
   int fd;
   const char *x;
-  struct tai when;
-  struct tai now;
   const char *fntemp;
+  char status[40];
 
   buffer_puts(&b,dir);
   buffer_puts(&b,": ");
@@ -104,54 +158,12 @@ void doit(char *dir)
     buffer_puts(&b,x);
     return;
   }
-
-  pid = (unsigned char) status[15];
-  pid <<= 8; pid += (unsigned char) status[14];
-  pid <<= 8; pid += (unsigned char) status[13];
-  pid <<= 8; pid += (unsigned char) status[12];
-
-  paused = status[16];
-  want = status[17];
-  statusflag = status[18];
-
-  tai_unpack(status,&when);
-  tai_now(&now);
-  if (tai_less(&now,&when)) when = now;
-  tai_sub(&when,&now,&when);
-
-  if (pid) {
-    buffer_puts(&b,"up (pid ");
-    buffer_put(&b,strnum,fmt_ulong(strnum,pid));
-    buffer_puts(&b,") ");
-  }
-  else
-    buffer_puts(&b,"down ");
-
-  buffer_put(&b,strnum,fmt_ulong(strnum,tai_approx(&when)));
-  buffer_puts(&b," seconds");
-
-  if (pid && !normallyup)
-    buffer_puts(&b,", normally down");
-  if (!pid && normallyup)
-    buffer_puts(&b,", normally up");
-  if (pid && paused)
-    buffer_puts(&b,", paused");
-  if (!pid && (want == 'u'))
-    buffer_puts(&b,", want up");
-  if (pid && (want == 'd'))
-    buffer_puts(&b,", want down");
-  if (r > 18) {
-    switch (statusflag) {
-    case svstatus_stopped: x = ", stopped"; break;
-    case svstatus_starting: x = ", starting"; break;
-    case svstatus_started: x = ", started"; break;
-    case svstatus_running: x = ", running"; break;
-    case svstatus_stopping: x = ", stopping"; break;
-    case svstatus_failed: x=", failed"; break;
-    default: x = ", status unknown";
-    }
-    if (x)
-      buffer_puts(&b,x);
+  showstatus(status,r);
+  if (r >= 20+18) {
+    buffer_puts(&b,"\n");
+    buffer_puts(&b,dir);
+    buffer_puts(&b," log: ");
+    showstatus(status+20,r-20);
   }
 }
 

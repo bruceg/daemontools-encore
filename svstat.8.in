@@ -14,6 +14,11 @@ prints one human-readable line for each directory, saying whether
 is successfully running in that directory, and reporting the status
 information maintained by
 .BR supervise (8).
+If a
+.B log
+process is also running in that directory,
+.B svstat
+prints an additional line for that process.
 .SH ENVIRONMENT
 .TP
 .B SUPERVISEDIR
