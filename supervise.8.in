@@ -41,7 +41,12 @@ If the file
 exists and is executable,
 .B supervise
 executes it with three command-line arguments.  The first is the name of
-the script being executed.  The second is a status code, one of:
+the script being executed, one of
+.BR start ,
+.BR run ,
+or
+.BR log .
+The second is a status code, one of:
 .TP
 .B start
 The script started executing.
