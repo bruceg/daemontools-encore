@@ -55,7 +55,7 @@ static int stat_isexec(const char *path)
 {
   struct stat st;
   if (stat(path,&st) == -1)
-    return -1;
+    return errno == error_noent ? 0 : -1;
   return S_ISREG(st.st_mode) && (st.st_mode & 0100);
 }
 
