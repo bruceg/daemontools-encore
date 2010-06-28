@@ -236,6 +236,7 @@ void doit(void)
       firstrun = 0;
       if (flagexit) return;
       if (svc->flagwant && svc->flagwantup) trystart(svc);
+      break;
     }
 
     svc = &svcmain;
