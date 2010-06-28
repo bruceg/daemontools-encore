@@ -25,8 +25,9 @@ filename extension (useful for compressed logs).
 
 Added extended state information to the supervise/status file and svstat.
 
-Added support for a "notify" script, executed whenever "run" or "start"
-is started or exits.
+Added support to supervise for a "notify" script, executed whenever a
+subprocess is started or exits.  If present, it is passed the script
+name, "start" or "exit", the PID, and the exit code.
 
 Added support for piping to "log" within supervise.  This requires "log"
 to be an executable file (instead of a directory as for svscan).
