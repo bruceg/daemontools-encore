@@ -40,7 +40,7 @@ If the file
 .IB s /notify
 exists and is executable,
 .B supervise
-executes it with three command-line arguments.  The first is the name of
+executes it with four command-line arguments.  The first is the name of
 the script being executed, one of
 .BR start ,
 .BR run ,
@@ -57,7 +57,8 @@ The running script exited.
 .B killed
 The running script was killed by a signal.
 .P
-The third is the exit code or kill signal number, or
+The third is the process ID of the newly created or just exited process.
+The fourth is the exit code or kill signal number, or
 .B 0
 on start.
 

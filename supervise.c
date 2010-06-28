@@ -128,13 +128,14 @@ void announce(struct svc *svc)
     strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
-void pidchange(struct svc *svc,const char *notice,int code)
+void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
 {
-  char num[FMT_ULONG];
+  char pidnum[FMT_ULONG];
+  char codenum[FMT_ULONG];
   const char *argv[] = {
     "./notify",
     svc == &svclog ? "log" : runscript+2,
-    notice,num,0
+    notice,pidnum,codenum,0
   };
   unsigned long u;
 
@@ -148,7 +149,8 @@ void pidchange(struct svc *svc,const char *notice,int code)
   svc->status[15] = u;
 
   if (notice != 0 && stat_isexec("notify") > 0) {
-    num[fmt_uint(num,code)] = 0;
+    pidnum[fmt_uint(pidnum,oldpid)] = 0;
+    codenum[fmt_uint(codenum,code)] = 0;
     forkexecve(argv,-1);
   }
   announce(svc);
@@ -176,7 +178,7 @@ void trystart(struct svc *svc)
     return;
   svc->pid = f;
   svc->flagpaused = 0;
-  pidchange(svc,"start",0);
+  pidchange(svc,"start",0,f);
   deepsleep(1);
 }
 
@@ -222,13 +224,15 @@ void doit(void)
 	svc = &svclog;
       else
 	continue;
+      killpid = svc->pid;
       svc->pid = 0;
       if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
 	svc->flagwantup = 0;
 	svc->flagstatus = svstatus_failed;
       }
       pidchange(svc, wait_crashed(wstat) ? "killed" : "exit",
-		wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat));
+		wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat),
+		killpid);
       firstrun = 0;
       if (flagexit) return;
       if (svc->flagwant && svc->flagwantup) trystart(svc);
@@ -385,7 +389,7 @@ int main(int argc,char **argv)
     strerr_die4sys(111,FATAL,"unable to write ",fntemp,": ");
   closeonexec(fdcontrolwrite);
 
-  pidchange(&svcmain,0,0);
+  pidchange(&svcmain,0,0,0);
 
   if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
   fifo_make(fntemp,0600);
