@@ -1,0 +1,4 @@
+--- readproctitle insists on an argument
+100
+--- readproctitle insists on last argument being at least five bytes
+100

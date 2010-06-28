@@ -1,0 +1,9 @@
+--- softlimit insists on an argument
+softlimit: usage: softlimit [-a allbytes] [-c corebytes] [-d databytes] [-f filebytes] [-l lockbytes] [-m membytes] [-o openfiles] [-p processes] [-r residentbytes] [-s stackbytes] [-t cpusecs] child
+100
+--- softlimit complains if it cannot run program
+softlimit: fatal: unable to run ./nonexistent: file does not exist
+111
+--- softlimit -p0 still allows exec
+./nonexistent
+0

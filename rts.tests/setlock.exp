@@ -1,0 +1,20 @@
+--- setlock requires arguments
+setlock: usage: setlock [ -nNxX ] file program [ arg ... ]
+100
+--- setlock complains if it cannot create lock file
+setlock: fatal: unable to open nonexistent/lock: file does not exist
+111
+--- setlock -x exits quietly if it cannot create lock file
+0
+--- setlock creates lock file
+ok
+0
+--- setlock does not truncate lock file
+ok
+0
+--- setlock -n complains if file is already locked
+setlock: fatal: unable to lock lock: temporary failure
+111
+--- setlock -nx exits quietly if file is already locked
+two
+0

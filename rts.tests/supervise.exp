@@ -1,0 +1,13 @@
+--- supervise starts, svok works, svstat works, svc -x works
+test.sv: down x seconds, starting
+0
+0
+test.sv: supervise not running
+0
+--- svc -ox works
+hi
+--- svstat works for up services
+.: up (pid x) x seconds, normally down, running
+--- svc -u works
+first
+second

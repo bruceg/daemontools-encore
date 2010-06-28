@@ -1,0 +1,9 @@
+--- pgrphack insists on an argument
+pgrphack: usage: pgrphack child
+100
+--- pgrphack complains if it cannot run program
+pgrphack: fatal: unable to run ./nonexistent: file does not exist
+111
+--- pgrphack runs a program
+ok
+0

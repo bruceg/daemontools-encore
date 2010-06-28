@@ -1,0 +1,11 @@
+--- envuidgid insists on two arguments
+envuidgid: usage: envuidgid account child
+100
+envuidgid: usage: envuidgid account child
+100
+--- envuidgid sets UID=0 for root
+0
+0
+--- envuidgid complains if it cannot run program
+envuidgid: fatal: unable to run ./nonexistent: file does not exist
+111

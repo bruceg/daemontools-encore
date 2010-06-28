@@ -1,0 +1,7 @@
+--- tai64n has the right format
+@xxxxxxxxxxxxxxxxxxxxxxxx ONE
+@xxxxxxxxxxxxxxxxxxxxxxxx TWO
+--- tai64nlocal handles non-@ lines correctly
+one
+two
+0

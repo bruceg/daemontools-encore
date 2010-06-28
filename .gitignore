@@ -26,6 +26,8 @@ multilog
 pgrphack
 readproctitle
 rts
+rts.exp
+rts.sh
 rts-tmp
 select.h
 setlock

@@ -1,0 +1,15 @@
+--- envdir requires arguments
+envdir: usage: envdir dir child
+111
+--- envdir complains if it cannot read directory
+envdir: fatal: unable to switch to directory env1: symbolic link loop
+111
+--- envdir complains if it cannot read file
+envdir: fatal: unable to read env1/Message: symbolic link loop
+111
+--- envdir adds variables
+This is a test. This is only a test.
+0
+--- envdir removes variables
+
+0

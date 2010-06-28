@@ -1,0 +1,9 @@
+--- fghack insists on an argument
+fghack: usage: fghack child
+100
+--- fghack complains if it cannot run program
+fghack: fatal: unable to run ./nonexistent: file does not exist
+111
+--- fghack runs a program
+hi
+0
