@@ -4,6 +4,7 @@ buffer.o
 buffer_0.o
 buffer_1.o
 buffer_2.o
+buffer_copy.o
 buffer_get.o
 buffer_put.o
 buffer_read.o
