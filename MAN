@@ -1,0 +1,14 @@
+d:::755:/man8::
+c:::644:/man8/:envdir.8:
+c:::644:/man8/:envuidgid.8:
+c:::644:/man8/:fghack.8:
+c:::644:/man8/:multilog.8:
+c:::644:/man8/:pgrphack.8:
+c:::644:/man8/:readproctitle.8:
+c:::644:/man8/:setlock.8:
+c:::644:/man8/:setuidgid.8:
+c:::644:/man8/:softlimit.8:
+c:::644:/man8/:svscan.8:
+c:::644:/man8/:svscanboot.8:
+c:::644:/man8/:tai64n.8
+c:::644:/man8/:tai64nlocal.8

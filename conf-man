@@ -1,0 +1,4 @@
+/usr/local/man
+
+Man pages will be installed in subdirectories of this directory. An
+unformatted man page foo.1 will go into .../man1/foo.1.

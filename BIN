@@ -1,0 +1,17 @@
+c:::755:/:envdir:
+c:::755:/:envuidgid:
+c:::755:/:fghack:
+c:::755:/:multilog:
+c:::755:/:pgrphack:
+c:::755:/:readproctitle:
+c:::755:/:setlock:
+c:::755:/:setuidgid:
+c:::755:/:softlimit:
+c:::755:/:supervise:
+c:::755:/:svc:
+c:::755:/:svok:
+c:::755:/:svscan:
+c:::755:/:svscanboot:
+c:::755:/:svstat:
+c:::755:/:tai64n:
+c:::755:/:tai64nlocal:
