@@ -53,9 +53,7 @@ extern int buffer_unixread(int,char *,unsigned int);
 extern int buffer_unixwrite(int,const char *,unsigned int);
 
 extern buffer *buffer_0;
-extern buffer *buffer_0small;
 extern buffer *buffer_1;
-extern buffer *buffer_1small;
 extern buffer *buffer_2;
 
 #endif
