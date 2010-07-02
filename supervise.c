@@ -128,7 +128,7 @@ void announce(struct svc *svc)
     strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
-void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
+static void notify(const struct svc *svc,const char *notice,int code,int oldpid)
 {
   char pidnum[FMT_ULONG];
   char codenum[FMT_ULONG];
@@ -137,6 +137,14 @@ void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
     svc == &svclog ? "log" : runscript+2,
     notice,pidnum,codenum,0
   };
+
+  pidnum[fmt_uint(pidnum,oldpid)] = 0;
+  codenum[fmt_uint(codenum,code)] = 0;
+  forkexecve(argv,-1);
+}
+
+void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
+{
   unsigned long u;
 
   taia_now(&svc->when);
@@ -148,11 +156,8 @@ void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
   svc->status[14] = u; u >>= 8;
   svc->status[15] = u;
 
-  if (notice != 0 && stat_isexec("notify") > 0) {
-    pidnum[fmt_uint(pidnum,oldpid)] = 0;
-    codenum[fmt_uint(codenum,code)] = 0;
-    forkexecve(argv,-1);
-  }
+  if (notice != 0 && stat_isexec("notify") > 0)
+    notify(svc,notice,code,oldpid);
   announce(svc);
 }
 
