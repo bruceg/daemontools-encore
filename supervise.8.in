@@ -40,8 +40,9 @@ If the file
 .IB s /notify
 exists and is executable,
 .B supervise
-executes it with four command-line arguments.  The first is the name of
-the script being executed, one of
+executes it when any script starts or stops.  It is given four
+command-line arguments: The first is the name of the script being
+executed, one of
 .BR start ,
 .BR run ,
 or
