@@ -9,6 +9,7 @@
 #include "fmt.h"
 #include "open.h"
 #include "lock.h"
+#include "seek.h"
 #include "wait.h"
 #include "closeonexec.h"
 #include "ndelay.h"
@@ -34,13 +35,12 @@ struct svc
 };
 
 const char *dir;
-stralloc fn_status = {0};
-stralloc fn_status_new = {0};
 int selfpipe[2];
 int fdlock;
 int fdcontrolwrite;
 int fdcontrol;
 int fdok;
+int fdstatus;
 
 int flagexit = 0;
 int firstrun = 1;
@@ -113,7 +113,6 @@ static void make_status(const struct svc *svc,char status[20])
 
 void announce(void)
 {
-  int fd;
   int r;
   int w;
   char status[40];
@@ -126,26 +125,15 @@ void announce(void)
     w = 40;
   }
 
-  fd = open_trunc(fn_status_new.s);
-  if (fd == -1) {
-    strerr_warn4(WARNING,"unable to open ",fn_status_new.s,": ",&strerr_sys);
+  if (seek_begin(fdstatus)) {
+    strerr_warn2(WARNING,"unable to seek in status: ",&strerr_sys);
     return;
   }
-
-  r = write(fd,status,w);
-  close(fd);
-  if (r == -1) {
-    strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": ",&strerr_sys);
-    close(fd);
-    return;
-  }
+  r = write(fdstatus,status,w);
   if (r < w) {
-    strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": partial write",0);
+    strerr_warn2(WARNING,"unable to write status: partial write",0);
     return;
   }
-
-  if (rename(fn_status_new.s,fn_status.s) == -1)
-    strerr_warn4(WARNING,"unable to rename ",fn_status_new.s," to status: ",&strerr_sys);
 }
 
 static void notify(const struct svc *svc,const char *notice,int code,int oldpid)
@@ -341,13 +329,6 @@ void doit(void)
   }
 }
 
-void make_svpaths(void)
-{
-  if (!svpath_copy(&fn_status,"/status")
-      || !svpath_copy(&fn_status_new,"/status.new"))
-    die_nomem();
-}
-
 int main(int argc,char **argv)
 {
   struct stat st;
@@ -371,7 +352,6 @@ int main(int argc,char **argv)
     strerr_die4sys(111,FATAL,"unable to chdir to ",dir,": ");
   if (!svpath_init())
     strerr_die4sys(111,FATAL,"unable to setup control path for ",dir,": ");
-  make_svpaths();
 
   if (stat_isexec("log") > 0) {
     if (pipe(logpipe) != 0)
@@ -389,6 +369,10 @@ int main(int argc,char **argv)
   if ((fntemp = svpath_make("")) == 0) die_nomem();
   if (mkdir(fntemp,0700) != 0 && errno != error_exist)
     strerr_die4sys(111,FATAL,"unable to create ",fntemp,": ");
+  if ((fntemp = svpath_make("/status")) == 0) die_nomem();
+  fdstatus = open_trunc(fntemp);
+  if (fdstatus == -1)
+    strerr_die4sys(111,FATAL,"unable to open ",fntemp," for writing: ");
   if ((fntemp = svpath_make("/lock")) == 0) die_nomem();
   fdlock = open_append(fntemp);
   if ((fdlock == -1) || (lock_exnb(fdlock) == -1))

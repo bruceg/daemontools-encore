@@ -31,3 +31,6 @@ name, "start" or "exit", the PID, and the exit code.
 
 Added support for piping to "log" within supervise.  This requires "log"
 to be an executable file (instead of a directory as for svscan).
+
+Modified supervise to overwrite status instead of creating a new file.
+This allows the "supervise" subdirectory to be non-writeable.
