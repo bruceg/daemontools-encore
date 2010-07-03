@@ -246,6 +246,8 @@ void doit(void)
 	svc->flagwantup = 0;
 	svc->flagstatus = svstatus_failed;
       }
+      else if (!svc->flagwant || !svc->flagwantup)
+	svc->flagstatus = svstatus_stopped;
       pidchange(svc, wait_crashed(wstat) ? "killed" : "exit",
 		wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat),
 		killpid);
