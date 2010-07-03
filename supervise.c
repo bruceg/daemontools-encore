@@ -59,6 +59,14 @@ static int stat_isexec(const char *path)
   return S_ISREG(st.st_mode) && (st.st_mode & 0100);
 }
 
+static int stat_exists(const char *path)
+{
+  struct stat st;
+  return stat(path,&st) == 0 ? 1 :
+    errno == error_noent ? 0 :
+    -1;
+}
+
 static void die_nomem(void)
 {
   strerr_die2sys(111,FATAL,"unable to allocate memory");
@@ -175,6 +183,12 @@ void trystart(struct svc *svc)
   else {
     if (firstrun && stat_isexec("start") == 0)
       firstrun = 0;
+    if (!firstrun && stat_exists("run") == 0) {
+      svc->flagwant = 0;
+      svc->flagstatus = svstatus_started;
+      announce(svc);
+      return;
+    }
     argv[0] = runscript = firstrun ? "./start" : "./run";
     svcmain.flagstatus = firstrun ? svstatus_starting : svstatus_running;
     fd = 1;
