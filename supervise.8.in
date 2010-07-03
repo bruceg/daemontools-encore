@@ -25,6 +25,13 @@ so that it does not loop
 too quickly if
 .B ./run
 exits immediately.
+After
+.B ./run
+exits for the last time (ie after
+.B svc -d
+has been issued), it runs
+.B ./stop
+once.
 All processes are run in a new process group.
 
 If the file
@@ -45,6 +52,7 @@ command-line arguments: The first is the name of the script being
 executed, one of
 .BR start ,
 .BR run ,
+.BR stop ,
 or
 .BR log .
 The second is a status code, one of:

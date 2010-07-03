@@ -32,6 +32,7 @@ struct svc
   int flagwantup;
   int flagpaused;
   struct taia when;
+  int ranstop;
 };
 
 const char *dir;
@@ -186,6 +187,29 @@ void trystart(struct svc *svc)
   deepsleep(1);
 }
 
+void trystop(struct svc *svc)
+{
+  const char *argv[] = { "./stop",0 };
+  int f;
+
+  if (svc->ranstop
+      || svc != &svcmain
+      || stat_isexec("stop") != 1) {
+    svc->ranstop = 1;
+    svc->flagstatus = svstatus_stopped;
+    announce();
+    return;
+  }
+  runscript = argv[0];
+  if ((f = forkexecve(argv,1)) < 0)
+    return;
+  svc->pid = f;
+  svc->flagpaused = 0;
+  svc->ranstop = 1;
+  pidchange(svc,"start",0,f);
+  deepsleep(1);
+}
+
 void doit(void)
 {
   iopause_fd x[2];
@@ -240,8 +264,12 @@ void doit(void)
 		wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat),
 		killpid);
       firstrun = 0;
-      if (flagexit) return;
-      if (svc->flagwant && svc->flagwantup) trystart(svc);
+      if (svc->flagwant && svc->flagwantup) {
+	if (!flagexit)
+	  trystart(svc);
+      }
+      else
+	trystop(svc);
       break;
     }
 
@@ -264,6 +292,7 @@ void doit(void)
 	    kill(killpid,SIGCONT);
 	    svc->flagpaused = 0;
 	    svc->flagstatus = svstatus_stopping;
+	    svc->ranstop = 0;
 	  }
 	  else
 	    svc->flagstatus = svstatus_stopped;
