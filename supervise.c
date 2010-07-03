@@ -31,7 +31,6 @@ struct svc
   int flagwantup;
   int flagpaused;
   struct taia when;
-  char status[20];
 };
 
 const char *dir;
@@ -94,15 +93,38 @@ static int forkexecve(const char *argv[],int fd)
   return f;
 }
 
-void announce(struct svc *svc)
+static void make_status(const struct svc *svc,char status[20])
+{
+  unsigned long u;
+
+  taia_pack(status,&svc->when);
+
+  u = (unsigned long) svc->pid;
+  status[12] = u; u >>= 8;
+  status[13] = u; u >>= 8;
+  status[14] = u; u >>= 8;
+  status[15] = u;
+
+  status[16] = (svc->pid ? svc->flagpaused : 0);
+  status[17] = (svc->flagwant ? (svc->flagwantup ? 'u' : 'd') : 0);
+  status[18] = svc->flagstatus;
+  status[19] = 0;
+}
+
+void announce(void)
 {
   int fd;
   int r;
+  int w;
+  char status[40];
 
-  svc->status[16] = (svc->pid ? svc->flagpaused : 0);
-  svc->status[17] = (svc->flagwant ? (svc->flagwantup ? 'u' : 'd') : 0);
-  svc->status[18] = svc->flagstatus;
-  svc->status[19] = '\n';
+  make_status(&svcmain,status);
+  if (logpipe[0] < 0)
+    w = 20;
+  else {
+    make_status(&svclog,status + 20);
+    w = 40;
+  }
 
   fd = open_trunc(fn_status_new.s);
   if (fd == -1) {
@@ -110,16 +132,14 @@ void announce(struct svc *svc)
     return;
   }
 
-  r = write(fd,svcmain.status,sizeof svcmain.status);
-  if (logpipe[0] >= 0 && r != -1)
-    r += write(fd,svclog.status,sizeof svclog.status);
+  r = write(fd,status,w);
   close(fd);
   if (r == -1) {
     strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": ",&strerr_sys);
     close(fd);
     return;
   }
-  if (r < sizeof svcmain.status + (logpipe[0] >= 0 ? sizeof svclog.status : 0)) {
+  if (r < w) {
     strerr_warn4(WARNING,"unable to write ",fn_status_new.s,": partial write",0);
     return;
   }
@@ -145,20 +165,11 @@ static void notify(const struct svc *svc,const char *notice,int code,int oldpid)
 
 void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
 {
-  unsigned long u;
-
   taia_now(&svc->when);
-  taia_pack(svc->status,&svc->when);
-
-  u = (unsigned long) svc->pid;
-  svc->status[12] = u; u >>= 8;
-  svc->status[13] = u; u >>= 8;
-  svc->status[14] = u; u >>= 8;
-  svc->status[15] = u;
 
   if (notice != 0 && stat_isexec("notify") > 0)
     notify(svc,notice,code,oldpid);
-  announce(svc);
+  announce();
 }
 
 void trystart(struct svc *svc)
@@ -198,7 +209,7 @@ void doit(void)
   int killpid;
   struct svc *svc;
 
-  announce(&svcmain);
+  announce();
 
   for (;;) {
     if (flagexit && !svcmain.pid && !svclog.pid) return;
@@ -266,7 +277,7 @@ void doit(void)
 	  }
 	  else
 	    svc->flagstatus = svstatus_stopped;
-	  announce(svc);
+	  announce();
 	  break;
 	case 'u':
 	  if (svc == &svcmain)
@@ -275,12 +286,12 @@ void doit(void)
 	  svc->flagwantup = 1;
 	  if (!svc->pid)
 	    svc->flagstatus = svstatus_starting;
-	  announce(svc);
+	  announce();
 	  if (!svc->pid) trystart(svc);
 	  break;
 	case 'o':
 	  svc->flagwant = 0;
-	  announce(svc);
+	  announce();
 	  if (!svc->pid) trystart(svc);
 	  break;
 	case 'a':
@@ -312,18 +323,17 @@ void doit(void)
 	  break;
 	case 'p':
 	  svc->flagpaused = 1;
-	  announce(svc);
+	  announce();
 	  if (killpid) kill(killpid,SIGSTOP);
 	  break;
 	case 'c':
 	  svc->flagpaused = 0;
-	  announce(svc);
+	  announce();
 	  if (killpid) kill(killpid,SIGCONT);
 	  break;
 	case 'x':
 	  flagexit = 1;
-	  announce(&svcmain);
-	  announce(&svclog);
+	  announce();
 	  break;
       }
   }
@@ -408,6 +418,6 @@ int main(int argc,char **argv)
   if (!svcmain.flagwant || svcmain.flagwantup) trystart(&svcmain);
 
   doit();
-  announce(&svcmain);
+  announce();
   _exit(0);
 }
