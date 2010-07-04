@@ -1,0 +1,26 @@
+daemontools-b is a collection of tools for managing UNIX services.  It
+is derived from the public-domain release of daemontools by
+D. J. Bernstein, which can be found at http://cr.yp.to/daemontools.html
+
+daemontools-b adds numerous enhancements above what daemontools could do
+while maintaining backwards compatibility with daemontools.  See the
+CHANGES file for more details on what features have been added.
+
+============
+Installation
+============
+
+Adjust the values in the conf-* files if necessary.
+
+Build the programs by running 'make'.
+
+Edit the conf-bin and conf-man files and put the destination directory
+for programs and man pages in the first line of each respectively.
+
+As root, run 'make install'.
+
+
+
+Copyright (c) 2010 Bruce Guenter
+
+See the LICENSE file for details.
