@@ -11,7 +11,8 @@ switches to the directory named
 and starts the service there by executing first
 .B ./start
 (if it is executable), and then
-.BR ./run .
+.BR ./run ,
+if it exists.
 It restarts
 .B ./run
 if

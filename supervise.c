@@ -186,7 +186,7 @@ void trystart(struct svc *svc)
     if (!firstrun && stat_exists("run") == 0) {
       svc->flagwant = 0;
       svc->flagstatus = svstatus_started;
-      announce(svc);
+      announce();
       return;
     }
     argv[0] = runscript = firstrun ? "./start" : "./run";
@@ -309,7 +309,7 @@ void doit(void)
 	    svc->ranstop = 0;
 	  }
 	  else
-	    svc->flagstatus = svstatus_stopped;
+	    trystop(svc);
 	  announce();
 	  break;
 	case 'u':
