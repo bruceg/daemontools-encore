@@ -17,9 +17,9 @@ It restarts
 .B ./run
 if
 .B ./start
-or
+exits zero or
 .B ./run
-exit with any value other than 100.
+exits with any value other than 100.
 It pauses for a second after starting
 .BR ./run ,
 so that it does not loop

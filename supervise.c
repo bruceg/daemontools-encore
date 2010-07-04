@@ -268,7 +268,8 @@ void doit(void)
 	continue;
       killpid = svc->pid;
       svc->pid = 0;
-      if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
+      if ((firstrun && (wait_crashed(wstat) || wait_exitcode(wstat) != 0))
+	   || (!wait_crashed(wstat) && wait_exitcode(wstat) == 100)) {
 	svc->flagwantup = 0;
 	svc->flagstatus = svstatus_failed;
       }
@@ -282,7 +283,7 @@ void doit(void)
 	if (!flagexit)
 	  trystart(svc);
       }
-      else
+      else if (svc->flagstatus != svstatus_failed)
 	trystop(svc);
       break;
     }
