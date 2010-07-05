@@ -14,5 +14,6 @@ svok.8 \
 svscan.8 \
 svscanboot.8 \
 svstat.8 \
+svup.8 \
 tai64n.8 \
 tai64nlocal.8

@@ -17,6 +17,7 @@ until svok test.sv
 do
   sleep 1
 done
+svup test.sv; echo $?
 svstat test.sv | sed 's/[0-9]* seconds/x seconds/'; echo $?
 svc -x test.sv; echo $?
 wait

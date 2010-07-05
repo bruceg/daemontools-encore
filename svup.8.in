@@ -1,0 +1,37 @@
+.TH svup 8
+.SH NAME
+svup \- checks whether
+.BR supervise(8)
+has started a service.
+.SH SYNOPSIS
+.B svup
+.I service
+.SH DESCRIPTION
+.B svup
+checks whether
+.BR supervise (8)
+has successfully started the service in the directory named
+.IR service .
+.SH EXIT CODES
+It silently exits 0 if
+.BR supervise (8)
+the service has been started. It silently exits 100 if the service has
+not been started.  It exits 111 with a message if an error is
+encountered.
+.SH ENVIRONMENT
+.TP
+.B SUPERVISEDIR
+If set, the named directory is used instead of
+.B @SUPERVISEDIR@
+for the status information and control files.  If
+.B $SUPERVISEDIR
+is an absolute path, it is suffixed with the path to
+.I s
+with all slashes ("/") replaced with colons (":").
+.SH SEE ALSO
+supervise(8),
+svc(8),
+svstat(8),
+svok(8)
+
+http://cr.yp.to/daemontools.html

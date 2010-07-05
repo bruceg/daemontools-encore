@@ -1,4 +1,5 @@
 --- supervise starts, svok works, svstat works, svc -x works
+100
 test.sv: down x seconds, starting
 0
 0

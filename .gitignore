@@ -44,6 +44,8 @@ svscan
 svscanboot
 svstat
 svstat.8
+svup
+svup.8
 sysdeps
 systype
 tai64n
