@@ -10,14 +10,16 @@ has started a service.
 .B svup
 checks whether
 .BR supervise (8)
-has successfully started the service in the directory named
-.IR service .
+is successfully running in the directory named
+.IR service ,
+and if it has started the service.
 .SH EXIT CODES
 It silently exits 0 if
 .BR supervise (8)
-the service has been started. It silently exits 100 if the service has
-not been started.  It exits 111 with a message if an error is
-encountered.
+is running and the service has been started. It silently exits 100 if
+.BR supervise (8)
+is not running or the service has not been started.  It exits 111 with a
+message if an error is encountered.
 .SH ENVIRONMENT
 .TP
 .B SUPERVISEDIR

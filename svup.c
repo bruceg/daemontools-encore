@@ -18,7 +18,7 @@ static int checkstatus(const char status[19], int r)
 int main(int argc,char **argv)
 {
   int fd;
-  const char *fnstatus;
+  const char *fn;
   char status[40];
   int rd;
 
@@ -30,17 +30,28 @@ int main(int argc,char **argv)
 
   if (!svpath_init())
     strerr_die4sys(111,FATAL,"unable to setup control path for ",argv[1],": ");
-  if ((fnstatus = svpath_make("/status")) == 0)
+
+  if ((fn = svpath_make("/ok")) == 0)
     strerr_die2sys(111,FATAL,"unable to allocate memory");
-  fd = open_read(fnstatus);
+  fd = open_write(fn);
   if (fd == -1) {
     if (errno == error_noent) _exit(100);
-    strerr_die4sys(111,FATAL,"unable to open ",fnstatus,": ");
+    if (errno == error_nodevice) _exit(100);
+    strerr_die4sys(111,FATAL,"unable to open ",fn,": ");
+  }
+  close(fd);
+
+  if ((fn = svpath_make("/status")) == 0)
+    strerr_die2sys(111,FATAL,"unable to allocate memory");
+  fd = open_read(fn);
+  if (fd == -1) {
+    if (errno == error_noent) _exit(100);
+    strerr_die4sys(111,FATAL,"unable to open ",fn,": ");
   }
   if ((rd = read(fd,status,sizeof status)) == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",fnstatus,": ");
+    strerr_die4sys(111,FATAL,"unable to read ",fn,": ");
   if (rd < 18)
-    strerr_die4(111,FATAL,"bad data in ",fnstatus,": truncated file",0);
+    strerr_die4(111,FATAL,"bad data in ",fn,": truncated file",0);
 
   if (!checkstatus(status,rd))
     _exit(100);
