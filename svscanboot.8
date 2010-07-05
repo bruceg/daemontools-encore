@@ -4,8 +4,6 @@ svscanboot \- starts
 .BR svscan (8)
 in the /service directory, with output and error messages logged through
 .BR readproctitle (8).
-
-svscanboot is available in daemontools 0.75 and above.
 .SH SYNOPSIS
 .B svscanboot
 .SH DESCRIPTION
@@ -29,9 +27,7 @@ sets $PATH to
 
 (all in one line, no space)
 
-and clears all other environment variables. Program writers are encouraged to
-use globally allocated names in
-.BR /command .
+and clears all other environment variables.
 .SH SEE ALSO
 supervise(8),
 svc(8),
