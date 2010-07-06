@@ -69,6 +69,7 @@ target() {
     (
 	ext=${target##*.}
 	base=${target%%.*}
+	set -- $target $base $tmp
 	if [ -f $target.do ]; then
 	    . ./$target.do
 	elif [ -f default.$ext.do ]; then
