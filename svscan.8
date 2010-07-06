@@ -36,6 +36,15 @@ is sticky.)
 .B svscan
 needs two free descriptors for each pipe.
 
+If a subdirectory named
+.B .log
+exists and has a
+.B log
+subdirectory,
+.B svscan
+starts the log service found there and redirects its output to that service.
+This service is started before any other.
+
 Every five seconds,
 .B svscan
 checks for subdirectories again. If it sees a new subdirectory, it starts a

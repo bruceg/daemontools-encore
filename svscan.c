@@ -4,6 +4,7 @@
 #include "direntry.h"
 #include "strerr.h"
 #include "error.h"
+#include "open.h"
 #include "wait.h"
 #include "closeonexec.h"
 #include "fd.h"
@@ -11,9 +12,11 @@
 #include "str.h"
 #include "byte.h"
 #include "pathexec.h"
+#include "conf_svscan_log.c"
 
 #define SERVICES 1000
 
+#define INFO "svscan: info: "
 #define WARNING "svscan: warning: "
 #define FATAL "svscan: fatal: "
 
@@ -30,7 +33,7 @@ int numx = 0;
 
 char fnlog[260];
 
-void start(char *fn)
+void start(const char *fn)
 {
   unsigned int fnlen;
   struct stat st;
@@ -38,7 +41,7 @@ void start(char *fn)
   int i;
   const char *args[3];
 
-  if (fn[0] == '.') return;
+  if (fn[0] == '.' && str_diff(fn,conf_svscan_log)) return;
 
   if (stat(fn,&st) == -1) {
     strerr_warn4(WARNING,"unable to stat ",fn,": ",&strerr_sys);
@@ -59,7 +62,8 @@ void start(char *fn)
     }
     x[i].ino = st.st_ino;
     x[i].dev = st.st_dev;
-    x[i].pid = 0;
+    /*(fn[0]=='.' here only if conf_svscan_log; if so only supervise log/ subdir)*/
+    x[i].pid = (fn[0] != '.') ? 0 : -1;
     x[i].pidlog = 0;
     x[i].flaglog = 0;
 
@@ -190,11 +194,36 @@ void doit(void)
   }
 }
 
+static void start_log(void)
+{
+  struct stat st;
+
+  /* Make sure the standard file descriptors are open before creating any pipes. */
+  if (fstat(0,&st) != 0 && errno == EBADF)
+    (void) open_read("/dev/null");
+  if (fstat(1,&st) != 0 && errno == EBADF)
+    (void) open_write("/dev/null");
+  if (fstat(2,&st) != 0 && errno == EBADF)
+    (void) open_write("/dev/null");
+
+  if (stat(conf_svscan_log,&st) == 0) {
+    start(conf_svscan_log);
+    if (numx == 1 && x[0].pidlog != 0) {
+      (void) fd_copy(1,x[0].pi[1]);
+      (void) fd_move(2,x[0].pi[1]);
+      strerr_warn1("",0);
+      strerr_warn2(INFO,"*** Starting svscan",0);
+    }
+  }
+}
+
 int main(int argc,char **argv)
 {
   if (argv[0] && argv[1])
     if (chdir(argv[1]) == -1)
       strerr_die4sys(111,FATAL,"unable to chdir to ",argv[1],": ");
+
+  start_log();
 
   for (;;) {
     doit();

@@ -40,3 +40,6 @@ Modified supervise to overwrite status instead of creating a new file.
 This allows the "supervise" subdirectory to be non-writeable.
 
 Added a "svup" tool to determine if a service is running.
+
+Modified svscan to redirect all output through a service in ".log/log".
+(adapted from http://www.gluelogic.com/code/daemontools/daemontools-0.76-gps-logging-0.01.patch)

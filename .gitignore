@@ -7,6 +7,7 @@ chkshsgr
 choose
 compile
 conf_supervise.c
+conf_svscan_log.c
 direntry.h
 dosubst
 envdir
