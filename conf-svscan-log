@@ -1,4 +1,0 @@
-.log
-
-This is the subdirectory that svscan will look in to find the service
-into which it will redirect all output.

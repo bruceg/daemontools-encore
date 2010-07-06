@@ -5,6 +5,8 @@ svscan \- starts and monitors a collection of services
 .B svscan
 [
 .I directory
+] [
+.I log-service
 ]
 .SH DESCRIPTION
 .B svscan
@@ -36,9 +38,9 @@ is sticky.)
 .B svscan
 needs two free descriptors for each pipe.
 
-If a subdirectory named
-.B .log
-exists,
+If
+.I log-service
+is specified and the named subdirectory exists,
 .B svscan
 starts the service found there and redirects its output through it.
 This service is started before any other.

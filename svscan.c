@@ -12,7 +12,6 @@
 #include "str.h"
 #include "byte.h"
 #include "pathexec.h"
-#include "conf_svscan_log.c"
 
 #define SERVICES 1000
 
@@ -32,6 +31,7 @@ struct {
 int numx = 0;
 int logx = -1;
 int logpipe[2];
+const char *logdir = 0;
 
 char fnlog[260];
 
@@ -44,7 +44,7 @@ void start(const char *fn)
   const char *args[3];
   int islog;
 
-  islog = !str_diff(fn,conf_svscan_log);
+  islog = logdir && !str_diff(fn,logdir);
   if (fn[0] == '.' && !islog) return;
 
   if (stat(fn,&st) == -1) {
@@ -212,13 +212,13 @@ static void start_log(void)
   if (fstat(2,&st) != 0 && errno == EBADF)
     (void) open_write("/dev/null");
 
-  if (stat(conf_svscan_log,&st) == 0 && S_ISDIR(st.st_mode)) {
+  if (logdir && stat(logdir,&st) == 0 && S_ISDIR(st.st_mode)) {
     logx = numx;
     if (pipe(logpipe) == -1)
-      strerr_die4sys(111,FATAL,"unable to create pipe for ",conf_svscan_log,": ");
+      strerr_die4sys(111,FATAL,"unable to create pipe for ",logdir,": ");
     closeonexec(logpipe[0]);
     closeonexec(logpipe[1]);
-    start(conf_svscan_log);
+    start(logdir);
     if (numx > logx && x[logx].pid != 0) {
       (void) fd_copy(1,logpipe[1]);
       (void) fd_move(2,logpipe[1]);
@@ -229,9 +229,11 @@ static void start_log(void)
 
 int main(int argc,char **argv)
 {
-  if (argv[0] && argv[1])
+  if (argc >= 2)
     if (chdir(argv[1]) == -1)
       strerr_die4sys(111,FATAL,"unable to chdir to ",argv[1],": ");
+  if (argc >= 3)
+    logdir = argv[2];
 
   start_log();
 

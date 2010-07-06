@@ -41,7 +41,7 @@ This allows the "supervise" subdirectory to be non-writeable.
 
 Added a "svup" tool to determine if a service is running.
 
-Modified svscan to optionally redirect all output through a service in ".log".
+Modified svscan to optionally redirect all output through a service.
 (adapted from http://www.gluelogic.com/code/daemontools/daemontools-0.76-gps-logging-0.01.patch)
 Note that this feature works differently from the GlueLogic
 modification.  See the svscan(8) man page for details.
