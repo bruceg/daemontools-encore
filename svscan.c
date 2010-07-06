@@ -30,6 +30,8 @@ struct {
   int pi[2]; /* defined if flaglog */
 } x[SERVICES];
 int numx = 0;
+int logx = -1;
+int logpipe[2];
 
 char fnlog[260];
 
@@ -40,8 +42,10 @@ void start(const char *fn)
   int child;
   int i;
   const char *args[3];
+  int islog;
 
-  if (fn[0] == '.' && str_diff(fn,conf_svscan_log)) return;
+  islog = !str_diff(fn,conf_svscan_log);
+  if (fn[0] == '.' && !islog) return;
 
   if (stat(fn,&st) == -1) {
     strerr_warn4(WARNING,"unable to stat ",fn,": ",&strerr_sys);
@@ -62,8 +66,7 @@ void start(const char *fn)
     }
     x[i].ino = st.st_ino;
     x[i].dev = st.st_dev;
-    /*(fn[0]=='.' here only if conf_svscan_log; if so only supervise log/ subdir)*/
-    x[i].pid = (fn[0] != '.') ? 0 : -1;
+    x[i].pid = 0;
     x[i].pidlog = 0;
     x[i].flaglog = 0;
 
@@ -102,6 +105,9 @@ void start(const char *fn)
         if (x[i].flaglog)
 	  if (fd_move(1,x[i].pi[1]) == -1)
             strerr_die4sys(111,WARNING,"unable to set up descriptors for ",fn,": ");
+	if (i == logx)
+	  if (fd_move(0,logpipe[0]) == -1)
+	    strerr_die4sys(111,WARNING,"unable to set up descriptors for ",fn,": ");
         args[0] = "supervise";
         args[1] = fn;
         args[2] = 0;
@@ -206,13 +212,17 @@ static void start_log(void)
   if (fstat(2,&st) != 0 && errno == EBADF)
     (void) open_write("/dev/null");
 
-  if (stat(conf_svscan_log,&st) == 0) {
+  if (stat(conf_svscan_log,&st) == 0 && S_ISDIR(st.st_mode)) {
+    logx = numx;
+    if (pipe(logpipe) == -1)
+      strerr_die4sys(111,FATAL,"unable to create pipe for ",conf_svscan_log,": ");
+    closeonexec(logpipe[0]);
+    closeonexec(logpipe[1]);
     start(conf_svscan_log);
-    if (numx == 1 && x[0].pidlog != 0) {
-      (void) fd_copy(1,x[0].pi[1]);
-      (void) fd_move(2,x[0].pi[1]);
-      strerr_warn1("",0);
-      strerr_warn2(INFO,"*** Starting svscan",0);
+    if (numx > logx && x[logx].pid != 0) {
+      (void) fd_copy(1,logpipe[1]);
+      (void) fd_move(2,logpipe[1]);
+      strerr_warn2(INFO,"starting",0);
     }
   }
 }
