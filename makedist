@@ -5,6 +5,7 @@ version=$( cut -d' ' -f2 <VERSION | head -n 1 )
 destdir=${package}-${version}
 ./makemake
 mkdir $destdir
+git log --stat -M -C -C > $destdir/ChangeLog
 cp -r $(cat SOURCES) $(cat EXTRADIST) EXTRADIST VERSION $destdir/
 tar -czf $destdir.tar.gz $destdir
 make -C $destdir -s
