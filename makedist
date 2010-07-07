@@ -1,0 +1,12 @@
+#!/bin/sh
+set -ex
+package=$( cut -d' ' -f1 <VERSION | head -n 1 )
+version=$( cut -d' ' -f2 <VERSION | head -n 1 )
+destdir=${package}-${version}
+./makemake
+mkdir $destdir
+cp -r $(cat SOURCES) $(cat EXTRADIST) EXTRADIST VERSION $destdir/
+tar -czf $destdir.tar.gz $destdir
+make -C $destdir -s
+chmod -R +w $destdir
+rm -r $destdir
