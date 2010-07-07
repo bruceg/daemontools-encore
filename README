@@ -1,18 +1,18 @@
-daemontools-b is a collection of tools for managing UNIX services.  It
-is derived from the public-domain release of daemontools by
-D. J. Bernstein, which can be found at http://cr.yp.to/daemontools.html
+daemontools-encore is a collection of tools for managing UNIX services.
+It is derived from the public-domain release of daemontools by D. J.
+Bernstein, which can be found at http://cr.yp.to/daemontools.html
 
-daemontools-b adds numerous enhancements above what daemontools could do
-while maintaining backwards compatibility with daemontools.  See the
-CHANGES file for more details on what features have been added.
+daemontools-encore adds numerous enhancements above what daemontools
+could do while maintaining backwards compatibility with daemontools.
+See the CHANGES file for more details on what features have been added.
 
 Official release can be found at:
 
-	http://untroubled.org/daemontools-b/
+	http://untroubled.org/daemontools-encore/
 
 Development versions are available via git from:
 
-	http://untroubled.org/git/daemontools-b.git
+	http://untroubled.org/git/daemontools-encore.git
 
 ============
 Installation

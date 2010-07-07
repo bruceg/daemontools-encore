@@ -1,5 +1,5 @@
-Changes between daemontools-0.76 and daemontools-b
-==================================================
+Changes between daemontools-0.76 and daemontools-encore
+=======================================================
 
 Added support to supervise/svc for sending SIGQUIT/USR1/USR2/WINCH.
 (original patch by Wayne Marshall, based on patch by Scott Gifford)
