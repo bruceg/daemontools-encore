@@ -1,7 +1,7 @@
 .TH svup 8
 .SH NAME
 svup \- checks whether
-.BR supervise(8)
+.BR supervise (8)
 has started a service.
 .SH SYNOPSIS
 .B svup

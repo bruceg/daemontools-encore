@@ -1,7 +1,7 @@
 .TH svok 8
 .SH NAME
 svok \- checks whether
-.BR supervise(8)
+.BR supervise (8)
 is running.
 .SH SYNOPSIS
 .B svok

@@ -1,7 +1,7 @@
 .TH svc 8
 .SH NAME
 svc \- controls services monitored by
-.BR supervise(8).
+.BR supervise (8).
 .SH SYNOPSIS
 .B svc
 [
