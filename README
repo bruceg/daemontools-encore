@@ -6,6 +6,11 @@ daemontools-encore adds numerous enhancements above what daemontools
 could do while maintaining backwards compatibility with daemontools.
 See the CHANGES file for more details on what features have been added.
 
+I realize there are other supervisory systems that will handle some or
+all of the tasks that this package does better.  I am providing this
+package as a service to those who prefer the semantics and handling that
+daemontools provides.
+
 Official release can be found at:
 
 	http://untroubled.org/daemontools-encore/
