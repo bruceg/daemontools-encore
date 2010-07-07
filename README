@@ -6,6 +6,14 @@ daemontools-b adds numerous enhancements above what daemontools could do
 while maintaining backwards compatibility with daemontools.  See the
 CHANGES file for more details on what features have been added.
 
+Official release can be found at:
+
+	http://untroubled.org/daemontools-b/
+
+Development versions are available via git from:
+
+	http://untroubled.org/git/daemontools-b.git
+
 ============
 Installation
 ============
