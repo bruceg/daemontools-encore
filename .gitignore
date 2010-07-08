@@ -12,6 +12,7 @@ dosubst
 envdir
 envuidgid
 fghack
+hasattribute.h
 hasflock.h
 hasmkffo.h
 hassgact.h
