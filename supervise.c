@@ -96,7 +96,7 @@ static int forkexecve(const char *argv[],int fd)
 	close(logpipe[0]);
 	close(logpipe[1]);
       }
-      execve(argv[0],argv,environ);
+      execve(argv[0],(char*const*)argv,environ);
       strerr_die5sys(111,FATAL,"unable to start ",dir,argv[0]+1,": ");
   }
   return f;

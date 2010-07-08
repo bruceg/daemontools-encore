@@ -22,6 +22,8 @@
 #include "match.h"
 #include "deepsleep.h"
 
+extern int rename(const char *,const char *);
+
 #define FATAL "multilog: fatal: "
 #define WARNING "multilog: warning: "
 
@@ -201,7 +203,7 @@ void startprocessor(struct cyclog *d)
   args[1] = "-c";
   args[2] = d->processor;
   args[3] = 0;
-  execve("/bin/sh",args,environ);
+  execve("/bin/sh",(char*const*)args,environ);
 }
 
 void fullcurrent(struct cyclog *d)
