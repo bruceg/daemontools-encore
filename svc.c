@@ -42,7 +42,7 @@ int main(int argc,const char *const *argv)
   if (fdorigdir == -1)
     strerr_die2sys(111,FATAL,"unable to open current directory: ");
 
-  while (dir = *argv++) {
+  while ((dir = *argv++) != 0) {
     if (chdir(dir) == -1)
       strerr_warn4(WARNING,"unable to chdir to ",dir,": ",&strerr_sys);
     else if (!svpath_init()

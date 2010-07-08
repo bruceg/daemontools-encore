@@ -539,7 +539,7 @@ void doit(char **script)
 
     flagselected = 1;
     j = 0;
-    for (i = 0;action = script[i];++i)
+    for (i = 0;(action = script[i]) != 0;++i)
       switch(*action) {
         case '+':
           if (!flagselected)

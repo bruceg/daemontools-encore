@@ -178,7 +178,7 @@ int main(int argc,char **argv)
   if (fdorigdir == -1)
     strerr_die2sys(111,FATAL,"unable to open current directory: ");
 
-  while (dir = *argv++) {
+  while ((dir = *argv++) != 0) {
     doit(dir);
     buffer_puts(&b,"\n");
     if (fchdir(fdorigdir) == -1)

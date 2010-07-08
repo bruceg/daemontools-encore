@@ -44,7 +44,7 @@ static void doenv(int resource,const char *name)
     doit(resource,arg);
 }
 
-static int doallenv(void)
+static void doallenv(void)
 {
 #ifdef RLIMIT_AS
   doenv(RLIMIT_AS,"SOFTLIMIT_ALLBYTES");
