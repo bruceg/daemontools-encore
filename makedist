@@ -6,7 +6,7 @@ destdir=${package}-${version}
 ./makemake
 mkdir $destdir
 git log --stat -M -C -C > $destdir/ChangeLog
-cp -r $(cat SOURCES) $(cat EXTRADIST) EXTRADIST VERSION $destdir/
+cp --parents $(cat SOURCES) $(cat EXTRADIST) EXTRADIST VERSION $destdir/
 tar -czf $destdir.tar.gz $destdir
 make -C $destdir -s
 chmod -R +w $destdir
