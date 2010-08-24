@@ -1,2 +1,6 @@
 --- supervise runs stop on down
 in stop
+
+--- supervise stops log after main
+Caught TERM
+

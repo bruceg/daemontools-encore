@@ -6,3 +6,12 @@ chmod +x test.sv/run test.sv/stop
 supervise test.sv &
 wait
 rm -f test.sv/stop
+echo
+
+echo '--- supervise stops log after main'
+( echo '#!/bin/sh'; echo 'exec ../../sleeper' ) >test.sv/log
+chmod +x test.sv/log
+supervise test.sv
+wait
+rm -f test.sv/log
+echo

@@ -42,6 +42,9 @@ is an executable file,
 starts it before any of the above, and will restart it if it exits.
 Standard output from the main script
 will be redirected through a pipe to standard input of the log process.
+As a special case, if
+.B svc -dx
+is issued, the log will be stopped after the main service has stopped.
 
 If the file
 .IB s /down

@@ -1,6 +1,10 @@
 Changes in daemontools-encore-1.02
 ==================================
 
+If a supervise is managing both a main and log service, issuing
+"svc -dx" on the service will cause the log to stop after the main
+service exits.
+
 Changes between daemontools-0.76 and daemontools-encore
 =======================================================
 

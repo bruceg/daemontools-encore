@@ -224,6 +224,15 @@ void trystop(struct svc *svc)
   deepsleep(1);
 }
 
+static void stopsvc(int killpid,struct svc *svc)
+{
+  kill(killpid,SIGTERM);
+  kill(killpid,SIGCONT);
+  svc->flagpaused = 0;
+  svc->flagstatus = svstatus_stopping;
+  svc->ranstop = 0;
+}
+
 void doit(void)
 {
   iopause_fd x[2];
@@ -302,13 +311,8 @@ void doit(void)
 	case 'd':
 	  svc->flagwant = 1;
 	  svc->flagwantup = 0;
-	  if (killpid) {
-	    kill(killpid,SIGTERM);
-	    kill(killpid,SIGCONT);
-	    svc->flagpaused = 0;
-	    svc->flagstatus = svstatus_stopping;
-	    svc->ranstop = 0;
-	  }
+	  if (killpid)
+	    stopsvc(killpid,svc);
 	  else
 	    trystop(svc);
 	  announce();
@@ -370,6 +374,11 @@ void doit(void)
 	  announce();
 	  break;
       }
+
+    if (flagexit
+	&& svcmain.flagstatus == svstatus_stopped
+	&& (svclog.flagstatus == svstatus_running || svclog.flagstatus == svstatus_started))
+      stopsvc(svclog.pid,&svclog);
   }
 }
 
