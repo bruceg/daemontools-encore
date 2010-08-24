@@ -35,6 +35,14 @@ has been issued), it runs
 once.
 All processes are run in a new process group.
 
+If
+.B ./log
+is an executable file,
+.B supervise
+starts it before any of the above, and will restart it if it exits.
+Standard output from the main script
+will be redirected through a pipe to standard input of the log process.
+
 If the file
 .IB s /down
 exists,
@@ -94,7 +102,9 @@ asked to exit. You can use
 .BR svok (8)
 to check whether
 .B supervise
-is successfully running. You can use
+is successfully running and
+.BR svup (8)
+to check if the supervised process is running. You can use
 .BR svscan (8)
 to reliably start a collection of
 .B supervise
@@ -112,6 +122,7 @@ with all slashes ("/") replaced with colons (":").
 .SH SEE ALSO
 svc(8),
 svok(8),
+svup(8),
 svstat(8),
 svscanboot(8),
 svscan(8),
