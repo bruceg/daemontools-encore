@@ -34,6 +34,7 @@ rts-tmp
 select.h
 setlock
 setuidgid
+sleeper
 softlimit
 supervise
 supervise.8
@@ -49,6 +50,7 @@ svup
 svup.8
 sysdeps
 systype
+tags
 tai64n
 tai64nlocal
 uint64.h
