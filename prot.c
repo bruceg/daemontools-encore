@@ -17,6 +17,11 @@ int prot_gid(gid_t gid)
   return setgid(gid); /* _should_ be redundant, but on some systems it isn't */
 }
 
+int prot_gids(const char *account, gid_t gid)
+{
+  return initgroups(account, gid);
+}
+
 int prot_uid(uid_t uid)
 {
   return setuid(uid);

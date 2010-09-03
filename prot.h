@@ -4,6 +4,7 @@
 #define PROT_H
 
 extern int prot_gid(gid_t);
+extern int prot_gids(const char *, gid_t);
 extern int prot_uid(uid_t);
 
 #endif

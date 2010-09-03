@@ -3,6 +3,9 @@
 setuidgid \- runs another program under a specified account's uid and gid.
 .SH SYNOPSIS
 .B setuidgid
+[
+.B \-s
+]
 .I account
 .I child
 .SH DESCRIPTION
@@ -27,6 +30,10 @@ if it cannot setgid, if it cannot setuid, or if it cannot run
 .IR child .
 Otherwise its exit code is the same as that of
 .IR child .
+.SH OPTIONS
+.TP
+.B \-s
+Set account's supplementary gids.
 .SH SEE ALSO
 supervise(8),
 svc(8),
