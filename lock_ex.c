@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/file.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "hasflock.h"
 #include "lock.h"
 
