@@ -1,6 +1,9 @@
 Changes in daemontools-encore-1.03
 ==================================
 
+Added -s option to setuidgid to set the supplemental GIDs.
+(Thanks to SATOH Fumiyasu)
+
 Changes in daemontools-encore-1.02
 ==================================
 
