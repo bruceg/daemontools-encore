@@ -26,6 +26,7 @@ void doit(stralloc *line)
   char *x;
   unsigned int xlen;
   unsigned int i;
+  unsigned long ul;
   char *type;
   char *uidstr;
   char *gidstr;
@@ -74,18 +75,18 @@ void doit(stralloc *line)
   if (!stralloc_0(&target)) nomem();
   if (xlen > 0) name = x;
 
-  uid = -1;
   if (*uidstr) {
-    unsigned long uid_ul;
-    scan_ulong(uidstr,&uid_ul);
-    uid = (uid_t)uid_ul;
+    scan_ulong(uidstr,&ul);
+    uid = (uid_t)ul;
   }
-  gid = -1;
+  else
+    uid = -1;
   if (*gidstr) {
-    unsigned long gid_ul;
-    scan_ulong(gidstr,&gid_ul);
-    gid = (gid_t)gid_ul;
+    scan_ulong(gidstr,&ul);
+    gid = (gid_t)ul;
   }
+  else
+    gid = -1;
   scan_8long(modestr,&mode);
 
   switch(*type) {
