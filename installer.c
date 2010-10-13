@@ -35,7 +35,7 @@ void doit(stralloc *line)
   char *name;
   uid_t uid;
   gid_t gid;
-  unsigned long mode;
+  mode_t mode;
   int fdin;
   int fdout;
   int opt;
@@ -87,7 +87,8 @@ void doit(stralloc *line)
   }
   else
     gid = -1;
-  scan_8long(modestr,&mode);
+  scan_8long(modestr,&ul);
+  mode = ul;
 
   switch(*type) {
     case 'd':
