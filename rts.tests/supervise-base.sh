@@ -1,13 +1,7 @@
 # not tested:
 
 # supervise closes descriptors properly
-# svc -d
 # svc -p
-# svc -c
-# svc -a
-# svc -i
-# svc -t
-# svc -k
 # svscan
 # svscanboot
 

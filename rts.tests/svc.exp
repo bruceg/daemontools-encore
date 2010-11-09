@@ -1,0 +1,12 @@
+--- svc sends right signals
+Caught ALRM
+Caught CONT
+Caught HUP
+Caught INT
+Caught TERM
+Caught QUIT
+Caught USR1
+Caught USR2
+Caught WINCH
+Caught CONT
+Caught TERM
