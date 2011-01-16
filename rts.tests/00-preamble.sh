@@ -3,8 +3,18 @@ export PATH
 
 umask 022
 
-rm -rf rts-tmp
-mkdir rts-tmp
-cd rts-tmp
-mkdir test.sv
+die() {
+    echo "$@"
+    exit 1
+}
 
+catexe() {
+    cat > $1
+    chmod +x $1
+}
+
+rm -rf rts-tmp || die "Could not clean up old rts-tmp"
+mkdir rts-tmp || die "Could not create new rts-tmp"
+cd rts-tmp || die "Could not change to rts-tmp"
+mkdir test.sv || die "Could not create test.sv"
+TOP=`pwd`

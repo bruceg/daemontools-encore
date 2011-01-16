@@ -2,7 +2,6 @@
 
 # supervise closes descriptors properly
 # svc -p
-# svscan
 # svscanboot
 
 echo '--- supervise starts, svok works, svstat works, svc -x works'

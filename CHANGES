@@ -1,6 +1,9 @@
 Changes in daemontools-encore-1.04
 ==================================
 
+Fixed bug in svscan preventing it from starting services with a "log"
+script instead of directory.
+
 Changes in daemontools-encore-1.03
 ==================================
 

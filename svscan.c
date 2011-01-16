@@ -74,8 +74,8 @@ void start(const char *fn)
     if (fnlen <= 255) {
       byte_copy(fnlog,fnlen,fn);
       byte_copy(fnlog + fnlen,5,"/log");
-      if (stat(fnlog,&st) == 0 && S_ISDIR(st.st_mode))
-	x[i].flaglog = 1;
+      if (stat(fnlog,&st) == 0)
+	x[i].flaglog = S_ISDIR(st.st_mode);
       else
 	if (errno != error_noent) {
           strerr_warn4(WARNING,"unable to stat ",fn,"/log: ",&strerr_sys);
