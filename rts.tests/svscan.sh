@@ -31,14 +31,20 @@ ln -s `pwd`/svc[0-9] service/
 svscan `pwd`/service >svscan.log 2>&1 &
 svscanpid=$!
 
-sleep 1
+until svok svc0 && svok svc1 && svok svc2 && svok svc2/log
+do
+  sleep 1
+done
 
 # stop svscan and clean up
 kill $svscanpid
 wait >/dev/null 2>&1
 
 svc -dx svc[0-9] svc2/log
-sleep 3
+until ! svok svc0 && ! svok svc1 && ! svok svc2 && ! svok svc2/log
+do
+  sleep 1
+done
 
 head -n 1 svc[0-9]/output
 cat svscan.log
