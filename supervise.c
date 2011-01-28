@@ -74,7 +74,8 @@ static void die_nomem(void)
 
 static void trigger(void)
 {
-  write(selfpipe[1],"",1);
+  int ignored;
+  ignored = write(selfpipe[1],"",1);
 }
 
 static int forkexecve(const char *argv[],int fd)

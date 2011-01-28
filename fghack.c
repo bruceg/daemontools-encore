@@ -15,6 +15,7 @@ int main(int argc,const char * const *argv,const char * const *envp)
   int wstat;
   int pi[2];
   int i;
+  int ignored;
 
   if (!argv[1])
     strerr_die1x(100,"fghack: usage: fghack child");
@@ -28,7 +29,7 @@ int main(int argc,const char * const *argv,const char * const *envp)
     case 0:
       close(pi[0]);
       for (i = 0;i < 30;++i)
-        dup(pi[1]);
+        ignored = dup(pi[1]);
       pathexec_run(argv[1],argv + 1,envp);
       strerr_die4sys(111,FATAL,"unable to run ",argv[1],": ");
   }

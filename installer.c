@@ -141,9 +141,7 @@ char buf[256];
 buffer in = BUFFER_INIT(buffer_unixread,0,buf,sizeof(buf));
 stralloc line = {0};
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc,char **argv)
 {
   int match;
 
@@ -162,4 +160,5 @@ char **argv;
       _exit(0);
   }
   (void)argc;
+  return 0;
 }

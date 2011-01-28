@@ -1,5 +1,7 @@
 /* Public domain. */
 
+#include <sys/types.h>
+#include <grp.h>
 #include <unistd.h>
 
 int main()
@@ -7,6 +9,6 @@ int main()
   short x[4];
 
   x[0] = x[1] = 0;
-  if (getgroups(1,x) == 0) if (setgroups(1,x) == -1) _exit(1);
+  if (getgroups(1,(gid_t*)x) == 0) if (setgroups(1,(gid_t*)x) == -1) _exit(1);
   _exit(0);
 }

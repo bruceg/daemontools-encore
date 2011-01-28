@@ -21,7 +21,7 @@ static void die_usage(void)
   strerr_die1x(100,"svup: usage: svup [-L] dir");
 }
 
-int main(int argc,char **argv)
+int main(int argc,const char *const *argv)
 {
   int fd;
   const char *fn;
