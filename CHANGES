@@ -1,6 +1,8 @@
 Changes in daemontools-encore-1.05
 ==================================
 
+Added options to svup to control checking the log script service.
+
 Changes in daemontools-encore-1.04
 ==================================
 

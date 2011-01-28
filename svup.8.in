@@ -5,6 +5,12 @@ svup \- checks whether
 has started a service.
 .SH SYNOPSIS
 .B svup
+[
+.B \-L
+]
+[
+.B \-l
+]
 .I service
 .SH DESCRIPTION
 .B svup
@@ -16,6 +22,14 @@ and if it has started the service.
 If the service includes a log script managed by the same
 .BR supervise (8),
 the status of that log is also checked.
+.SH OPTIONS
+.TP
+.B \-L
+If the service includes a log script, check only the log process instead
+of both.
+.TP
+.B \-l
+Do not check if the log is running.
 .SH EXIT CODES
 It silently exits 0 if
 .BR supervise (8)

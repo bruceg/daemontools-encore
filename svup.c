@@ -2,6 +2,7 @@
 #include "strerr.h"
 #include "error.h"
 #include "open.h"
+#include "sgetopt.h"
 #include "svpath.h"
 #include "svstatus.h"
 
@@ -15,17 +16,38 @@ static int checkstatus(const char status[19], int r)
 	&& (status[18] == svstatus_started || status[18] == svstatus_running));
 }
 
+static void die_usage(void)
+{
+  strerr_die1x(100,"svup: usage: svup [-L] dir");
+}
+
 int main(int argc,char **argv)
 {
   int fd;
   const char *fn;
   char status[40];
   int rd;
+  int opt;
+  int check_log = -1;
 
-  if (!argv[1])
-    strerr_die1x(100,"svup: usage: svup dir");
+  while ((opt = getopt(argc,argv,"lL")) != opteof) {
+    switch (opt) {
+    case 'L':
+      check_log = 1;
+      break;
+    case 'l':
+      check_log = 0;
+      break;
+    default:
+      die_usage();
+    }
+  }
+  argv += optind;
 
-  if (chdir(argv[1]) == -1)
+  if (!argv[0])
+    die_usage();
+
+  if (chdir(argv[0]) == -1)
     strerr_die4sys(111,FATAL,"unable to chdir to ",argv[1],": ");
 
   if (!svpath_init())
@@ -53,9 +75,18 @@ int main(int argc,char **argv)
   if (rd < 18)
     strerr_die4(111,FATAL,"bad data in ",fn,": truncated file",0);
 
-  if (!checkstatus(status,rd))
-    _exit(100);
-  if (rd >= 20+18 && !checkstatus(status+20,rd-20))
-    _exit(100);
+  if (check_log <= 0)
+    if (!checkstatus(status,rd))
+      _exit(100);
+
+  if (check_log != 0) {
+    if (rd < 20+18) {
+      if (check_log > 0)
+	_exit(100);
+    }
+    else
+      if (!checkstatus(status+20,rd-20))
+	_exit(100);
+  }
   _exit(0);
 }
