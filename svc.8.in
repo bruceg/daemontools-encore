@@ -28,6 +28,12 @@ Send all subsequent signals to the running
 .B log
 process, if it exists.
 .TP
+.B \-l
+(default) Send all subsequent signals to the main process.
+This may be useful for controlling both a log and main process in one
+shot or avoiding race conditions after using
+.BR \-L .
+.TP
 .B \-u
 Up. If the
 .I service

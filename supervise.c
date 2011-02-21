@@ -309,6 +309,10 @@ void doit(void)
 	  svc = &svclog;
 	  killpid = svc->pid;
 	  break;
+        case 'l':
+	  svc = &svcmain;
+	  killpid = svc->pid;
+	  break;
 	case 'd':
 	  svc->flagwant = 1;
 	  svc->flagwantup = 0;
