@@ -13,7 +13,7 @@ done
 svup test.sv; echo $?
 svup -l test.sv; echo $?
 svup -L test.sv; echo $?
-svstat test.sv | sed 's/[0-9]* seconds/x seconds/'; echo $?
+( svstat test.sv; echo $?; ) | filter_svstat
 svc -x test.sv; echo $?
 wait
 svstat test.sv; echo $?
@@ -39,8 +39,7 @@ echo \$?
 svup -l .
 echo \$?
 EOF
-supervise test.sv \
-| sed -e 's/[0-9]* seconds/x seconds/' -e 's/pid [0-9]*/pid x/' &
+supervise test.sv | filter_svstat &
 until svok test.sv
 do
   sleep 1
