@@ -18,7 +18,7 @@ static int checkstatus(const char status[19], int r)
 
 static void die_usage(void)
 {
-  strerr_die1x(100,"svup: usage: svup [-L] dir");
+  strerr_die1x(100,"svup: usage: svup [-L] [-l] dir");
 }
 
 int main(int argc,const char *const *argv)
