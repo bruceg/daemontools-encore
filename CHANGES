@@ -3,6 +3,8 @@ Changes in daemontools-encore-1.06
 
 Added -l option to svc to explicitly control the main service.
 
+Fixed race issuing svc commands to log and then main service.
+
 Changes in daemontools-encore-1.05
 ==================================
 

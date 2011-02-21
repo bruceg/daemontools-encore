@@ -12,8 +12,8 @@
 #define FATAL "svc: fatal: "
 #define WARNING "svc: warning: "
 
-int datalen = 0;
-char data[20];
+int datalen = 1;
+char data[20] = "l";
 
 buffer b;
 char bspace[1];
