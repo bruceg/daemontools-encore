@@ -1,3 +1,3 @@
-/usr/local/bin
+debian/tmp/bin
 
 Programs will be installed in this directory.
