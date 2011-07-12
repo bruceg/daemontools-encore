@@ -1,6 +1,17 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+build: Makefile
+
+installdirs: install-dirs
+
+install-dirs:
+	mkdir -p debian/daemontools-encore/usr/bin
+	mkdir -p debian/daemontools-encore/usr/share/man
+
+Makefile:
+	./makemake
+
 %:
 	dh $@
 
