@@ -33,7 +33,14 @@ exits for the last time (ie after
 has been issued), it runs
 .B ./stop
 once.
-All processes are run in a new process group.
+
+If the file
+.B ./setsid
+exists,
+.B supervise
+will run subordinate processes in a new process group. All signals requested by the
+.BR svc (8)
+program will be sent to the process group instead of the process.
 
 If
 .B ./log

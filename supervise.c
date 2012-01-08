@@ -78,7 +78,14 @@ static void trigger(void)
   ignored = write(selfpipe[1],"",1);
 }
 
-static int forkexecve(const char *argv[],int fd)
+static void terminate(void)
+{
+  int ignored;
+  ignored = write(fdcontrolwrite,"dx",2);
+  ignored = write(selfpipe[1],"",1);
+}
+
+static int forkexecve(const char *argv[],int fd,int sid)
 {
   int f;
 
@@ -91,7 +98,9 @@ static int forkexecve(const char *argv[],int fd)
     case 0:
       sig_uncatch(sig_child);
       sig_unblock(sig_child);
-      setsid();			/* shouldn't fail; if it does, too bad */
+      sig_uncatch(sig_int);
+      sig_uncatch(sig_term);
+      if (sid) setsid();	/* shouldn't fail; if it does, too bad */
       if (fd >= 0 && logpipe[0] >= 0) {
 	dup2(logpipe[fd],fd);
 	close(logpipe[0]);
@@ -158,7 +167,7 @@ static void notify(const struct svc *svc,const char *notice,int code,int oldpid)
 
   pidnum[fmt_uint(pidnum,oldpid)] = 0;
   codenum[fmt_uint(codenum,code)] = 0;
-  forkexecve(argv,-1);
+  forkexecve(argv,-1,stat_exists("setsid")==1);
 }
 
 void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
@@ -194,7 +203,7 @@ void trystart(struct svc *svc)
     svcmain.flagstatus = firstrun ? svstatus_starting : svstatus_running;
     fd = 1;
   }
-  if ((f = forkexecve(argv,fd)) < 0)
+  if ((f = forkexecve(argv,fd,stat_exists("setsid")==1)) < 0)
     return;
   svc->pid = f;
   svc->flagpaused = 0;
@@ -216,7 +225,7 @@ void trystop(struct svc *svc)
     return;
   }
   runscript = argv[0];
-  if ((f = forkexecve(argv,1)) < 0)
+  if ((f = forkexecve(argv,1,stat_exists("setsid")==1)) < 0)
     return;
   svc->pid = f;
   svc->flagpaused = 0;
@@ -300,14 +309,19 @@ void doit(void)
 
     svc = &svcmain;
     killpid = svc->pid;
-    while (read(fdcontrol,&ch,1) == 1)
+    if (stat_exists("setsid")==1) killpid = -killpid;
+    while (read(fdcontrol,&ch,1) == 1) {
       switch(ch) {
         case '+':
-	  killpid = -svc->pid;
+	  if (killpid > 0) killpid = -killpid;
+	  break;
+        case '=':
+	  if (killpid < 0) killpid = -killpid;
 	  break;
         case 'L':
 	  svc = &svclog;
 	  killpid = svc->pid;
+          if (stat_exists("setsid")==1) killpid = -killpid;
 	  break;
 	case 'd':
 	  svc->flagwant = 1;
@@ -375,6 +389,7 @@ void doit(void)
 	  announce();
 	  break;
       }
+    }
 
     if (flagexit
 	&& svcmain.flagstatus == svstatus_stopped
@@ -401,6 +416,8 @@ int main(int argc,char **argv)
 
   sig_block(sig_child);
   sig_catch(sig_child,trigger);
+  sig_catch(sig_term,terminate);
+  sig_catch(sig_int,terminate);
 
   if (chdir(dir) == -1)
     strerr_die4sys(111,FATAL,"unable to chdir to ",dir,": ");
