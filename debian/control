@@ -1,0 +1,21 @@
+Source: daemontools-encore
+Section: admin
+Priority: optional
+Maintainer: Alan Grow <alangrow+daemontools-encore@gmail.com>
+Standards-Version: 3.7.3.0
+
+Package: daemontools-encore
+Architecture: any
+Depends: ${shlibs:Depends}
+Replaces: daemontools-doc, daemontools
+Description: a collection of tools for managing UNIX services
+ supervise monitors a service. It starts the service and restarts the
+ service if it dies. Setting up a new service is easy: all supervise
+ needs is a directory with a run script that runs the service. 
+ .
+ multilog saves error messages to one or more logs. It optionally timestamps
+ each line and, for each log, includes or excludes lines matching specified
+ patterns. It automatically rotates logs to limit the amount of disk space
+ used. If the disk fills up, it pauses and tries again, without losing any
+ data.
+

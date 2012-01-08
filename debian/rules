@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+build: patch-stamp Makefile 
+
+binary: build
+
+Makefile:
+	./makemake
+
+patch: patch-stamp
+patch-stamp:
+	for i in `ls -1 debian/diff/*.diff || :`; do \
+	  patch -p1 <$$i || exit 1; \
+	done
+	touch patch-stamp
+
+%:
+	dh $@
+
