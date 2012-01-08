@@ -1,0 +1,6 @@
+daemontools-encore (1:1.05-1) lucid; urgency=low
+
+  * initial debianization
+
+ -- Alan Grow <alangrow+daemontools-encore@gmail.com>  Mon, 11 Jul 2011 21:27:01 -0400
+
