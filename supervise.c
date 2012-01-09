@@ -85,6 +85,20 @@ static void terminate(void)
   ignored = write(selfpipe[1],"",1);
 }
 
+static void ttystop(void)
+{
+  int ignored;
+  ignored = write(fdcontrolwrite,"p",1);
+  ignored = write(selfpipe[1],"",1);
+}
+
+static void resume(void)
+{
+  int ignored;
+  ignored = write(fdcontrolwrite,"c",1);
+  ignored = write(selfpipe[1],"",1);
+}
+
 static int forkexecve(const char *argv[],int fd,int sid)
 {
   int f;
@@ -100,6 +114,8 @@ static int forkexecve(const char *argv[],int fd,int sid)
       sig_unblock(sig_child);
       sig_uncatch(sig_int);
       sig_uncatch(sig_term);
+      sig_uncatch(sig_ttystop);
+      sig_uncatch(sig_cont);
       if (sid) setsid();	/* shouldn't fail; if it does, too bad */
       if (fd >= 0 && logpipe[0] >= 0) {
 	dup2(logpipe[fd],fd);
@@ -418,6 +434,8 @@ int main(int argc,char **argv)
   sig_catch(sig_child,trigger);
   sig_catch(sig_term,terminate);
   sig_catch(sig_int,terminate);
+  sig_catch(sig_ttystop,ttystop);
+  sig_catch(sig_cont,resume);
 
   if (chdir(dir) == -1)
     strerr_die4sys(111,FATAL,"unable to chdir to ",dir,": ");
