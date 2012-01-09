@@ -1,0 +1,17 @@
+reverted:
+--- b/conf-bin
++++ a/conf-bin
+@@ -1,3 +1,3 @@
++debian/daemontools-encore/usr/bin
+-/usr/local/bin
+ 
+ Programs will be installed in this directory.
+reverted:
+--- b/conf-man
++++ a/conf-man
+@@ -1,4 +1,4 @@
++debian/daemontools-encore/usr/share/man
+-/usr/local/man
+ 
+ Man pages will be installed in subdirectories of this directory. An
+ unformatted man page foo.1 will go into .../man1/foo.1.
