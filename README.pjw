@@ -1,0 +1,20 @@
+Starting with the compile directory of the daemontools-0.76 distribution
+I added a couple of "wrapper" programs which were useful for projects that
+I was working on in 2004:
+
+  as_user       run a given program as a given user
+  setlock2      run a given program while locking a given lockfile
+
+Here's how to build the new programs:
+
+1) make clean
+2) make setlock2
+3) make as_user
+
+The warnings about incompatible pointer types are annoying but appear to
+be harmless. Note that we don't need everything in the daemontools build
+directory in order to make the new programs, but we need a lot of these
+files in order to build the unix.a library, which is useful (though it is
+missing a few things, like getuid() for example).
+
+I also added a Makefile, apparently missing from daemontools-encore.
