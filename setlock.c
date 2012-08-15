@@ -1,11 +1,16 @@
 #include <unistd.h>
 #include "lock.h"
 #include "open.h"
+#include "string.h" // for strlen()
+#include "stdlib.h" // for atoi()
+#include "time.h"   // for time()
+#include "stdio.h"  // for sprintf()
 #include "strerr.h"
 #include "pathexec.h"
 #include "sgetopt.h"
 
 #define FATAL "setlock: fatal: "
+#define INFO "setlock: info: "
 
 /* This sets the maximum length of a PID string to be 17 digits.
    If a real PID string is longer, then we'll write only the first 17 digits
@@ -79,11 +84,24 @@ int  blockval = 0;    // seconds to block, as number
 
 const char *file;     // lockfile (from command line)
 
+/* The alarm() invocation (see below) causes this routine to catch a timeout
+   signal after we've been waiting for 'timeval' seconds for a lock on 'file'.
+   We can assume that the file and timestr strings are populated, since
+   this is checked before alarm() is called.
+ */
+void timed_out(void)
+{
+  char msg[100];
+  sprintf(msg, "lock request for %s timed out after %s seconds : ",file,timestr);
+  strerr_die2sys(111,INFO,msg);
+} // timed out
+
 int main(int argc,const char *const *argv,const char *const *envp)
 {
   int opt;
-  int fd;
-  const char *file;
+  int fd, fd2;           // file descriptors for lockfile and pidfile
+  long t;                // current time as number (epoch sec)
+  char tbuf[MAX_TIME+1]; // current time as string
 
   while ((opt = getopt(argc,argv,"nNxX")) != opteof)
     switch(opt) {
@@ -133,8 +151,8 @@ int main(int argc,const char *const *argv,const char *const *envp)
   }
 
   if (timeval) { // legal timeout was specified
-    signal(SIGALRM,timed_out); // set signal handler
-    alarm(timeval);            // set alarm
+    signal(SIGALRM,(void *)timed_out); // set signal handler
+    alarm(timeval);                    // set alarm
   } // legal timeout was specified
 
   if ((flagndelay ? lock_exnb : lock_ex)(fd) == -1) {
