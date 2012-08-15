@@ -1,6 +1,6 @@
 #!/bin/sh
 
-t=makemake.targets
+t=makemake.targetd
 T=makemake.TARGETS
 S=makemake.SOURCES
 trap 'rm -fv *.tmp.$$ $T $S; rm -r $t' EXIT
