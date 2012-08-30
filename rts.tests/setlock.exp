@@ -18,3 +18,5 @@ setlock: fatal: unable to lock lock: temporary failure
 --- setlock -nx exits quietly if file is already locked
 two
 0
+--- setlock -t 2 -b 3 times out
+setlock: info: lock request timeout after 2 seconds: timed out
