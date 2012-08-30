@@ -1,170 +1,160 @@
 #include <unistd.h>
 #include "lock.h"
 #include "open.h"
+#include "str.h"
+#include "error.h"
 #include "strerr.h"
 #include "pathexec.h"
 #include "sgetopt.h"
+#include "scan.h"
+#include "fmt.h"
+#include <time.h>
+#include <signal.h>
+#include "sig.h"
+#include "stralloc.h"
 
+#define INVALID "setlock: bad parameter value: "
 #define FATAL "setlock: fatal: "
+#define INFO "setlock: info: "
 
-/* This sets the maximum length of a PID string to be 17 digits.
-   If a real PID string is longer, then we'll write only the first 17 digits
-   to the indicated pidfile.
- */
-#define MAX_PID 18
-
-/* This sets the maximum length of a UTC time string to be 17 digits.
-   Since Feb 19, 2004 ~ 1077217000, ten decimal digits should take us from
-   1970 to about 2285 (315 years), and datestamps produced by this program
-   will start to be truncated in about 3 billion years.
- */
-#define MAX_TIME 18
-
-/* This sets the maximum delay to 60*60*24*7 seconds, or 1 week.
+/* This sets the maximum delay to 60*60*24*7 seconds, or 1 week (far longer
+   that should be necessary for any reasonable application of setlock).
    If a user specifies a longer time delay, then we flag an error and exit.
  */
 #define MAX_DELAY 604800
 
-void usage() {
-  strerr_die1x(100,"setlock: usage: setlock [ -nNxXptb ] file program [ arg ... ]");
-}
-
 int flagndelay = 0;
 int flagx = 0;
 
-/* The reverse() and itoa() routines defined below were borrowed
-   from p.64 of K&R _The C Programming Language_ Edition 2.
+/* This is the lock timeout, in seconds (from command line).
  */
+unsigned long int  timeval = 0;
 
-/* Reverse a string in place (used by itoa).
+/* This is where in the filesystem to write PID,timestamp (also from the
+   command line) in the following format:
+
+   PID,timestamp
+
+   NOTE: space for terminal \0 is included in FMT_ULONG, so space for the
+   comma-separator comes for free in the allocation of pidcontent[] (see
+   below).
  */
-void reverse(char s[]) {
-  int c,i,j;
-  for(i=0,j=strlen(s)-1; i<j; i++,j--) {
-    c=s[i]; s[i]=s[j]; s[j]=c;
-  }
-} // reverse
+char *pidfile = 0;
 
-/* Convert a signed integer into a string, whose allocated length is only
-   guaranteed to be the passed limit (including the terminal NULL).
+/* seconds to block, after locking (from command line)
  */
-void itoa(int n, char s[], int m) {
-  int i, sign;
-  // Since we need one slot for the terminal NULL character, and (potentially)
-  // one slot for the leading minus sign, and at least one slot for a digit,
-  // the passed limit must be at least 3.
-  if (m < 3)
-    strerr_die2sys(111,FATAL,"itoa called with m < 3 : ");
-  m -= 2; // leave room for terminal null and sign char
-  if ((sign = n) < 0) // record sign, and flip if necessary
-    n = -n;
-  i = 0;
-  do {
-    s[i++] = n%10 + '0';              // get next digit
-  } while (((n/=10) > 0)&&(m-- > 0)); // remove it
-  if (sign < 0)
-    s[i++] = '-';
-  s[i] = '\0';
-  reverse(s);
-} // itoa
+unsigned long int  blockval = 0;
 
-char pidstr[MAX_PID]; // PID as printable string
-int  pidval = 0;      // PID as comparable number
-char *timestr = 0;    // lock timeout (in seconds) as string
-int  timeval = 0;     // lock timeout (in seconds) as number
-char *pidfile = 0;    // place to write PID and time (from command line)
+/* file to lock (from command line)
+ */
+const char *file;
 
-char *blockstr = 0;   // seconds to block, as string (from command line)
-int  blockval = 0;    // seconds to block, as number
+void usage() {
+  strerr_die1x(100,"setlock: usage: setlock [ -nNxX ] [ -p pidfile ] [ -t timeout ] [ -b blocktime ] file program [ arg ... ]");
+}
 
-const char *file;     // lockfile (from command line)
+/* The alarm() invocation (see below) causes this routine to catch a timeout
+   signal after we've been waiting for 'timeval' seconds for a lock on 'file'.
+ */
+void timed_out(void)
+{
+  char timestr[FMT_ULONG];
+
+  if (flagx) _exit(0);
+  fmt_uint(timestr,timeval);
+  errno = error_timeout;
+  strerr_die4sys(errno,INFO,"lock request timeout after ",timestr," seconds: ");
+}
 
 int main(int argc,const char *const *argv,const char *const *envp)
 {
-  int opt;
-  int fd;
-  const char *file;
+  char opt;
+  int fd_lockfile, fd_pidfile;
+  int idx;
+  char timestr[FMT_ULONG];
+  char pidcontent[2*FMT_ULONG];
 
-  while ((opt = getopt(argc,argv,"nNxX")) != opteof)
+  fmt_uint(timestr,MAX_DELAY);
+
+  while ((opt = getopt(argc,argv,"nNxXp:t:b:")) != opteof) {
     switch(opt) {
       case 'n': flagndelay = 1; break;
       case 'N': flagndelay = 0; break;
       case 'x': flagx = 1; break;
       case 'X': flagx = 0; break;
       case 'p':
-        pidfile = strdup(optarg);
+        /* Don't bother duping the optarg string: */
+        pidfile = (char *)optarg;
         break;
       case 't':
-        timestr = strdup(optarg);
-        timeval = atoi(timestr);   // returns 0 for non-numerical string
+        scan_ulong(optarg, &timeval);
         if (timeval > MAX_DELAY) {
-          fprintf(stderr, "lock timeout (%d sec) > maximum (%d sec)\n", timeval, MAX_DELAY);
+          if (flagx) _exit(0);
+          strerr_warn4(INVALID,"maximum timeout is ",timestr," seconds",NULL);
           usage();
         }
         else if (timeval <= 0) {
-          fprintf(stderr, "lock timeout (%d) in seconds must be a positive integer!\n", timeval);
+          if (flagx) _exit(0);
+          strerr_warn2(INVALID,"timeout must be a positive integer",NULL);
           usage();
         }
         break;
       case 'b':
-        blockstr = strdup(optarg);
-        blockval = atoi(blockstr); // returns 0 for non-numerical string
+        scan_ulong(optarg, &blockval);
         if (blockval > MAX_DELAY) {
-          fprintf(stderr, "blocking time (%d sec) > maximum (%d sec)\n", blockval, MAX_DELAY);
+          if (flagx) _exit(0);
+          strerr_warn4(INVALID,"maximum blocktime is ",timestr," seconds",NULL);
           usage();
         }
         else if (blockval <= 0) {
-          fprintf(stderr, "blocking time (%d) in seconds must be a positive integer!\n", blockval);
+          if (flagx) _exit(0);
+          strerr_warn2(INVALID,"blocktime must be a positive integer",NULL);
           usage();
         }
         break;
       default: usage();
     }
+  }
 
   argv += optind;
   if (!*argv) usage();
   file = *argv++;
   if (!*argv) usage();
 
-  fd = open_append(file);
-  if (fd == -1) {
+  fd_lockfile = open_append(file);
+  if (fd_lockfile == -1) {
     if (flagx) _exit(0);
     strerr_die4sys(111,FATAL,"unable to open ",file,": ");
   }
 
-  if (timeval) { // legal timeout was specified
-    signal(SIGALRM,timed_out); // set signal handler
-    alarm(timeval);            // set alarm
-  } // legal timeout was specified
+  if (timeval) {
+    sig_catch(SIGALRM,(void *)timed_out);
+    alarm(timeval);
+  }
 
-  if ((flagndelay ? lock_exnb : lock_ex)(fd) == -1) {
+  if ((flagndelay ? lock_exnb : lock_ex)(fd_lockfile) == -1) {
     if (flagx) _exit(0);
     strerr_die4sys(111,FATAL,"unable to lock ",file,": ");
   }
 
-  if (timeval) // legal timeout was specified
-    alarm(0);  // clear alarm
-
-  if (pidfile && strlen(pidfile)) { // pidfile was specified
-    fd2 = open_trunc(pidfile);
-    if (fd2 == -1) {
+  if (pidfile != 0 && pidfile[0] != 0) {
+    fd_pidfile = open_trunc(pidfile);
+    if (fd_pidfile == -1) {
       if (flagx) _exit(0);
-      strerr_die4sys(111, FATAL, "unable to open_trunc ", pidfile, ": ");
+      strerr_die4sys(111,FATAL,"unable to write to ",pidfile,": ");
     }
-    pidval = getpid();
-    itoa(pidval, pidstr, MAX_PID);
-    write(fd2, pidstr, strlen(pidstr)); // don't write the null char!
-    t = (long)time(NULL);
-    tbuf[0] = ',';
-    itoa(t, tbuf+1, MAX_TIME);
-    write(fd2, tbuf, strlen(tbuf));     // don't write the null char!
-    close(fd2);
 
-  } // pidfile was specified
+    idx = fmt_uint(pidcontent,getpid());
+    pidcontent[idx] = ',';
+    fmt_uint(pidcontent+idx+1,(unsigned long int)time(NULL));
 
-  if (blockval) { // blocking interval was specified  (and legal)
+    write(fd_pidfile,pidcontent,str_len(pidcontent));
+    close(fd_pidfile);
+  }
+
+  if (blockval) {
     sleep(blockval);
-  } // blocking interval was specified (and legal)
+  }
 
   pathexec_run(*argv,argv,envp);
   strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
