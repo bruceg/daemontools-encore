@@ -66,18 +66,6 @@ void timed_out(void)
   strerr_die4sys(errno,INFO,"lock request timeout after ",timestr," seconds: ");
 }
 
-/* The alarm() invocation (see below) causes this routine to catch a timeout
-   signal after we've been waiting for 'timeval' seconds for a lock on 'file'.
-   We can assume that the file and timestr strings are populated, since
-   this is checked before alarm() is called.
- */
-void timed_out(void)
-{
-  char msg[100];
-  sprintf(msg, "lock request for %s timed out after %s seconds : ",file,timestr);
-  strerr_die2sys(111,INFO,msg);
-} // timed out
-
 int main(int argc,const char *const *argv,const char *const *envp)
 {
   char opt;
