@@ -1,5 +1,5 @@
 --- setlock requires arguments
-setlock: usage: setlock [ -nNxX ] file program [ arg ... ]
+setlock: usage: setlock [ -nNxX ] [ -p pidfile ] [ -t timeout ] [ -b blocktime ] file program [ arg ... ]
 100
 --- setlock complains if it cannot create lock file
 setlock: fatal: unable to open nonexistent/lock: file does not exist
@@ -20,3 +20,11 @@ two
 0
 --- setlock -t 2 -b 3 times out
 setlock: info: lock request timeout after 2 seconds: timed out
+--- setlock -t 999999 is rejected
+setlock: bad parameter value: maximum timeout is 604800 seconds
+setlock: usage: setlock [ -nNxX ] [ -p pidfile ] [ -t timeout ] [ -b blocktime ] file program [ arg ... ]
+100
+--- setlock -b 999999 is rejected
+setlock: bad parameter value: maximum blocktime is 604800 seconds
+setlock: usage: setlock [ -nNxX ] [ -p pidfile ] [ -t timeout ] [ -b blocktime ] file program [ arg ... ]
+100

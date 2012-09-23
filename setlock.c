@@ -55,6 +55,7 @@ void usage() {
 
 /* The alarm() invocation (see below) causes this routine to catch a timeout
    signal after we've been waiting for 'timeval' seconds for a lock on 'file'.
+   Note that the scope of "errno" is not local!
  */
 void timed_out(void)
 {
