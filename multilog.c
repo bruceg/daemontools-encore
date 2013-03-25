@@ -414,7 +414,7 @@ void c_init(char **script)
     else if (script[i][0] == '!') {
       processor = script[i] + 1;
     }
-    else if (script[i][0] == '+') {
+    else if (script[i][0] == 'w') {
       code_finished = script[i] + 1;
       if (!stralloc_ready(&fn,str_len(code_finished)+TIMESTAMP+1))
 	strerr_die2sys(111,FATAL,"unable to allocate memory: ");
