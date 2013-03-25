@@ -15,9 +15,9 @@ Official release can be found at:
 
 	http://untroubled.org/daemontools-encore/
 
-Development versions are available via git from:
+Development versions are available from github:
 
-	http://untroubled.org/git/daemontools-encore.git
+	https://github.com/bruceg/daemontools-encore
 
 ============
 Installation
@@ -34,6 +34,6 @@ As root, run 'make install'.
 
 
 
-Copyright (c) 2010 Bruce Guenter
+Copyright (c) 2013 Bruce Guenter
 
 See the LICENSE file for details.
