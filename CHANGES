@@ -7,6 +7,8 @@ Fixed race issuing svc commands to log and then main service.
 
 Changed the "safely written" option for multilog to "w".
 
+Fixed daemontools leaking the status file descriptor to its children.
+
 Changes in daemontools-encore-1.05
 ==================================
 

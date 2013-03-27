@@ -431,6 +431,7 @@ int main(int argc,char **argv)
   fdstatus = open_trunc(fntemp);
   if (fdstatus == -1)
     strerr_die4sys(111,FATAL,"unable to open ",fntemp," for writing: ");
+  closeonexec(fdstatus);
   if ((fntemp = svpath_make("/lock")) == 0) die_nomem();
   fdlock = open_append(fntemp);
   if ((fdlock == -1) || (lock_exnb(fdlock) == -1))
