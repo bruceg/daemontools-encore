@@ -13,7 +13,8 @@
 #define WARNING "svc: warning: "
 
 int datalen = 1;
-char data[20] = "l";
+int datastart = 0;
+char data[32] = "l";
 
 buffer b;
 char bspace[1];
@@ -34,7 +35,11 @@ int main(int argc,const char *const *argv)
       strerr_die1x(100,"svc options: + kill process group, L kill log, l kill main, u up, d down, o once, x exit, p pause, c continue, h hup, a alarm, i interrupt, t term, k kill, q quit, 1 SIGUSR1, 2 SIGUSR2, w SIGWINCH");
     else if (datalen >= sizeof data)
       strerr_die2x(100,FATAL,"too many options");
-    else if (byte_chr(data,datalen,opt) == datalen)
+    else if (opt == 'L' || opt == 'l') {
+      data[datalen++] = opt;
+      datastart = datalen;
+    }
+    else if (byte_chr(data+datastart,datalen-datastart,opt) == datalen-datastart)
       data[datalen++] = opt;
   argv += optind;
 
