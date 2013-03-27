@@ -12,7 +12,23 @@ hi
 --- svstat and svup work for up services
 .: up (pid x) x seconds, normally down, running
 0
+.: up (pid x) x seconds, normally down, running
+0
+.: no log service
+0
+0
 100
+0
+--- svstat and svup work for logged services
+.: up (pid x) x seconds, normally down, running
+. log: up (pid x) x seconds, normally down, running
+0
+.: up (pid x) x seconds, normally down, running
+0
+. log: up (pid x) x seconds, normally down, running
+0
+0
+0
 0
 --- svc -u works
 first

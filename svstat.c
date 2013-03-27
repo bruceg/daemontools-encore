@@ -7,6 +7,7 @@
 #include "fmt.h"
 #include "tai.h"
 #include "buffer.h"
+#include "sgetopt.h"
 #include "svpath.h"
 #include "svstatus.h"
 
@@ -18,22 +19,27 @@ buffer b = BUFFER_INIT(buffer_unixwrite,1,bspace,sizeof bspace);
 
 char strnum[FMT_ULONG];
 
-unsigned long pid;
-unsigned char normallyup;
-unsigned char want;
-unsigned char paused;
-enum svstatus statusflag;
+int check_log = -1;
 
 static void die_nomem(void)
 {
   strerr_die2sys(111,FATAL,"unable to allocate memory");
 }
 
-static void showstatus(const char status[19], int r)
+static void die_usage(void)
+{
+  strerr_die1x(100,"svstat: usage: svstat [-L] [-l] dir [dir ...]");
+}
+
+static void showstatus(const char status[19], int r, int normallyup)
 {
   const char *x;
   struct tai when;
   struct tai now;
+  unsigned long pid;
+  unsigned char want;
+  unsigned char paused;
+  enum svstatus statusflag;
 
   pid = (unsigned char) status[15];
   pid <<= 8; pid += (unsigned char) status[14];
@@ -85,7 +91,7 @@ static void showstatus(const char status[19], int r)
   }
 }
 
-void doit(char *dir)
+void doit(const char *dir)
 {
   struct stat st;
   int r;
@@ -93,13 +99,13 @@ void doit(char *dir)
   const char *x;
   const char *fntemp;
   char status[40];
+  unsigned char normallyup;
 
   buffer_puts(&b,dir);
-  buffer_puts(&b,": ");
 
   if (chdir(dir) == -1) {
     x = error_str(errno);
-    buffer_puts(&b,"unable to chdir: ");
+    buffer_puts(&b,": unable to chdir: ");
     buffer_puts(&b,x);
     return;
   }
@@ -112,7 +118,7 @@ void doit(char *dir)
   if (stat("down",&st) == -1) {
     if (errno != error_noent) {
       x = error_str(errno);
-      buffer_puts(&b,"unable to stat down: ");
+      buffer_puts(&b,": unable to stat down: ");
       buffer_puts(&b,x);
       return;
     }
@@ -123,11 +129,11 @@ void doit(char *dir)
   fd = open_write(fntemp);
   if (fd == -1) {
     if (errno == error_nodevice) {
-      buffer_puts(&b,"supervise not running");
+      buffer_puts(&b,": supervise not running");
       return;
     }
     x = error_str(errno);
-    buffer_puts(&b,"unable to open ");
+    buffer_puts(&b,": unable to open ");
     buffer_puts(&b,fntemp);
     buffer_puts(&b,": ");
     buffer_puts(&b,x);
@@ -139,7 +145,7 @@ void doit(char *dir)
   fd = open_read(fntemp);
   if (fd == -1) {
     x = error_str(errno);
-    buffer_puts(&b,"unable to open ");
+    buffer_puts(&b,": unable to open ");
     buffer_puts(&b,fntemp);
     buffer_puts(&b,": ");
     buffer_puts(&b,x);
@@ -152,27 +158,52 @@ void doit(char *dir)
       x = error_str(errno);
     else
       x = "bad format";
-    buffer_puts(&b,"unable to read ");
+    buffer_puts(&b,": unable to read ");
     buffer_puts(&b,fntemp);
     buffer_puts(&b,": ");
     buffer_puts(&b,x);
     return;
   }
-  showstatus(status,r);
-  if (r >= 20+18) {
-    buffer_puts(&b,"\n");
-    buffer_puts(&b,dir);
-    buffer_puts(&b," log: ");
-    showstatus(status+20,r-20);
+  if (check_log != 1) {
+    buffer_puts(&b,": ");
+    showstatus(status,r,normallyup);
+  }
+  if (check_log != 0) {
+    if (r >= 20+18) {
+      if (check_log < 0) {
+	buffer_puts(&b,"\n");
+	buffer_puts(&b,dir);
+      }
+      buffer_puts(&b," log: ");
+      showstatus(status+20,r-20,normallyup);
+    }
+    else if (check_log == 1)
+      buffer_puts(&b,": no log service");
   }
 }
 
-int main(int argc,char **argv)
+int main(int argc,const char *const *argv)
 {
   int fdorigdir;
-  char *dir;
+  const char *dir;
+  int opt;
 
-  ++argv;
+  while ((opt = getopt(argc,argv,"lL")) != opteof) {
+    switch (opt) {
+    case 'L':
+      check_log = 1;
+      break;
+    case 'l':
+      check_log = 0;
+      break;
+    default:
+      die_usage();
+    }
+  }
+  argv += optind;
+
+  if (!argv[0])
+    die_usage();
 
   fdorigdir = open_read(".");
   if (fdorigdir == -1)

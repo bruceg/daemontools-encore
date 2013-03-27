@@ -32,6 +32,11 @@ catexe test.sv/run <<EOF
 #!/bin/sh
 sleep 1
 svstat .
+echo $?
+svstat -l .
+echo $?
+svstat -L .
+echo $?
 svup .
 echo \$?
 svup -L .
@@ -46,6 +51,36 @@ do
 done
 svc -ox test.sv
 wait
+
+echo '--- svstat and svup work for logged services'
+catexe test.sv/run <<EOF
+#!/bin/sh
+sleep 1
+svstat .
+echo $?
+svstat -l .
+echo $?
+svstat -L .
+echo $?
+svup .
+echo \$?
+svup -L .
+echo \$?
+svup -l .
+echo \$?
+EOF
+catexe test.sv/log <<EOF
+#!/bin/sh
+exec cat
+EOF
+supervise test.sv | filter_svstat &
+until svok test.sv
+do
+  sleep 1
+done
+svc -Lolox test.sv
+wait
+rm -f test.sv/log
 
 echo '--- svc -u works'
 ( echo '#!/bin/sh'; echo echo first; echo mv run2 run ) > test.sv/run

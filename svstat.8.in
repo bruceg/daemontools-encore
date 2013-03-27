@@ -4,6 +4,12 @@ svstat \- prints the status of services monitored by
 .BR supervise (8).
 .SH SYNOPSIS
 .B svstat
+[
+.B \-L
+]
+[
+.B \-l
+]
 .I services
 .SH DESCRIPTION
 .I services
@@ -19,6 +25,13 @@ If a
 process is also running in that directory,
 .B svstat
 prints an additional line for that process.
+.SH OPTIONS
+.TP
+.B \-L
+Only report the status of the log process of all listed services.
+.TP
+.B \-l
+Do not report the status of the log process of all listed services.
 .SH ENVIRONMENT
 .TP
 .B SUPERVISEDIR
