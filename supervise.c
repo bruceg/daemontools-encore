@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <stdio.h>
 #include "sig.h"
 #include "strerr.h"
 #include "error.h"
@@ -20,6 +21,7 @@
 #include "stralloc.h"
 #include "svpath.h"
 #include "svstatus.h"
+#include "unconst.h"
 
 #define FATAL "supervise: fatal: "
 #define WARNING "supervise: warning: "
@@ -97,7 +99,7 @@ static int forkexecve(const char *argv[],int fd)
 	close(logpipe[0]);
 	close(logpipe[1]);
       }
-      execve(argv[0],(char*const*)argv,environ);
+      execve(argv[0],UNCONST(char*const*,argv),UNCONST(char*const*,environ));
       strerr_die5sys(111,FATAL,"unable to start ",dir,argv[0]+1,": ");
   }
   return f;

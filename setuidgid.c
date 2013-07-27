@@ -43,4 +43,5 @@ int main(int argc,const char *const *argv,const char *const *envp)
 
   pathexec_run(*argv,argv,envp);
   strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
+  return(0); /* make -Wall happy */
 }

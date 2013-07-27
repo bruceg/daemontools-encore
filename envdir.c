@@ -83,4 +83,5 @@ int main(int argc,const char *const *argv)
 
   pathexec(argv);
   strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
+  return(0); /* make -Wall happy */
 }
