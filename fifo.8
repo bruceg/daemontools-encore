@@ -1,0 +1,73 @@
+.TH fifo 8
+.SH NAME
+fifo \- create and read a named pipe while writing to child.
+.SH SYNOPSIS
+.B fifo
+.I file
+.I child
+.SH DESCRIPTION
+.B fifo
+prints everything fed to the named pipe
+.I file
+to standard input
+of
+.IR child .
+It holds
+.I file
+open for writing so that other programs can
+repeatedly open and close
+.IR file .
+
+.B fifo
+creates
+.I file
+if
+.I file
+does not exist.
+
+.B fifo
+normally runs forever.
+
+At startup,
+.B fifo
+prints a banner message ("\*(L"fifostart\*(R"") to
+.I child
+to ensure it is running before reading from
+.IR file .
+.SH EXIT CODES
+.B fifo
+normally exits 0 after \s-1SIGTERM\s0 and
+.I child
+stops.
+
+For any other problems,
+.B fifo
+exits 112 and prints an error message
+to standard error.
+.SH SIGNALS
+\s-1SIGTERM\s0
+.Sp
+.RS 4
+.B fifo
+stops reading from
+.IR file ,
+empties its buffer, and closes the
+pipe to
+.IR child .
+.I child
+is expected to continue until it notices the
+end of file on its standard input and exit gracefully.
+.B fifo
+then stops.
+.RE
+
+\s-1SIGALRM\s0
+.Sp
+.RS 4
+.B fifo
+sends \s-1SIGALRM\s0 to
+.IR child .
+.RE
+.SH SEE ALSO
+mkfifo(1),
+mkfifo(2)
