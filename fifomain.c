@@ -17,6 +17,7 @@
 #include "fd.h"
 #include "closeonexec.h"
 #include "str.h"
+#include "fionread.h"
 
 #define FATAL "fifo: fatal: "
 
@@ -202,6 +203,7 @@ int main(argc,argv) int argc; const char *const *argv;
 
   write(1,&banner,blen);
 
+#ifdef HASFIONREAD
   millisleep(1);
   while (1) {
     int remain;
@@ -210,6 +212,7 @@ int main(argc,argv) int argc; const char *const *argv;
     if (remain < blen) break;
     millisleep(5);
   }
+#endif
 
   switch (my_buffer_copy(&ssout,&ssin)) {
     case -2:
