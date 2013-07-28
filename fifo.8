@@ -46,10 +46,13 @@ normally exits 0 after SIGTERM and
 .I child
 stops.
 
+.B fifo
+exits 100 for improper usage with a message on standard error.
+
 For any other problems,
 .B fifo
-exits 112 and prints an error message
-to standard error.
+exits 111 with a message on standard
+error.
 .SH SIGNALS
 SIGTERM
 .Sp
