@@ -30,19 +30,19 @@ normally runs forever.
 
 At startup,
 .B fifo
-prints a banner message ("\*(L"fifostart\*(R"") to
+prints a banner message ("fifostart") to
 .I child
 to ensure it is running before reading from
 .IR file .
 If your platform
-supports the \s-1FIONREAD\s0 ioctl,
+supports the FIONREAD ioctl,
 .I fifo
 will wait until the banner has been
 read before reading from
 .IR file .
 .SH EXIT CODES
 .B fifo
-normally exits 0 after \s-1SIGTERM\s0 and
+normally exits 0 after SIGTERM and
 .I child
 stops.
 
@@ -51,7 +51,7 @@ For any other problems,
 exits 112 and prints an error message
 to standard error.
 .SH SIGNALS
-\s-1SIGTERM\s0
+SIGTERM
 .Sp
 .RS 4
 .B fifo
@@ -67,15 +67,17 @@ end of file on its standard input and exit gracefully.
 then stops.
 .RE
 
-\s-1SIGALRM\s0
+SIGALRM
 .Sp
 .RS 4
 .B fifo
-sends \s-1SIGALRM\s0 to
+sends SIGALRM to
 .IR child .
 .RE
 .SH BUGS
-On platforms that don't support \s-1FIONREAD, \s0\fBfifo\fR will begin reading
+On platforms that don't support FIONREAD,
+.B fifo
+will begin reading
 from
 .I file
 as soon as it forks
