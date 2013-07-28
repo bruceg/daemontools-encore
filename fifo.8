@@ -34,6 +34,12 @@ prints a banner message ("\*(L"fifostart\*(R"") to
 .I child
 to ensure it is running before reading from
 .IR file .
+If your platform
+supports the \s-1FIONREAD\s0 ioctl,
+.I fifo
+will wait until the banner has been
+read before reading from
+.IR file .
 .SH EXIT CODES
 .B fifo
 normally exits 0 after \s-1SIGTERM\s0 and
@@ -68,6 +74,26 @@ then stops.
 sends \s-1SIGALRM\s0 to
 .IR child .
 .RE
+.SH BUGS
+On platforms that don't support \s-1FIONREAD, \s0\fBfifo\fR will begin reading
+from
+.I file
+as soon as it forks
+.IR child .
+If
+.I child
+fails to start,
+.B fifo
+dies and whatever has been read from
+.I file
+is lost.
+
+While running, if
+.I child
+dies
+.B fifo
+also exits, losing any messages
+it has in its buffer.
 .SH SEE ALSO
 mkfifo(1),
 mkfifo(2)
