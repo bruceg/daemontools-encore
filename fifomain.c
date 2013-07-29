@@ -205,10 +205,10 @@ int main(argc,argv) int argc; const char *const *argv;
 #ifdef HASFIONREAD
   millisleep(1);
   while (1) {
-    int remain;
+    FIONREADTYPE remain;
     if (ioctl(1,FIONREAD,&remain) == -1)
       strerr_die2sys(111,FATAL,"unable to check pipe: ");
-    if (remain < blen) break;
+    if (remain < (FIONREADTYPE)blen) break;
     millisleep(5);
   }
 #endif
