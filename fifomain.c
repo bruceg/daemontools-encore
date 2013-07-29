@@ -38,6 +38,23 @@ int myread(fd,buf,len) int fd; char *buf; int len;
   return read(fd,buf,len);
 }
 
+int my_buffer_copy(buffer *out,buffer *in)
+{
+  int n;
+  char *x;
+
+  for (;;) {
+    n = buffer_feed(in);
+    if (n < 0) return -2;
+    if (exitsoon) return -4;
+    if (!n) return 0;
+    x = buffer_PEEK(in);
+    if (buffer_put(out,x,n) == -1) return -3;
+    buffer_SEEK(in,n);
+    if (exitsoon) return -4;
+  }
+}
+
 void die_usage(void)
 {
   strerr_die1x(100,"fifo: usage: fifo file child");
@@ -79,25 +96,6 @@ void sig_child_handler(void)
     );
   }
   strerr_die2x(111,FATAL,"immaculate conception");
-}
-
-int my_buffer_copy(out,in)
-register buffer *out;
-register buffer *in;
-{
-  register int n;
-  register char *x;
-
-  for (;;) {
-    n = buffer_feed(in);
-    if (n < 0) return -2;
-    if (exitsoon) return -4;
-    if (!n) return 0;
-    x = buffer_PEEK(in);
-    if (buffer_put(out,x,n) == -1) return -3;
-    buffer_SEEK(in,n);
-    if (exitsoon) return -4;
-  }
 }
 
 void millisleep(unsigned int s)
