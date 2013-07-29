@@ -6,8 +6,8 @@ fifo: usage: fifo file child
 100
 --- fifo complains if it cannot run program
 fifo: fatal: unable to exec ./nonexistent: file does not exist
-child died: status 112
-112
+child died: status 111
+111
 --- fifo runs a program
 0
 fifostart
