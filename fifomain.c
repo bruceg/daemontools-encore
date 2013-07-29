@@ -28,10 +28,14 @@ int exitsoon = 0;
 char inbuf[BUFFER_INSIZE];
 char outbuf[BUFFER_OUTSIZE];
 
-buffer ssin;
-buffer ssout = BUFFER_INIT(buffer_unixwrite,1,outbuf,sizeof outbuf);
+buffer ssin,ssout;
 
-int myread(fd,buf,len) int fd; char *buf; int len;
+int mywrite(int fd,const char *buf,unsigned int len)
+{
+  return write(fd,buf,len);
+}
+
+int myread(int fd,char *buf,int len)
 {
   if (buffer_flush(&ssout) == -1) return -1;
   if (exitsoon) return 0;
@@ -156,6 +160,7 @@ int main(argc,argv) int argc; const char *const *argv;
   if (ndelay_off(fdr))
     strerr_die2sys(111,FATAL,"unable to set nonblocking on fifo: ");
 
+  buffer_init(&ssout,mywrite,1,outbuf,sizeof outbuf);
   buffer_init(&ssin,myread,fdr,inbuf,sizeof inbuf);
 
   if (pipe(pi))
