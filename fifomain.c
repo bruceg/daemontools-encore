@@ -105,7 +105,8 @@ void millisleep(unsigned int s)
   struct taia now;
   struct taia deadline;
   iopause_fd x;
-  int secs, nsecs;
+  uint64 secs;
+  unsigned long nsecs;
 
   secs = s / 1000;
   nsecs = (s * 1000) % 1000000000;
