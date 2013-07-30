@@ -42,17 +42,17 @@ supports the FIONREAD ioctl,
 will wait until the banner has been
 read before reading from
 .IR file .
-If
+If FIONREAD is supported and
 .I child
-dies before the banner
-is read,
+dies before the banner is read,
 .B fifo
-exits. Otherwise
+exits without reading from
+.IR file .
+Otherwise
 .B fifo
 tries to restart
 .IR child .
-It
-never gives up.
+It never gives up.
 
 .B fifo
 normally runs forever.
@@ -76,12 +76,12 @@ SIGTERM
 .B fifo
 stops reading from
 .IR file ,
-empties its buffer, and closes the
-pipe to
+empties its buffer, and closes pipe
+to
 .IR child .
 .I child
-is expected to continue until it notices the
-end of file on its standard input and exit gracefully.
+is expected to continue until it notices end of
+input and exit gracefully.
 .B fifo
 then stops.
 .RE
@@ -94,21 +94,6 @@ sends SIGALRM to
 .IR child .
 .RE
 .SH BUGS
-On platforms that don't support FIONREAD,
-.B fifo
-will begin reading
-from
-.I file
-as soon as it forks
-.IR child .
-If
-.I child
-fails to start,
-.B fifo
-dies and whatever has been read from
-.I file
-is lost.
-
 While running, if
 .B fifo
 dies, any messages it has in its buffer are lost
