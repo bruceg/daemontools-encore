@@ -12,11 +12,16 @@ prints everything fed to the named pipe
 to standard input
 of
 .IR child .
-It holds
 .I file
-open for writing so that other programs can
-repeatedly open and close
+is held open for writing so that other programs
+can repeatedly open and close
 .IR file .
+The pipe to
+.I child
+is held open
+for reading so
+.I child
+can be restarted if it dies without losing data.
 
 .B fifo
 creates
@@ -24,9 +29,6 @@ creates
 if
 .I file
 does not exist.
-
-.B fifo
-normally runs forever.
 
 At startup,
 .B fifo
@@ -40,6 +42,20 @@ supports the FIONREAD ioctl,
 will wait until the banner has been
 read before reading from
 .IR file .
+If
+.I child
+dies before the banner
+is read,
+.B fifo
+exits. Otherwise
+.B fifo
+tries to restart
+.IR child .
+It
+never gives up.
+
+.B fifo
+normally runs forever.
 .SH EXIT CODES
 .B fifo
 normally exits 0 after SIGTERM and
@@ -94,11 +110,8 @@ dies and whatever has been read from
 is lost.
 
 While running, if
-.I child
-dies
 .B fifo
-also exits, losing any messages
-it has in its buffer.
+dies, any messages it has in its buffer are lost
 .SH SEE ALSO
 mkfifo(1),
 mkfifo(2)

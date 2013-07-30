@@ -19,49 +19,30 @@
 #include "str.h"
 #include "fionread.h"
 
-#define FATAL "fifo: fatal: "
-
+int pi[2];
+int fifo_rd;
+int fifo_wr;
+int null_rd;
+int null_wr;
 int child = 0;
 const char *fn;
 int exitsoon = 0;
-
+int childdied = 0;
+buffer ssin,ssout;
 char inbuf[BUFFER_INSIZE];
 char outbuf[BUFFER_OUTSIZE];
+const char *const *save_argv = NULL;
 
-buffer ssin,ssout;
+/* must be newline and null-terminated */
+char banner[] = "fifostart\n\0";
 
-int mywrite(int fd,const char *buf,unsigned int len)
-{
-  return write(fd,buf,len);
-}
-
-int myread(int fd,char *buf,int len)
-{
-  if (buffer_flush(&ssout) == -1) return -1;
-  if (exitsoon) return 0;
-  return read(fd,buf,len);
-}
-
-int my_buffer_copy(buffer *out,buffer *in)
-{
-  int n;
-  char *x;
-
-  for (;;) {
-    n = buffer_feed(in);
-    if (n < 0) return -2;
-    if (exitsoon) return -4;
-    if (!n) return 0;
-    x = buffer_PEEK(in);
-    if (buffer_put(out,x,n) == -1) return -3;
-    buffer_SEEK(in,n);
-    if (exitsoon) return -4;
-  }
-}
+#define FATAL "fifo: fatal: "
+#define WARNING "fifo: warning: "
+#define USAGE "fifo: usage: "
 
 void die_usage(void)
 {
-  strerr_die1x(100,"fifo: usage: fifo file child");
+  strerr_die2x(100,USAGE,"fifo file child");
 }
 
 void sig_term_handler(void)
@@ -81,23 +62,24 @@ void sig_child_handler(void)
   int wstat;
   if (child) {
     char s[FMT_ULONG];
-    do {
-      if (wait_pid(&wstat,child) == -1)
-        strerr_die1x(111,"waitpid failed in sig_child_handler");
-      if ((wstat & 0x7f) == 0) {
-        len = fmt_uint(s,((wstat & 0xff00) >> 8));
-        s[len] = '\0';
-        strerr_die2x(111,"child died: status ",s);
-      }
-      if (((signed char) (((wstat) & 0x7f) + 1) >> 1) > 0) {
-        len = fmt_uint(s,(wstat & 0x7f));
-        s[len] = '\0';
-        strerr_die2x(111,"child died: signal ",s);
-      }
-    } while (
-      !((wstat & 0x7f) == 0)
-      && !(((signed char) ((wstat & 0x7f) + 1) >> 1) > 0)
-    );
+    if (wait_pid(&wstat,child) == -1)
+      /* XXX: only here if we get another signal (error_intr) */
+      strerr_die2x(111,FATAL,"waitpid failed in sig_child_handler");
+    if ((wstat & 0x7f) == 0) {
+      len = fmt_uint(s,((wstat & 0xff00) >> 8));
+      s[len] = '\0';
+      strerr_warn3(WARNING,"child died: status ",s,0);
+      childdied = 1;
+      return;
+    }
+    if (((signed char) (((wstat) & 0x7f) + 1) >> 1) > 0) {
+      len = fmt_uint(s,(wstat & 0x7f));
+      s[len] = '\0';
+      strerr_warn3(WARNING,"child died: signal ",s,0);
+      childdied = 1;
+      return;
+    }
+    strerr_die2x(111,FATAL,"child on fire");
   }
   strerr_die2x(111,FATAL,"immaculate conception");
 }
@@ -127,19 +109,64 @@ void millisleep(unsigned int s)
   }
 }
 
-int main(argc,argv) int argc; const char *const *argv;
+void fork_child(void)
 {
-  int fdr;
-  int fdw;
+  for (;;) {
+    childdied = 0;
+    switch(child = fork()) {
+      case -1:
+        strerr_warn2(WARNING,"unable to fork: ",&strerr_sys);
+        millisleep(1000);
+        continue;
+      case 0:
+        if (fd_move(0,pi[0]))
+          strerr_die2sys(111,FATAL,"unable to move pipe to stdin: ");
+        if (fd_move(1,null_wr))
+          strerr_die2sys(111,FATAL,"unable to move null to stdout: ");
+        if (closeonexec(fifo_rd))
+          strerr_die2sys(111,FATAL,"unable to set fifo reader closeonexec: ");
+        if (closeonexec(fifo_wr))
+          strerr_die2sys(111,FATAL,"unable to set fifo writer closeonexec: ");
+        pathexec(save_argv);
+        strerr_die4sys(111,WARNING,"unable to exec ",*save_argv,": ");
+    }
+    break;
+  }
+}
+
+int myread(int fd,char *buf,int len)
+{
+  if (buffer_flush(&ssout) == -1) return -1;
+  if (childdied) return 0;
+  if (exitsoon) return 0;
+  return read(fd,buf,len);
+}
+
+int my_buffer_copy(buffer *out,buffer *in)
+{
+  int n;
+  char *x;
+
+  for (;;) {
+    for (;;) {
+      n = buffer_feed(in);
+      if (n < 0) return -2;
+      if (childdied) break;
+      if (exitsoon) return -4;
+      if (!n) return 0;
+      x = buffer_PEEK(in);
+      if (buffer_put(out,x,n) == -1) return -3;
+      buffer_SEEK(in,n);
+      if (childdied) break;
+      if (exitsoon) return -4;
+    }
+    fork_child();
+  }
+}
+
+int main(int argc,const char *const *argv)
+{
   int blen;
-  int pi[2];
-  int rd_null;
-  int wr_null;
-
-  /* must be newline and null-terminated */
-  char banner[] = "fifostart\n\0";
-
-  blen = str_len(banner);
 
   if (!*argv) die_usage();
   if (!*++argv) die_usage();
@@ -148,97 +175,84 @@ int main(argc,argv) int argc; const char *const *argv;
 
   if (!*++argv) die_usage();
 
-  if (fifo_make(fn,0600) == -1)
-    if (errno != error_exist)
-      strerr_die4sys(111,FATAL,"unable to create ",fn,": ");
-
-  if ((fdr = open_read(fn)) == -1)
-    strerr_die4sys(111,FATAL,"unable to open ",fn," for reading: ");
-  if ((fdw = open_write(fn)) == -1)
-    strerr_die4sys(111,FATAL,"unable to open ",fn," for writing: ");
-
-  if (ndelay_off(fdr))
-    strerr_die2sys(111,FATAL,"unable to set nonblocking on fifo: ");
-
-  buffer_init(&ssout,mywrite,1,outbuf,sizeof outbuf);
-  buffer_init(&ssin,myread,fdr,inbuf,sizeof inbuf);
-
-  if (pipe(pi))
-    strerr_die2sys(111,FATAL,"unable to create pipe: ");
-  if (ndelay_off(pi[1]))
-    strerr_die2sys(111,FATAL,"unable to set nonblocking on pipe: ");
-  if ((rd_null = open_read("/dev/null")) == -1)
-    strerr_die2sys(111,FATAL,"unable to open null reader: ");
-  if ((wr_null = open_write("/dev/null")) == -1)
-    strerr_die2sys(111,FATAL,"unable to open null writer: ");
+  save_argv = argv;
 
   sig_catch(sig_child,sig_child_handler);
   sig_catch(sig_term,sig_term_handler);
   sig_catch(sig_alarm,sig_alarm_handler);
 
-  switch(child = fork()) {
-    case -1:
-      strerr_die2sys(111,FATAL,"unable to fork: ");
-    case 0:
-      if (fd_move(0,pi[0]))
-        strerr_die2sys(111,FATAL,"unable to move pipe to stdin: ");
-      if (fd_move(1,wr_null))
-        strerr_die2sys(111,FATAL,"unable to move null to stdout: ");
-      if (closeonexec(fdr))
-        strerr_die2sys(111,FATAL,"unable to set fifo reader closeonexec: ");
-      if (closeonexec(pi[1]))
-        strerr_die2sys(111,FATAL,"unable to set pipe writer closeonexec: ");
-      if (closeonexec(fdw))
-        strerr_die2sys(111,FATAL,"unable to set fifo writer closeonexec: ");
-      if (closeonexec(rd_null))
-        strerr_die2sys(111,FATAL,"unable to set null reader closeonexec: ");
-      pathexec(argv);
-      strerr_die4sys(111,FATAL,"unable to exec ",*argv,": ");
-  }
+  if (fifo_make(fn,0600) == -1)
+    if (errno != error_exist)
+      strerr_die4sys(111,FATAL,"unable to create ",fn,": ");
 
-  if (close(pi[0]))
-    strerr_die2sys(111,FATAL,"unable to close pipe reader: ");
-  if (fd_move(0,rd_null))
+  if ((fifo_rd = open_read(fn)) == -1)
+    strerr_die4sys(111,FATAL,"unable to open ",fn," for reading: ");
+  if ((fifo_wr = open_write(fn)) == -1)
+    strerr_die4sys(111,FATAL,"unable to open ",fn," for writing: ");
+
+  if ((null_wr = open_write("/dev/null")) == -1)
+    strerr_die2sys(111,FATAL,"unable to open null writer: ");
+  if ((null_rd = open_read("/dev/null")) == -1)
+    strerr_die2sys(111,FATAL,"unable to open null reader: ");
+
+  if (fd_move(0,null_rd))
     strerr_die2sys(111,FATAL,"unable to move null to stdin: ");
+
+  if (pipe(pi))
+    strerr_die2sys(111,FATAL,"unable to create pipe: ");
+
+  if (ndelay_off(fifo_rd))
+    strerr_die2sys(111,FATAL,"unable to set blocking on fifo: ");
+  if (ndelay_off(pi[1]))
+    strerr_die2sys(111,FATAL,"unable to set blocking on pipe: ");
+
   if (fd_move(1,pi[1]))
     strerr_die2sys(111,FATAL,"unable to move pipe to stdout: ");
-  if (close(wr_null))
-    strerr_die2sys(111,FATAL,"unable to close null writer: ");
 
+  buffer_init(&ssout,buffer_unixwrite,1,outbuf,sizeof outbuf);
+  buffer_init(&ssin,myread,fifo_rd,inbuf,sizeof inbuf);
+
+  fork_child();
+
+  blen = str_len(banner);
   write(1,&banner,blen);
 
 #ifdef HASFIONREAD
-  millisleep(1);
   while (1) {
     FIONREADTYPE remain;
     if (ioctl(1,FIONREAD,&remain) == -1)
       strerr_die2sys(111,FATAL,"unable to check pipe: ");
-    if (remain < (FIONREADTYPE)blen) break;
-    millisleep(5);
+    if (!remain)
+      break;
+    if (childdied)
+      strerr_die2x(111,FATAL,"child died before banner");
+    millisleep(250);
   }
 #endif
 
-  switch (my_buffer_copy(&ssout,&ssin)) {
-    case -2:
-      strerr_die4sys(111,FATAL,"unable to read ",fn,": ");
-    case -3:
-      strerr_die2sys(111,FATAL,"unable to write output: ");
-    case -4:
-      if (1) {
-        int wstat = 0;
-        if (child) {
-          sig_block(sig_child);
-          if (close(1))
-            strerr_die2sys(111,FATAL,"unable to close pipe to child: ");
-          if (wait_pid(&wstat,child) == -1)
-            strerr_die2sys(111,FATAL,"waitpid failed: ");
+  for (;;) {
+    switch (my_buffer_copy(&ssout,&ssin)) {
+      case -2:
+        strerr_die2sys(111,FATAL,"unable to flush buffer: ");
+      case -3:
+        strerr_die2sys(111,FATAL,"unable to write output: ");
+      case -4:
+        if (1) {
+          int wstat = 0;
+          if (child) {
+            sig_block(sig_child);
+            if (close(1))
+              strerr_die2sys(111,FATAL,"unable to close pipe to child: ");
+            if (wait_pid(&wstat,child) == -1)
+              strerr_die2sys(111,FATAL,"waitpid failed: ");
+          }
+          return(0);
         }
-        return(0);
-      }
-    case 0:
-      strerr_die3x(111,FATAL,"end of file on ",fn);
+      case 0:
+        strerr_die3x(111,FATAL,"end of file on ",fn);
+    }
   }
-  strerr_die1x(111,"should never get here");
+  strerr_die2x(111,FATAL,"should never get here");
   return(0); /* make -Wall happy */
 }
 

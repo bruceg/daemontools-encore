@@ -5,10 +5,30 @@ fifo: usage: fifo file child
 fifo: usage: fifo file child
 100
 --- fifo complains if it cannot run program
-fifo: fatal: unable to exec ./nonexistent: file does not exist
-child died: status 111
+fifo: warning: unable to exec ./nonexistent: file does not exist
+fifo: warning: child died: status 111
+fifo: fatal: child died before banner
 111
+--- fifo quits if child doesnt finish banner
+fifostar
+fifo: warning: child died: status 111
+fifo: fatal: child died before banner
 --- fifo runs a program
-0
 fifostart
 hi there
+--- fifo runs a program but child dies later
+:fifostart
+
+fifo: warning: child died: status 0
+:Ticking away the momen
+fifo: warning: child died: status 0
+:ts that make up the du
+fifo: warning: child died: status 0
+:ll day,
+fritter and wa
+fifo: warning: child died: status 0
+:ste the hour in an off
+fifo: warning: child died: status 0
+:hand way.
+
+fifo: warning: child died: status 0
