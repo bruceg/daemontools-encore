@@ -1,7 +1,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
-#include <sys/ioctl.h>
 #include "buffer.h"
 #include "sig.h"
 #include "taia.h"
