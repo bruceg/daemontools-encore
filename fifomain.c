@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
-#include <sys/ioctl.h> /* <sys/filio.h> on solaris */
+#include <sys/ioctl.h>
 #include "buffer.h"
 #include "sig.h"
 #include "taia.h"
@@ -62,9 +62,13 @@ void sig_child_handler(void)
   int wstat;
   if (child) {
     char s[FMT_ULONG];
-    if (wait_pid(&wstat,child) == -1)
-      /* XXX: only here if we get another signal (error_intr) */
-      strerr_die2x(111,FATAL,"waitpid failed in sig_child_handler");
+    for (;;) {
+      if (wait_pid(&wstat,child) == -1) {
+        if (errno == error_intr) continue;
+        strerr_die2x(111,FATAL,"reaping failed: ");
+      }
+      break;
+    }
     if ((wstat & 0x7f) == 0) {
       len = fmt_uint(s,((wstat & 0xff00) >> 8));
       s[len] = '\0';
@@ -119,13 +123,13 @@ void fork_child(void)
         millisleep(1000);
         continue;
       case 0:
-        if (fd_move(0,pi[0]))
+        if (fd_move(0,pi[0]) == -1)
           strerr_die2sys(111,FATAL,"unable to move pipe to stdin: ");
-        if (fd_move(1,null_wr))
+        if (fd_move(1,null_wr) == -1)
           strerr_die2sys(111,FATAL,"unable to move null to stdout: ");
-        if (closeonexec(fifo_rd))
+        if (closeonexec(fifo_rd) == -1)
           strerr_die2sys(111,FATAL,"unable to set fifo reader closeonexec: ");
-        if (closeonexec(fifo_wr))
+        if (closeonexec(fifo_wr) == -1)
           strerr_die2sys(111,FATAL,"unable to set fifo writer closeonexec: ");
         pathexec(save_argv);
         strerr_die4sys(111,WARNING,"unable to exec ",*save_argv,": ");
@@ -167,6 +171,8 @@ int my_buffer_copy(buffer *out,buffer *in)
 int main(int argc,const char *const *argv)
 {
   int blen;
+  int wrote;
+  char *bptr;
 
   if (!*argv) die_usage();
   if (!*++argv) die_usage();
@@ -195,27 +201,39 @@ int main(int argc,const char *const *argv)
   if ((null_rd = open_read("/dev/null")) == -1)
     strerr_die2sys(111,FATAL,"unable to open null reader: ");
 
-  if (fd_move(0,null_rd))
+  if (fd_move(0,null_rd) == -1)
     strerr_die2sys(111,FATAL,"unable to move null to stdin: ");
 
-  if (pipe(pi))
+  if (pipe(pi) == -1)
     strerr_die2sys(111,FATAL,"unable to create pipe: ");
 
-  if (ndelay_off(fifo_rd))
+  if (ndelay_off(fifo_rd) == -1)
     strerr_die2sys(111,FATAL,"unable to set blocking on fifo: ");
-  if (ndelay_off(pi[1]))
+  if (ndelay_off(pi[1]) == -1)
     strerr_die2sys(111,FATAL,"unable to set blocking on pipe: ");
 
-  if (fd_move(1,pi[1]))
+  if (fd_move(1,pi[1]) == -1)
     strerr_die2sys(111,FATAL,"unable to move pipe to stdout: ");
 
   buffer_init(&ssout,buffer_unixwrite,1,outbuf,sizeof outbuf);
   buffer_init(&ssin,myread,fifo_rd,inbuf,sizeof inbuf);
 
-  fork_child();
-
+  bptr = banner;
   blen = str_len(banner);
-  write(1,&banner,blen);
+  for (;;) {
+    if ((wrote = write(1,bptr,blen)) == -1) {
+      if (errno == error_intr) continue;
+      strerr_die2sys(111,FATAL,"unable to write banner: ");
+    }
+    if (wrote < blen) {
+      bptr += wrote;
+      blen -= wrote;
+      continue;
+    }
+    break;
+  }
+
+  fork_child();
 
 #ifdef HASFIONREAD
   while (1) {
@@ -232,24 +250,38 @@ int main(int argc,const char *const *argv)
 
   for (;;) {
     switch (my_buffer_copy(&ssout,&ssin)) {
+
+      /* catastrophic error while reading fifo or writing pipe */
       case -2:
         strerr_die2sys(111,FATAL,"unable to flush buffer: ");
+
+      /* catastrophic error while writing pipe */
       case -3:
         strerr_die2sys(111,FATAL,"unable to write output: ");
+
+      /* exitsoon == 1 */
       case -4:
         if (1) {
-          int wstat = 0;
           if (child) {
+            int wstat = 0;
             sig_block(sig_child);
-            if (close(1))
-              strerr_die2sys(111,FATAL,"unable to close pipe to child: ");
+            for (;;) {
+              if (close(1) == -1) {
+                if (errno == error_intr) continue;
+                strerr_die2sys(111,FATAL,"unable to close pipe to child: ");
+              }
+              break;
+            }
             if (wait_pid(&wstat,child) == -1)
-              strerr_die2sys(111,FATAL,"waitpid failed: ");
+              strerr_die2sys(111,FATAL,"waiting failed: ");
           }
           return(0);
         }
+
+      /* eof on file */
       case 0:
-        strerr_die3x(111,FATAL,"end of file on ",fn);
+        exitsoon = 1;
+        continue;
     }
   }
   strerr_die2x(111,FATAL,"should never get here");
