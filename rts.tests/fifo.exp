@@ -17,18 +17,15 @@ fifo: fatal: child died before banner
 fifostart
 hi there
 --- fifo runs a program but child dies later
-:fifostart
+fifostart
+Ticking away
+fifo: warning: child died: status 121
+ the moments that make
+fifo: warning: child died: status 121
+ up the dull day,
+frit
+fifo: warning: child died: status 121
+ter and waste the hour
+fifo: warning: child died: status 121
+ in an offhand way.
 
-fifo: warning: child died: status 0
-:Ticking away the momen
-fifo: warning: child died: status 0
-:ts that make up the du
-fifo: warning: child died: status 0
-:ll day,
-fritter and wa
-fifo: warning: child died: status 0
-:ste the hour in an off
-fifo: warning: child died: status 0
-:hand way.
-
-fifo: warning: child died: status 0

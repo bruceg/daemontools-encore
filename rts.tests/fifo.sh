@@ -1,5 +1,5 @@
 echo '--- fifo requires arguments'
-fifo; echo $?
+fifo; echo $?;
 
 
 echo '--- fifo requires more arguments'
@@ -7,28 +7,33 @@ fifo pipe; echo $?
 
 
 echo '--- fifo complains if it cannot run program'
-fifo pipe ./nonexistent; echo $?
+fifo pipe ./nonexistent; echo $?; rm -f pipe
 
 
 echo '--- fifo quits if child doesnt finish banner'
-fifo pipe perl -e 'sysread(STDIN,$a,8); warn(qq{$a\n}); exit(111)'
+fifo pipe sh -c 'head -c 8 1>&2 ; echo 1>&2 ; exit 111'
+rm -f pipe
 
 
 echo '--- fifo runs a program'
-fifo pipe multilog ./main &
-fifopid=$!
+fifo pipe multilog e &
 echo 'hi there' > pipe
-perl -e 'select(undef,undef,undef,0.5)'
-cat main/current
-kill $fifopid
+fifopid=$!
+rm -f pipe
+wait $fifopid
 
 
 echo '--- fifo runs a program but child dies later'
-echo 'Ticking away the moments that make up the dull day,' > pipe
-echo 'fritter and waste the hour in an offhand way.'       > pipe
-fifo pipe perl -e 'sysread(STDIN, $a, 22) && warn( qq{:$a\n} )' &
+mknod pipe p
+( cat <<END
+Ticking away the moments that make up the dull day,
+fritter and waste the hour in an offhand way.
+END
+) > pipe &
+fifo pipe sh -c 'head -c 22 1>&2 ; echo 1>&2 ; exit 121' &
 fifopid=$!
-perl -e 'select(undef,undef,undef,0.5)'
-kill $fifopid
-perl -e 'select(undef,undef,undef,0.5)'
+sleep 1
+kill -TERM $fifopid
+wait $fifopid
+rm -f pipe
 
