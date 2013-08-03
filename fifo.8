@@ -36,26 +36,50 @@ prints a banner message ("fifostart") to
 .I child
 to ensure it is running before reading from
 .IR file .
-If your platform
-supports the FIONREAD ioctl,
+
+If your platform supports the FIONREAD ioctl,
 .I fifo
-will wait until the banner has been
-read before reading from
+will wait until
+the banner has been read before reading from
 .IR file .
-If FIONREAD is supported and
+In that case, if
 .I child
-dies before the banner is read,
+dies before the banner is read
 .B fifo
-exits without reading from
-.IR file .
-Otherwise
+exits without reading
+from
+.I file
+and prints a message on standard error.
+
 .B fifo
 tries to restart
-.IR child .
-It never gives up.
+.I child
+if it stops. It never gives up.
 
 .B fifo
 normally runs forever.
+
+At shutdown (SIGTERM),
+.B fifo
+reads from
+.I file
+until the next
+newline. If the last character read was already a newline,
+.B fifo
+stops
+reading immediately. If
+.B fifo
+doesn't see a newline within 2 seconds,
+it gives up.
+
+.B fifo
+waits until its buffers have been flushed before shutting down.
+
+If your platform supports FIONREAD,
+.B fifo
+waits until the pipe to
+.I child
+has been completely read before closing it.
 .SH EXIT CODES
 .B fifo
 normally exits 0 after SIGTERM and

@@ -1,6 +1,8 @@
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <fcntl.h>
 #include "buffer.h"
 #include "sig.h"
 #include "taia.h"
@@ -25,6 +27,8 @@ int null_rd;
 int null_wr;
 int child = 0;
 const char *fn;
+int nllast = 0;
+int nlfound = 0;
 int exitsoon = 0;
 int childdied = 0;
 buffer ssin,ssout;
@@ -47,10 +51,15 @@ void die_usage(void)
 void sig_term_handler(void)
 {
   exitsoon = 1;
+  alarm(2);
 }
 
 void sig_alarm_handler(void)
 {
+  if (exitsoon) {
+    nlfound = 1;
+    return;
+  }
   if (child)
     kill(child,sig_alarm);
 }
@@ -64,6 +73,7 @@ void sig_child_handler(void)
     for (;;) {
       if (wait_pid(&wstat,child) == -1) {
         if (errno == error_intr) continue;
+        if (errno == error_child) break;
         strerr_die2x(111,FATAL,"reaping failed: ");
       }
       break;
@@ -116,33 +126,134 @@ void fork_child(void)
 {
   for (;;) {
     childdied = 0;
-    switch(child = fork()) {
+    switch (child = fork()) {
+
       case -1:
         strerr_warn2(WARNING,"unable to fork: ",&strerr_sys);
         millisleep(1000);
         continue;
+
       case 0:
-        if (fd_move(0,pi[0]) == -1)
+        for (;;) {
+          if (fd_move(0,pi[0]) != -1) break;
+          if (errno == error_intr) continue;
           strerr_die2sys(111,FATAL,"unable to move pipe to stdin: ");
-        if (fd_move(1,null_wr) == -1)
+        }
+        pi[0] = 0;
+
+        for (;;) {
+          if (fd_move(1,null_wr) != -1) break;
+          if (errno == error_intr) continue;
           strerr_die2sys(111,FATAL,"unable to move null to stdout: ");
-        if (closeonexec(fifo_rd) == -1)
-          strerr_die2sys(111,FATAL,"unable to set fifo reader closeonexec: ");
-        if (closeonexec(fifo_wr) == -1)
-          strerr_die2sys(111,FATAL,"unable to set fifo writer closeonexec: ");
+        }
+        null_wr = 1;
+
+        for (;;) {
+          if (close(fifo_rd) != -1) break;
+          if (errno == error_intr) continue;
+          strerr_die2sys(111,FATAL,"unable to close forked reader: ");
+        }
+
+        for (;;) {
+          if (close(fifo_wr) != -1) break;
+          if (errno == error_intr) continue;
+          strerr_die2sys(111,FATAL,"unable to close forked writer: ");
+        }
+
         pathexec(save_argv);
-        strerr_die4sys(111,WARNING,"unable to exec ",*save_argv,": ");
+        strerr_die4sys(111,WARNING,"unable to run ",*save_argv,": ");
     }
     break;
   }
 }
 
+/* buffer notes
+ *   s->x points to next available buffer space
+ *   s->n is how much space available
+ *   s->op and s->fd are obvious
+ *   s->p is buffer space used
+ */
+
 int myread(int fd,char *buf,int len)
 {
-  if (buffer_flush(&ssout) == -1) return -1;
+  int r;
+  int new_rd;
+  /*
+   * buffer_flush() returns either 0 or -1 on write() error
+   *
+   * buffer_flush() assumes all data is written. if any write() error
+   * other than EINTR occurs, it is propogated back to us. ssout->p has
+   * already been reset to 0, so any unwritten data in ssout is lost!
+   *
+   * or is it? ssout->x nor ssout->n are changed, so... in theory we
+   * could semi-gracefully recover, but the errors from write() all look
+   * pretty catastrophic, so just die.
+   */
+  if (buffer_flush(&ssout) == -1)
+    strerr_die2sys(111,FATAL,"unable to flush: ");
+  /*
+   * at this point we need to know several things: exitsoon, childdied,
+   * nlfound, nllast.
+   *
+   * if childdied, we don't want to read any more until a new child is
+   * forked, if any. just return 0.
+   */
   if (childdied) return 0;
-  if (exitsoon) return 0;
-  return read(fd,buf,len);
+  /*
+   * if we're exiting and what we've read so far was newline-terminated
+   * already, we can start flushing now, so don't read in that
+   * case. set newline found and return 0.
+   */
+  if (exitsoon && nllast) nlfound = 1;
+  /* if we'll be exiting soon and newline has been found, we don't want
+   * to read any more. we're on our way out, so just return 0.
+   */
+  if (nlfound) return 0;
+  /*
+   * if exitsoon, we want to read one character at a time up until the
+   * next newline then let the buffer flush and close the pipe to child
+   * so it exits, then ourselves exit.
+   */
+  if (exitsoon) len = 1;
+
+  r = read(fd,buf,len);
+
+  if (r > 0) {
+    /*
+     * check for newline-termination
+     */
+    nllast = (buf[r-1] == '\n') ? 1 : 0;
+    return r;
+  }
+  if (!r) {
+    /*
+     * what we want here is to find out if we have anything buffered. if
+     * so, we want to just return 0 and let it flush. if the write()
+     * blocks, fine. we'll end up looping around to read again, at which
+     * time we may have a new writer and not get here again.
+     */
+    if ((ssin.p != 0) || (ssout.p != 0)) return 0;
+    /*
+     * if nothing buffered, we want to somehow block until we have
+     * some input. whether we block on open() here or loop back around
+     * to block on read() doesn't matter, though the latter is preferred.
+     */
+    for (;;) {
+      if ((new_rd = open(fn,O_RDONLY)) != -1) break;
+      if (errno == error_intr) continue;
+      strerr_die2sys(111,FATAL,"unable to open new reader: ");
+    }
+    /* XXX Ugh! if the close() in either fd_copy() or fd_move() fails
+     * (error_intr?), we could end up with either our new descriptor in
+     * the wrong place and/or an extra reader.
+     */
+    for (;;) {
+      if (fd_move(fifo_rd,new_rd) != -1) break;
+      if (errno == error_intr) continue;
+      strerr_die2sys(111,FATAL,"unable to move new reader: ");
+    }
+  }
+  return r;
 }
 
 int my_buffer_copy(buffer *out,buffer *in)
@@ -151,20 +262,35 @@ int my_buffer_copy(buffer *out,buffer *in)
   char *x;
 
   for (;;) {
-    for (;;) {
-      n = buffer_feed(in);
-      if (n < 0) return -2;
-      if (childdied) break;
-      if (exitsoon) return -4;
-      if (!n) return 0;
+    /* buffer_feed returns in->p if in->p without calling myread(),
+       or whatever returned from myread() */
+    /* myread() return either count read or -1 on read() OR write()
+       error. error_intr already handled. */
+    /* myread() returns 0 in cases: childdied or nlfound before read(),
+       and end of file on fifo. */
+    n = buffer_feed(in);
+    if (n < 0) return -2;
+    if (n) {
       x = buffer_PEEK(in);
+      /* buffer_put returns -1 on catastrophic write() or 0 */
       if (buffer_put(out,x,n) == -1) return -3;
       buffer_SEEK(in,n);
-      if (childdied) break;
-      if (exitsoon) return -4;
     }
-    fork_child();
+    if (childdied) fork_child();
+    if ((nlfound != 0) && (in->p == 0) && (out->p == 0)) return 0;
+/* XXX do we need this? */
+    if (childdied) fork_child();
   }
+}
+
+long check_pipe(void) {
+#ifdef HASFIONREAD
+  FIONREADTYPE remain;
+  if (ioctl(1,FIONREAD,&remain) == -1)
+    strerr_die2sys(111,FATAL,"unable to check pipe: ");
+  return((long)remain);
+#endif
+  return 0;
 }
 
 int main(int argc,const char *const *argv)
@@ -190,37 +316,57 @@ int main(int argc,const char *const *argv)
     if (errno != error_exist)
       strerr_die4sys(111,FATAL,"unable to create ",fn,": ");
 
-  if ((fifo_rd = open_read(fn)) == -1)
+  for (;;) {
+    if ((fifo_rd = open(fn,O_RDONLY|O_NONBLOCK)) != -1) break;
+    if (errno == error_intr) continue;
     strerr_die4sys(111,FATAL,"unable to open ",fn," for reading: ");
-  if ((fifo_wr = open_write(fn)) == -1)
+  }
+  for (;;) {
+    if ((fifo_wr = open(fn,O_WRONLY)) != -1) break;
+    if (errno == error_intr) continue;
     strerr_die4sys(111,FATAL,"unable to open ",fn," for writing: ");
+  }
 
-  if ((null_wr = open_write("/dev/null")) == -1)
+  if (ndelay_off(fifo_rd) == -1)
+    strerr_die2sys(111,FATAL,"unable to set blocking on fifo: ");
+
+  for (;;) {
+    if ((null_wr = open("/dev/null",O_WRONLY)) != -1) break;
+    if (errno == error_intr) continue;
     strerr_die2sys(111,FATAL,"unable to open null writer: ");
-  if ((null_rd = open_read("/dev/null")) == -1)
+  }
+  for (;;) {
+    if ((null_rd = open("/dev/null",O_RDONLY)) != -1) break;
+    if (errno == error_intr) continue;
     strerr_die2sys(111,FATAL,"unable to open null reader: ");
-
-  if (fd_move(0,null_rd) == -1)
-    strerr_die2sys(111,FATAL,"unable to move null to stdin: ");
+  }
 
   if (pipe(pi) == -1)
     strerr_die2sys(111,FATAL,"unable to create pipe: ");
 
-  if (ndelay_off(fifo_rd) == -1)
-    strerr_die2sys(111,FATAL,"unable to set blocking on fifo: ");
-  if (ndelay_off(pi[1]) == -1)
-    strerr_die2sys(111,FATAL,"unable to set blocking on pipe: ");
+  for (;;) {
+    if (fd_move(0,null_rd) != -1) break;
+    if (errno == error_intr) continue;
+    strerr_die2sys(111,FATAL,"unable to move null to stdin: ");
+  }
+  null_rd = 0;
 
-  if (fd_move(1,pi[1]) == -1)
+  for (;;) {
+    if (fd_move(1,pi[1]) != -1) break;
+    if (errno == error_intr) continue;
     strerr_die2sys(111,FATAL,"unable to move pipe to stdout: ");
+  }
+  pi[1] = 1;
 
-  buffer_init(&ssout,buffer_unixwrite,1,outbuf,sizeof outbuf);
+  buffer_init(&ssout,buffer_unixwrite,pi[1],outbuf,sizeof outbuf);
   buffer_init(&ssin,myread,fifo_rd,inbuf,sizeof inbuf);
+
+  fork_child();
 
   bptr = banner;
   blen = str_len(banner);
   for (;;) {
-    if ((wrote = write(1,bptr,blen)) == -1) {
+    if ((wrote = write(pi[1],bptr,blen)) == -1) {
       if (errno == error_intr) continue;
       strerr_die2sys(111,FATAL,"unable to write banner: ");
     }
@@ -232,55 +378,46 @@ int main(int argc,const char *const *argv)
     break;
   }
 
-  fork_child();
-
-#ifdef HASFIONREAD
-  while (1) {
-    FIONREADTYPE remain;
-    if (ioctl(1,FIONREAD,&remain) == -1)
-      strerr_die2sys(111,FATAL,"unable to check pipe: ");
-    if (!remain)
-      break;
+  for (;;) {
+    if (!check_pipe()) break;
     if (childdied)
       strerr_die2x(111,FATAL,"child died before banner");
-    millisleep(250);
+    millisleep(100);
   }
-#endif
 
   for (;;) {
     switch (my_buffer_copy(&ssout,&ssin)) {
 
-      /* catastrophic error while reading fifo or writing pipe */
+      /* SIGTERM, newline, flushed, now close child */
+      case 0:
+        if (child) {
+          int wstat = 0;
+/* XXX do we still need this? */
+          for (;;) {
+            if (!check_pipe()) break;
+            if (childdied) fork_child();
+            millisleep(100);
+          }
+          sig_block(sig_child);
+          for (;;) {
+            if (close(pi[1]) != -1) break;
+            if (errno == error_intr) continue;
+            strerr_die2sys(111,FATAL,"unable to close pipe to child: ");
+          }
+          if (wait_pid(&wstat,child) == -1)
+            if (errno != error_child)
+              strerr_die2sys(111,FATAL,"waiting failed: ");
+        }
+        exit(0);
+
+      /* catastrophic error while reading fifo */
       case -2:
-        strerr_die2sys(111,FATAL,"unable to flush buffer: ");
+        strerr_die2sys(111,FATAL,"unable to feed: ");
 
       /* catastrophic error while writing pipe */
       case -3:
         strerr_die2sys(111,FATAL,"unable to write output: ");
 
-      /* exitsoon == 1 */
-      case -4:
-        if (1) {
-          if (child) {
-            int wstat = 0;
-            sig_block(sig_child);
-            for (;;) {
-              if (close(1) == -1) {
-                if (errno == error_intr) continue;
-                strerr_die2sys(111,FATAL,"unable to close pipe to child: ");
-              }
-              break;
-            }
-            if (wait_pid(&wstat,child) == -1)
-              strerr_die2sys(111,FATAL,"waiting failed: ");
-          }
-          return(0);
-        }
-
-      /* eof on file */
-      case 0:
-        exitsoon = 1;
-        continue;
     }
   }
   strerr_die2x(111,FATAL,"should never get here");
