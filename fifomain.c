@@ -1,24 +1,21 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <signal.h>
 #include <fcntl.h>
-#include "buffer.h"
-#include "sig.h"
-#include "taia.h"
-#include "strerr.h"
-#include "open.h"
-#include "iopause.h"
-#include "wait.h"
-#include "pathexec.h"
-#include "fifo.h"
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include "fmt.h"
-#include "error.h"
-#include "ndelay.h"
-#include "fd.h"
-#include "closeonexec.h"
+#include "sig.h"
 #include "str.h"
+#include "taia.h"
+#include "fifo.h"
+#include "wait.h"
+#include "error.h"
+#include "buffer.h"
+#include "ndelay.h"
+#include "strerr.h"
+#include "iopause.h"
 #include "fionread.h"
+#include "pathexec.h"
 
 int pi[2];
 int fifo_rd;
@@ -122,6 +119,41 @@ void millisleep(unsigned int s)
   }
 }
 
+/*
+ * if the original unhandled close() got EINTR here, we wind up
+ * dup'ing from source to `the lowest numbered available file descriptor
+ * greater than or equal to' the target. in other words, the wrong place,
+ * successfully.
+ */
+int my_fd_copy(int to,int from)
+{
+  if (to == from) return 0;
+  if (fcntl(from,F_GETFL,0) == -1) return -1;
+  for (;;) {
+    if (close(to) != -1) break;
+    if (errno == error_intr) continue;
+    return -1;
+  }
+  if (fcntl(from,F_DUPFD,to) == -1) return -1;
+  return 0;
+}
+
+/*
+ * if the original unhandled close() got EINTR here, we wind up with
+ * an extra descriptor.
+ */
+int my_fd_move(int to,int from)
+{
+  if (to == from) return 0;
+  if (my_fd_copy(to,from) == -1) return -1;
+  for (;;) {
+    if (close(from) != -1) break;
+    if (errno == error_intr) continue;
+    return -1;
+  }
+  return 0;
+}
+
 void fork_child(void)
 {
   for (;;) {
@@ -135,14 +167,14 @@ void fork_child(void)
 
       case 0:
         for (;;) {
-          if (fd_move(0,pi[0]) != -1) break;
+          if (my_fd_move(0,pi[0]) != -1) break;
           if (errno == error_intr) continue;
           strerr_die2sys(111,FATAL,"unable to move pipe to stdin: ");
         }
         pi[0] = 0;
 
         for (;;) {
-          if (fd_move(1,null_wr) != -1) break;
+          if (my_fd_move(1,null_wr) != -1) break;
           if (errno == error_intr) continue;
           strerr_die2sys(111,FATAL,"unable to move null to stdout: ");
         }
@@ -243,12 +275,8 @@ int myread(int fd,char *buf,int len)
       if (errno == error_intr) continue;
       strerr_die2sys(111,FATAL,"unable to open new reader: ");
     }
-    /* XXX Ugh! if the close() in either fd_copy() or fd_move() fails
-     * (error_intr?), we could end up with either our new descriptor in
-     * the wrong place and/or an extra reader.
-     */
     for (;;) {
-      if (fd_move(fifo_rd,new_rd) != -1) break;
+      if (my_fd_move(fifo_rd,new_rd) != -1) break;
       if (errno == error_intr) continue;
       strerr_die2sys(111,FATAL,"unable to move new reader: ");
     }
@@ -278,8 +306,6 @@ int my_buffer_copy(buffer *out,buffer *in)
     }
     if (childdied) fork_child();
     if ((nlfound != 0) && (in->p == 0) && (out->p == 0)) return 0;
-/* XXX do we need this? */
-    if (childdied) fork_child();
   }
 }
 
@@ -345,14 +371,14 @@ int main(int argc,const char *const *argv)
     strerr_die2sys(111,FATAL,"unable to create pipe: ");
 
   for (;;) {
-    if (fd_move(0,null_rd) != -1) break;
+    if (my_fd_move(0,null_rd) != -1) break;
     if (errno == error_intr) continue;
     strerr_die2sys(111,FATAL,"unable to move null to stdin: ");
   }
   null_rd = 0;
 
   for (;;) {
-    if (fd_move(1,pi[1]) != -1) break;
+    if (my_fd_move(1,pi[1]) != -1) break;
     if (errno == error_intr) continue;
     strerr_die2sys(111,FATAL,"unable to move pipe to stdout: ");
   }
@@ -392,7 +418,6 @@ int main(int argc,const char *const *argv)
       case 0:
         if (child) {
           int wstat = 0;
-/* XXX do we still need this? */
           for (;;) {
             if (!check_pipe()) break;
             if (childdied) fork_child();
