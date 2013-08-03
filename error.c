@@ -130,3 +130,11 @@ ENOTDIR;
 #else
 -18;
 #endif
+
+int error_child =
+#ifdef ECHILD
+ECHILD;
+#else
+-19;
+#endif
+

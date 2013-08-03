@@ -10,4 +10,5 @@ int main(int argc,const char * const *argv,const char * const *envp)
   setsid(); /* shouldn't fail; if it does, too bad */
   pathexec_run(argv[1],argv + 1,envp);
   strerr_die4sys(111,"pgrphack: fatal: ","unable to run ",argv[1],": ");
+  return(0); /* make -Wall happy */
 }

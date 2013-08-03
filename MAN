@@ -2,6 +2,7 @@ d:::755:/man8::
 c:::644:/man8/:envdir.8:
 c:::644:/man8/:envuidgid.8:
 c:::644:/man8/:fghack.8:
+c:::644:/man8/:fifo.8:
 c:::644:/man8/:multilog.8:
 c:::644:/man8/:pgrphack.8:
 c:::644:/man8/:readproctitle.8:

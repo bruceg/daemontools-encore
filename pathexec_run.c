@@ -6,6 +6,7 @@
 #include "str.h"
 #include "env.h"
 #include "pathexec.h"
+#include "unconst.h"
 
 static stralloc tmp;
 
@@ -16,7 +17,7 @@ void pathexec_run(const char *file,const char * const *argv,const char * const *
   int savederrno;
 
   if (file[str_chr(file,'/')]) {
-    execve(file,(char*const*)argv,(char*const*)envp);
+    execve(file,UNCONST(char*const*,argv),UNCONST(char*const*,envp));
     return;
   }
 
@@ -33,7 +34,7 @@ void pathexec_run(const char *file,const char * const *argv,const char * const *
     if (!stralloc_cats(&tmp,file)) return;
     if (!stralloc_0(&tmp)) return;
 
-    execve(tmp.s,(char*const*)argv,(char*const*)envp);
+    execve(tmp.s,UNCONST(char*const*,argv),UNCONST(char*const*,envp));
     if (errno != error_noent) {
       savederrno = errno;
       if ((errno != error_acces) && (errno != error_perm) && (errno != error_isdir)) return;

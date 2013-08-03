@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include "direntry.h"
 #include "alloc.h"
 #include "stralloc.h"
@@ -21,6 +22,7 @@
 #include "sig.h"
 #include "match.h"
 #include "deepsleep.h"
+#include "unconst.h"
 
 extern int rename(const char *,const char *);
 
@@ -203,7 +205,7 @@ void startprocessor(struct cyclog *d)
   args[1] = "-c";
   args[2] = d->processor;
   args[3] = 0;
-  execve("/bin/sh",(char*const*)args,environ);
+  execve("/bin/sh",UNCONST(char*const*,args),UNCONST(char*const*,environ));
 }
 
 void fullcurrent(struct cyclog *d)
@@ -539,7 +541,7 @@ void doit(char **script)
 
     flagselected = 1;
     j = 0;
-    for (i = 0;(action = script[i]) != 0;++i)
+    for (i = 0;((action = script[i]) != 0);++i)
       switch(*action) {
         case '+':
           if (!flagselected)

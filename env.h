@@ -3,7 +3,7 @@
 #ifndef ENV_H
 #define ENV_H
 
-extern char **environ;
+extern const char * const *environ;
 
 extern /*@null@*/char *env_get(const char *);
 

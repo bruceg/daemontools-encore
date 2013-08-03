@@ -1,0 +1,14 @@
+
+int main(int argc,const char *const *argv)
+{
+  __TYPE__ len; /* int or long? */
+  int pi[2];
+  char stuff[5] = "stuff";
+  pipe(pi);
+  len = -1;
+  write(pi[1],&stuff,5);
+  ioctl(pi[0],FIONREAD,&len);
+  if (len != 5) return(-1);
+  return(0);
+}
+

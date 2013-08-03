@@ -1,0 +1,69 @@
+--- fifo requires arguments
+fifo: usage: fifo file child
+100
+--- fifo requires more arguments
+fifo: usage: fifo file child
+100
+--- fifo creates pipe but complains if it cannot run program
+fifo: warning: unable to run ./nonexistent: file does not exist
+fifo: warning: child died: status 111
+fifo: fatal: child died before banner
+111
+1
+--- fifo quits if child does not finish banner
+fifostar
+fifo: warning: child died: status 121
+fifo: fatal: child died before banner
+111
+--- fifo runs a program
+fifostart
+hi there
+0
+--- fifo runs a program but child dies later
+fifostart
+Ticking away
+fifo: warning: child died: status 131
+ the moments that make
+fifo: warning: child died: status 131
+ up the dull day,
+frit
+fifo: warning: child died: status 131
+ter and waste the hour
+fifo: warning: child died: status 131
+ in an offhand way.
+
+0
+--- fifo stops at SIGTERM if newline was last
+0
+fifostart
+Something has to change.
+
+0
+--- fifo continues after SIGTERM until newline
+fifostart
+Whiskey, gin and brandy
+With a glass I'm pretty handy
+I'm trying to walk a straight line
+
+0
+--- fifo continues after SIGTERM until newline, child dies early
+fifostart
+There's a lady who's sure all that glitters is gold
+And she's buying a stairway to heaven.
+When she get there she knows, if the st
+fifo: warning: child died: status 161
+ores are all closed
+
+0
+--- fifo continues past TERM until newline, child dies during search
+fifostart
+Johnny was a schoolboy when he heard his first Beatle song,
+'Love Me Do', I think it was. From there it didn't take him long.
+Got himself a guitar, used to play every fifo: warning: child died: status 171
+night,
+0
+--- fifo continues past TERM until newline, gets eof instead
+fifostart
+There is no dark side of the moon really.
+ Matter of fact it's all dark.
+0

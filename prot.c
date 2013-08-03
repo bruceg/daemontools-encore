@@ -1,5 +1,6 @@
 /* Public domain. */
 
+#include <sys/types.h>
 #include <unistd.h>
 #include <grp.h>
 #include "hasshsgr.h"
@@ -8,7 +9,7 @@
 int prot_gid(gid_t gid)
 {
 #ifdef HASSHORTSETGROUPS
-  short x[2];
+  gid_t x[2];
   x[0] = gid; x[1] = 73; /* catch errors */
   if (setgroups(1,x) == -1) return -1;
 #else
