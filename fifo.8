@@ -1,0 +1,138 @@
+.TH fifo 8
+.SH NAME
+fifo \- create and read a named pipe while writing to child.
+.SH SYNOPSIS
+.B fifo
+.I file
+.I child
+.SH DESCRIPTION
+.B fifo
+prints everything fed to the named pipe
+.I file
+to standard input
+of
+.IR child .
+.I file
+is held open for writing so that other programs
+can repeatedly open and close
+.IR file .
+The pipe to
+.I child
+is held open
+for reading so
+.I child
+can be restarted if it dies without losing data.
+
+.B fifo
+creates
+.I file
+if
+.I file
+does not exist.
+
+.B fifo
+makes sure
+.I file
+is actually a named pipe.
+
+.B fifo
+prints a newline-terminated banner message ("fifostart")
+to
+.I child
+on startup to ensure it is running before reading from
+.IR file .
+If
+.I child
+dies before the banner is read,
+.B fifo
+exits and
+prints a message on standard error.
+
+.B fifo
+tries to restart
+.I child
+if it stops. It never gives up.
+
+.B fifo
+normally runs forever.
+
+.B fifo
+can be shut down with a TERM signal.
+.B fifo
+will then read from
+.I file
+until the next newline. If the last character read was already
+a newline,
+.B fifo
+stops reading immediately. If
+.B fifo
+doesn't see a
+newline within 2 seconds, it gives up and stops reading immediately. If
+.B fifo
+receives an ALRM signal before either of these, it gives up and
+stops reading immediately. ALRM signals are no longer propogated to
+child once a TERM is received.
+
+.B fifo
+will also wait until its buffers have been flushed and the pipe
+to
+.I child
+has been read before shutting down. If
+.I child
+exits before
+this is done,
+.B fifo
+will restart it.
+.SH EXIT CODES
+.B fifo
+normally exits 0 after a TERM signal and
+.I child
+stops.
+
+.B fifo
+exits 100 for improper usage with a message on standard error.
+
+.B fifo
+exits 111 for any other problems with a message on standard error.
+.SH SIGNALS
+TERM
+.Sp
+.RS 4
+.B fifo
+stops reading from
+.IR file ,
+empties its buffer, and closes the
+pipe to
+.IR child .
+.I child
+is expected to continue until it notices end
+of input and exit gracefully.
+.B fifo
+then stops.
+.RE
+
+ALRM
+.Sp
+.RS 4
+.B fifo
+sends an ALRM signal to
+.IR child ,
+unless it has previously
+received a TERM signal. After TERM,
+.B fifo
+considers an ALRM to signal
+end of next newline search.
+.RE
+.SH BUGS
+If
+.B fifo
+dies, any messages it has in its buffer are lost.
+
+Once
+.B fifo
+receives a TERM signal, it will no longer propogate ALRM
+signals to
+.IR child .
+.SH SEE ALSO
+mkfifo(1),
+mkfifo(2)
