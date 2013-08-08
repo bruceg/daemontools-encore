@@ -208,46 +208,47 @@ int my_fd_move(int to,int from)
 
 void do_c(void)
 {
-  int wc,we,wstat;
+  int wc,we,wstat,dead;
   char s[FMT_ULONG];
 
-  if (child) {
-
-    for (;;) {
-      if (wait_pid(&wstat,child) == -1) {
-        if (errno == error_intr) continue;
-        if (errno == error_child) {
-          s[ fmt_uint(s,child) ] = '\0';
-          strerr_warn3(WARNING,"child died: was ",s,0);
-          return;
-        }
-        strerr_die2x(111,FATAL,"reaping failed: ");
-      }
-      break;
-    }
-
-    wc = wait_crashed(wstat);
-    we = wait_exitcode(wstat);
-
-    if (!wc) {
-      s[ fmt_uint(s,we) ] = '\0';
-      strerr_warn3(WARNING,"child died: status ",s,0);
-      if (we == 112)
-        strerr_die2x(111,FATAL,"child died on start");
-    }
-
-    else if (wc > 0) {
-      s[ fmt_uint(s,wc) ] = '\0';
-      strerr_warn3(WARNING,"child died: signal ",s,0);
-    }
-
-    else
-      strerr_die2x(111,FATAL,"child on fire");
-
-    childdied = 1;
+  for (;;) {
+    if ((dead = wait_nohang(&wstat)) != -1) break;
+    if (errno == error_intr) continue;
+    if (errno != error_child) break;
+    strerr_die2x(111,FATAL,"reaping failed: ");
+  }
+  if (dead <= 0) {
+    s[ fmt_uint(s,child) ] = '\0';
+    strerr_warn3(WARNING,"child not dead? ",s,0);
     return;
   }
-  strerr_die2x(111,FATAL,"immaculate conception");
+  if (child != dead) {
+    s[ fmt_uint(s,dead) ] = '\0';
+    strerr_warn3(WARNING,"unknown child: ",s,0);
+    return;
+  }
+
+  wc = wait_crashed(wstat);
+  we = wait_exitcode(wstat);
+
+  if (!wc) {
+    s[ fmt_uint(s,we) ] = '\0';
+    strerr_warn3(WARNING,"child died: status ",s,0);
+    if (we == 112)
+      strerr_die2x(111,FATAL,"child died on start");
+  }
+
+  else if (wc > 0) {
+    s[ fmt_uint(s,wc) ] = '\0';
+    strerr_warn3(WARNING,"child died: signal ",s,0);
+  }
+
+  else {
+    s[ fmt_uint(s,child) ] = '\0';
+    strerr_die3x(111,FATAL,"child on fire: ",s);
+  }
+
+  childdied = 1;
 }
 
 void do_a(void)
@@ -299,6 +300,25 @@ void do_self(void)
     }
   }
   strerr_die2x(111,FATAL,"unable to grasp reality");
+}
+
+void check_self(void)
+{
+  int r;
+  fd_set rfds;
+  struct timeval tv;
+
+  for (;;) {
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&rfds);
+    FD_SET(fdself[0],&rfds);
+    if ((r = select(fdself[0]+1,&rfds,NULL,NULL,&tv)) != -1) break;
+    if (errno == error_intr) continue;
+    strerr_die2sys(111,FATAL,"unable to check self: ");
+  }
+  if (!r) return;
+  if (FD_ISSET(fdself[0],&rfds)) do_self();
 }
 
 void do_child(void)
@@ -450,7 +470,7 @@ void wait_banner(void)
 {
   for (;;) {
     if (check_pipe_empty()) break;
-    do_self();
+    check_self();
     if (childdied)
       strerr_die2x(111,FATAL,"child died before banner");
     if (exitsoon) break;
@@ -511,7 +531,7 @@ void stop_child(void)
 
   for (;;) {
     if (check_pipe_empty()) break;
-    do_self();
+    check_self();
     if (childdied) fork_child();
     millisleep(100);
   }

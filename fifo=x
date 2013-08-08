@@ -39,4 +39,5 @@ taia_frac.o
 taia_less.o
 taia_now.o
 taia_sub.o
+wait_nohang.o
 wait_pid.o
