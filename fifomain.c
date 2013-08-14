@@ -24,14 +24,14 @@ const char banner[] = "fifostart\n";
 #define BUFFER_SIZE 8192
 
 int child = 0;
-int nllast = 0;
-int nlfound = 0;
+int nllast0 = 0;
+int nllast1 = 0;
+int nlfound0 = 0;
+int nlfound1 = 0;
 int exitsoon = 0;
 int childdied = 0;
 int fifo_rd = -1;
 int fifo_wr = -1;
-int null_rd = -1;
-int null_wr = -1;
 
 int fdself[2] = { -1, -1 };
 int fdchild[2] = { -1, -1 };
@@ -254,7 +254,7 @@ void do_c(void)
 void do_a(void)
 {
   if (exitsoon)
-    nlfound = 1;
+    nlfound0 = nlfound1 = 1;
   else if (child)
     kill(child,sig_alarm);
 }
@@ -343,6 +343,36 @@ void do_child(void)
   }
 }
 
+void do_stdin(void)
+{
+  int len,r;
+  char *ptr;
+
+  if (childdied) return;
+
+  len = exitsoon ? 1 : fbuf0->len - fbuf0->e;
+  if (!len) strerr_die2x(111,FATAL,"learn to count stdin!");
+
+  ptr = fbuf0->buf + fbuf0->e;
+
+  if ((r = read(0,ptr,len)) == -1) {
+    if (errno == error_intr) return;
+    if (errno == error_again) return; /* shouldnt happen */
+    strerr_die2sys(111,FATAL,"unable to read stdin: ");
+  }
+
+  if (!r) {
+    /* hmm.. eof? writer end must be closed so dont read anymore */
+    nlfound0 = 1;
+    return;
+  }
+
+  fbuf0->e += r;
+
+  if (ptr[r-1] == '\n') nllast0 = 1;
+  if (exitsoon) if (nllast0) nlfound0 = 1;
+}
+
 void do_fifo(void)
 {
   int len,r;
@@ -351,7 +381,7 @@ void do_fifo(void)
   if (childdied) return;
 
   len = exitsoon ? 1 : fbuf0->len - fbuf0->e;
-  if (!len) strerr_die2x(111,FATAL,"learn to count!");
+  if (!len) strerr_die2x(111,FATAL,"learn to count fifo!");
 
   ptr = fbuf0->buf + fbuf0->e;
 
@@ -365,8 +395,8 @@ void do_fifo(void)
 
   fbuf0->e += r;
 
-  if (ptr[r-1] == '\n') nllast = 1;
-  if (exitsoon) if (nllast) nlfound = 1;
+  if (ptr[r-1] == '\n') nllast1 = 1;
+  if (exitsoon) if (nllast1) nlfound1 = 1;
 }
 
 void init_sigs(void)
@@ -378,9 +408,7 @@ void init_sigs(void)
 
 void init_fds(void)
 {
-  OPEN_READ(null_rd,"/dev/null","unable to open null reader: ");
-  FD_MOVE(0,null_rd,"unable to move null to stdin: ");
-  null_rd = 0;
+  NDELAY_OFF(0,"unable to set blocking on stdin: ");
 
   FIFO_MAKE(fn);
 
@@ -393,6 +421,17 @@ void init_fds(void)
   PIPE(fdchild,"unable to create pipe to child: ");
   FD_MOVE(1,fdchild[1],"unable to move pipe to stdout: ");
   fdchild[1] = 1;
+
+  /* now we have:
+   *  0 - stdin
+   *  1 - fdchild[1]
+   *  2 - stderr
+   *  3 - fifo_rd
+   *  4 - fifo_wr
+   *  5 - fdself[0]
+   *  6 - fdself[1]
+   *  7 - fdchild[0]
+   */
 }
 
 void init_buffers(void)
@@ -403,6 +442,7 @@ void init_buffers(void)
 
 void fork_child(void)
 {
+  int null_wr = -1;
   for (;;) {
     childdied = 0;
 
@@ -434,6 +474,12 @@ void fork_child(void)
         fdchild[1] = -1;
 
         NDELAY_OFF(fdchild[0],"unable to set blocking on child: ");
+
+        /* now we have:
+         * 0 - fdchild[0]
+         * 1 - /dev/null
+         * 2 - stderr
+         */
 
         pathexec(saved_argv);
 
@@ -482,13 +528,18 @@ void select_loop(void)
 {
   int max;
   fd_set rfds,wfds;
-  int add_fifo,add_child;
+  int add_fifo,add_child,add_stdin;
   fifobuffer *tmpfb;
 
   for (;;) {
-    if (nlfound && !fbuf0->e && !fbuf1->e) break;
+    if (nlfound0 && nlfound1 && !fbuf0->e && !fbuf1->e) break;
 
-    add_fifo = !nlfound && BUFFER_CANADD(fbuf0);
+    add_fifo = add_stdin = 0;
+    if (BUFFER_CANADD(fbuf0)) {
+      add_fifo = !nlfound1;
+      add_stdin = !nlfound0;
+    }
+
     add_child = BUFFER_CANSUB(fbuf1);
 
     FD_ZERO(&rfds);
@@ -496,11 +547,13 @@ void select_loop(void)
 
     FD_SET(fdself[0],&rfds);
     if (add_fifo)
-        FD_SET(fifo_rd,&rfds);
+      FD_SET(fifo_rd,&rfds);
     if (add_child)
-        FD_SET(fdchild[1],&wfds);
+      FD_SET(fdchild[1],&wfds);
+    if (add_stdin)
+      FD_SET(0,&rfds);
 
-    max = fdself[0];
+    max = fdself[0]; /* so, no need to worry about stdin */
     if (add_fifo) max = max > fifo_rd ? max : fifo_rd;
     if (add_child) max = max > fdchild[1] ? max : fdchild[1];
 
@@ -511,7 +564,10 @@ void select_loop(void)
 
     if (FD_ISSET(fdself[0],&rfds)) { do_self(); continue; }
     if (add_child) if (FD_ISSET(fdchild[1],&wfds)) do_child();
-    if (add_fifo) if (FD_ISSET(fifo_rd,&rfds)) do_fifo();
+
+    /* one or the other. NOT both! */
+    if (add_stdin && FD_ISSET(0,&rfds)) do_stdin();
+    else if (add_fifo && FD_ISSET(fifo_rd,&rfds)) do_fifo();
 
     if (!fbuf1->e) {
       if (fbuf0->b != fbuf0->e) {
@@ -574,8 +630,8 @@ int main(int argc,const char *const *argv)
 SUMMARY
 =======
 
-    Log         Requests   KBytes                                    Mean
-Destination  |  / Second  / Second    Relative Transfer Rates    Request Time
+    Log         Requests   KBytes     Relative Transfer Rates        Mean
+Destination  |  / Second  / Second    null  |  file   |  fifo    Request Time
 -----------  +  --------  --------  --------+---------+--------  ------------
    null      |  38507.95  34939.61  100.00% | 109.14% | 117.96%   259.687 ms
    file      |  35279.64  32014.20   91.63% | 100.00% | 108.08%   283.450 ms

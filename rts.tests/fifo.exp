@@ -22,6 +22,11 @@ fifo: fatal: child died before banner
 fifostart
 hi there
 0
+--- fifo runs a program with stdin
+fifostart
+HI THERE
+hi there
+0
 --- fifo runs a program but child dies later
 fifostart
 Ticking away
@@ -39,14 +44,17 @@ fifo: warning: child died: status 131
 --- fifo stops at SIGTERM if newline was last
 0
 fifostart
+Im bored
 Something has to change.
 
 0
 --- fifo continues after SIGTERM until newline
 fifostart
-Whiskey, gin and brandy
+line 1 stdin
+line 2 Whiskey, gin and brandy
 With a glass I'm pretty handy
-I'm trying to walk a straight line
+I'm trying to walk stdin
+a straight line
 
 0
 --- fifo continues after SIGTERM until newline, child dies early

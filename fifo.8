@@ -14,14 +14,20 @@ of
 .IR child .
 .I file
 is held open for writing so that other programs
-can repeatedly open and close
-.IR file .
-The pipe to
+can repeatedly open and close. The pipe to
 .I child
-is held open
-for reading so
+is held open for
+reading so
 .I child
 can be restarted if it dies without losing data.
+
+.B fifo
+also prints anything it sees on stdin to
+.IR child .
+If end of
+file is seen on stdin,
+.B fifo
+will stop monitoring it and not restart.
 
 .B fifo
 creates
@@ -49,12 +55,13 @@ exits and
 prints a message on standard error.
 
 .B fifo
-tries to restart
+normally runs forever. If
 .I child
-if it stops. It never gives up.
-
+stops after reading the banner,
 .B fifo
-normally runs forever.
+will restart it.
+.B fifo
+never gives up.
 
 .B fifo
 can be shut down with a TERM signal.
@@ -70,7 +77,7 @@ doesn't see a
 newline within 2 seconds, it gives up and stops reading immediately. If
 .B fifo
 receives an ALRM signal before either of these, it gives up and
-stops reading immediately. ALRM signals are no longer propogated to
+stops reading immediately. ALRM signals are no longer propagated to
 child once a TERM is received.
 
 .B fifo
@@ -130,9 +137,32 @@ dies, any messages it has in its buffer are lost.
 
 Once
 .B fifo
-receives a TERM signal, it will no longer propogate ALRM
+receives a TERM signal, it will no longer propagate ALRM
 signals to
 .IR child .
+
+In situations where
+.B fifo
+receives data from both stdin and
+.I file
+at the same time,
+.B fifo
+could intermingle lines. This could happen
+specifically in cases where non-atomic
+.IR read (2)s
+or
+.IR write (2)s
+are
+happening, such as: either side is sending partial lines; or, either
+side is sending messages larger than PIPE_BUF (see
+.IR pipe (7));
+or
+.BR fifo s
+internal buffer space becomes limited because messages are coming in
+faster than
+.I child
+can process.
 .SH SEE ALSO
 mkfifo(1),
-mkfifo(2)
+mkfifo(2),
+pipe(7)

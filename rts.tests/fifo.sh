@@ -39,6 +39,18 @@ echo $?
 rm -f pipe
 
 
+echo '--- fifo runs a program with stdin'
+mknod pipe p
+echo 'HI THERE' | fifo pipe multilog e &
+fifopid=$!
+echo 'hi there' > pipe
+sleep 1
+kill -TERM $fifopid
+wait $fifopid
+echo $?
+rm -f pipe
+
+
 echo '--- fifo runs a program but child dies later'
 mknod pipe p
 fifo pipe sh -c 'head -c 22 1>&2 ; echo 1>&2 ; exit 131' &
@@ -56,6 +68,7 @@ rm -f pipe
 
 echo '--- fifo stops at SIGTERM if newline was last'
 mknod pipe p
+echo 'Im bored' | \
 fifo pipe sh -c 'head -c 70 1>&2 ; echo 1>&2 ; exit 141' &
 fifopid=$!
 cat >pipe <<END
@@ -75,20 +88,24 @@ rm -f pipe
 
 echo '--- fifo continues after SIGTERM until newline'
 mknod pipe p
-fifo pipe sh -c 'cat -v 1>&2 ; echo 1>&2 ; exit 151' &
+mknod pipe2 p
+echo 'line 1 stdin' > pipe2 &
+fifo pipe sh -c 'cat -v 1>&2 ; echo 1>&2 ; exit 151' < pipe2 &
 fifopid=$!
 cat >pipe <<END
 Whiskey, gin and brandy
 With a glass I'm pretty handy
 END
 echo -n "I'm trying to walk " > pipe
+( echo -n 'line 2 '; sleep 1 ; echo 'stdin' ) > pipe2
 sleep 1
 kill -TERM $fifopid
+echo 'line 3 stdin' > pipe2
 echo 'a straight line' > pipe
 echo 'On sour mash and cheap wine' > pipe
 wait $fifopid
 echo $?
-rm -f pipe
+rm -f pipe pipe2
 
 
 echo '--- fifo continues after SIGTERM until newline, child dies early'
