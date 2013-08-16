@@ -86,7 +86,7 @@ echo $?
 rm -f pipe
 
 
-echo '--- fifo continues after SIGTERM until newline'
+echo '--- fifo continues after SIGTERM until newline, intermingled'
 mknod pipe p
 mknod pipe2 p
 echo 'line 1 stdin' > pipe2 &

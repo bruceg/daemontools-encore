@@ -23,9 +23,9 @@ can be restarted if it dies without losing data.
 
 .B fifo
 also prints anything it sees on stdin to
-.IR child .
-If end of
-file is seen on stdin,
+.I child
+without
+intermingling partial messages. If end of file is seen on stdin,
 .B fifo
 will stop monitoring it and not restart.
 
@@ -147,21 +147,10 @@ receives data from both stdin and
 .I file
 at the same time,
 .B fifo
-could intermingle lines. This could happen
-specifically in cases where non-atomic
-.IR read (2)s
-or
-.IR write (2)s
-are
-happening, such as: either side is sending partial lines; or, either
-side is sending messages larger than PIPE_BUF (see
-.IR pipe (7));
-or
-.BR fifo s
-internal buffer space becomes limited because messages are coming in
-faster than
-.I child
-can process.
+will eventually stop reading one stream if
+the other fails to properly newline-terminate its messages. This is
+currently considered a feature in the sense that messages will not
+intermingle, but it's conceivable that it could be a problem.
 .SH SEE ALSO
 mkfifo(1),
 mkfifo(2),

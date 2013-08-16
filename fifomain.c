@@ -37,32 +37,69 @@ int fdself[2] = { -1, -1 };
 int fdchild[2] = { -1, -1 };
 
 const char *fn;
-const char *const *saved_argv = NULL;
+const char *const *saved_argv = 0;
 
 /*
- * 'b' points at first byte of content.
- * 'e' points one beyond last byte of content.
+ * 'b' points at first byte of content
+ * 'e' points at first free byte
+ * 'n' points at last known newline
+ * 'empty' signifies buffer empty
+ * 'nl' signifies we know where last newline is
  * so...
- *    if b == e, buffer empty.
- *    if b == 0 && e == len, buffer full.
- *    if b != e && (b != 0 || e != len), buffer partial.
+ *    if empty == 1, b == e, buffer empty
+ *    if empty == 0, b == e, buffer full
  *
- *    if e != len, can add (len - e) bytes.
- *    if b != e, can sub (e - b) bytes.
+ *    if e > b, can add (len - e) bytes.
+ *    if e < b, can add (b - e) bytes.
  */
 typedef struct fifobuffer {
   char *buf;
   unsigned int b;
   unsigned int e;
+  unsigned int n;
   unsigned int len;
+  int empty;
+  int nl;
 } fifobuffer;
 
-#define BUFFER_CANADD(f) ( ( (f)->e != (f)->len ) ? -1 : 0 )
-#define BUFFER_CANSUB(f) ( ( (f)->b != (f)->e ) ? -1 : 0 )
+#define FB_CANREAD(f) (        \
+  (f)->empty                   \
+    ? (f)->len - (f)->e        \
+    : (                        \
+        (f)->e > (f)->b        \
+          ? (f)->len - (f)->e  \
+          : (f)->b - (f)->e    \
+    )                          \
+)
+
+#define FB_CANWRITE_NL(f) (            \
+  (f)->empty                           \
+  ? 0                                  \
+  : (                                  \
+      (f)->nl                          \
+        ? (                            \
+            ((f)->b <= (f)->n)         \
+              ? ((f)->n - (f)->b + 1)  \
+              : ((f)->len - (f)->b)    \
+        )                              \
+        : 0                            \
+  )                                    \
+)
+
+#define FB_CANWRITE_ALL(f) (   \
+  (f)->empty                   \
+  ? 0                          \
+  : (                          \
+      ((f)->b < (f)->e)        \
+        ? ((f)->e - (f)->b)    \
+        : ((f)->len - (f)->b)  \
+  )                            \
+)
 
 fifobuffer fifobuffer0;
 fifobuffer fifobuffer1;
 
+fifobuffer *fbuf_pref = 0;
 fifobuffer *fbuf0 = &fifobuffer0;
 fifobuffer *fbuf1 = &fifobuffer1;
 
@@ -92,7 +129,6 @@ char buf1[BUFFER_SIZE];
     strerr_die2sys(111,FATAL,(m));     \
   }
 
-/* XXX how much got wrote? */
 #define WRITE(f,b,l,m)                   \
   for (;;) {                             \
     if (write((f),(b),(l)) != -1) break; \
@@ -157,7 +193,15 @@ void sig_term_handler(void)
 }
 
 void buffer_init(fifobuffer *s,char *buf,unsigned int len)
-{ s->buf = buf;  s->b = 0;  s->e = 0;  s->len = len; }
+{
+  s->buf = buf;
+  s->b = 0;
+  s->e = 0;
+  s->n = 0;
+  s->len = len;
+  s->nl = 0;
+  s->empty = 1;
+}
 
 void millisleep(unsigned int s)
 {
@@ -276,7 +320,7 @@ int check_pipe_empty(void)
     tv.tv_usec = 0;
     FD_ZERO(&rfds);
     FD_SET(fdchild[0],&rfds);
-    if ((r = select(fdchild[0]+1,&rfds,NULL,NULL,&tv)) != -1) break;
+    if ((r = select(fdchild[0]+1,&rfds,0,0,&tv)) != -1) break;
     if (errno == error_intr) continue;
     strerr_die2sys(111,FATAL,"unable to check pipe: ");
   }
@@ -313,7 +357,7 @@ void check_self(void)
     tv.tv_usec = 0;
     FD_ZERO(&rfds);
     FD_SET(fdself[0],&rfds);
-    if ((r = select(fdself[0]+1,&rfds,NULL,NULL,&tv)) != -1) break;
+    if ((r = select(fdself[0]+1,&rfds,0,0,&tv)) != -1) break;
     if (errno == error_intr) continue;
     strerr_die2sys(111,FATAL,"unable to check self: ");
   }
@@ -321,37 +365,80 @@ void check_self(void)
   if (FD_ISSET(fdself[0],&rfds)) do_self();
 }
 
-void do_child(void)
+void fb_to_child(fifobuffer *fb,const char *src,int *nlfound,int nllast)
 {
   int len,w;
-  char *ptr;
 
-  if (!(len = fbuf1->e - fbuf1->b)) return;
+  if (fbuf_pref && fbuf_pref != fb) return;
+  if (fb->empty) return;
 
-  ptr = fbuf1->buf + fbuf1->b;
+  fbuf_pref = 0;
 
-  if ((w = write(fdchild[1],ptr,len)) == -1) {
-    if (errno == error_intr) return;
-    strerr_die2sys(111,FATAL,"unable to write to child: ");
+  /* Here be dragons */
+
+  if (fb->nl) { /* normally, send up to last newline */
+    if (!(len = FB_CANWRITE_NL(fb))) return;
+    if ((w = write(fdchild[1],&fb->buf[fb->b],len)) == -1) {
+      if (errno == error_intr) { fbuf_pref = fb; return; }
+      strerr_die4sys(111,FATAL,"unable to flush ",src," with newline: ");
+    }
+    fb->b += w; fb->b %= fb->len;
+    if (fb->b == fb->n + 1 || (!fb->b && fb->n == fb->len - 1)) fb->nl = 0;
+    else fbuf_pref = fb;
+    if (fb->b == fb->e) fb->empty = 1;
+    if (fb->empty) fb->b = fb->e = fb->n = fb->nl = 0;
+    fbuf_pref = 0;
+    return;
   }
 
-  fbuf1->b += w;
-
-  if (fbuf1->b == fbuf1->e) {
-    fbuf1->b = 0;
-    fbuf1->e = 0;
+  else if (!fb->empty && fb->b == fb->e) { /* buffer full, no newline */
+    if (!(len = FB_CANWRITE_ALL(fb))) return;
+    if ((w = write(fdchild[1],&fb->buf[fb->b],len)) == -1) {
+      if (errno == error_intr) { fbuf_pref = fb; return; }
+      strerr_die4sys(111,FATAL,"unable to flush ",src," without newline: ");
+    }
+    fb->b += w; fb->b %= fb->len;
+    if (fb->b == fb->e) fb->empty = 1;
+    if (fb->empty) fb->b = fb->e = fb->n = fb->nl = 0;
+    fbuf_pref = fb;
+    return;
   }
+
+  else if (*nlfound) { /* all done, flush it all, add a newline if needed */
+    if (!(len = FB_CANWRITE_ALL(fb))) return;
+    if ((w = write(fdchild[1],&fb->buf[fb->b],len)) == -1) {
+      if (errno == error_intr) { fbuf_pref = fb; return; }
+      strerr_die4sys(111,FATAL,"unable to flush ",src,": ");
+    }
+    fb->b += w; fb->b %= fb->len;
+    if (fb->b == fb->e) fb->empty = 1;
+    else fbuf_pref = fb;
+    if (fb->empty && !nllast) {
+      fb->buf[0] = '\n';
+      fb->e = fb->nl = 1;
+      fb->b = fb->n = fb->empty = 0;
+      fbuf_pref = fb;
+    }
+  }
+}
+
+void do_child(void)
+{
+  fb_to_child(fbuf0,"stdin",&nlfound0,nllast0);
+  fb_to_child(fbuf1,"fifo",&nlfound1,nllast1);
 }
 
 void do_stdin(void)
 {
-  int len,r;
   char *ptr;
+  int len,r,x;
 
   if (childdied) return;
 
-  len = exitsoon ? 1 : fbuf0->len - fbuf0->e;
-  if (!len) strerr_die2x(111,FATAL,"learn to count stdin!");
+  len = exitsoon ? 1 : FB_CANREAD(fbuf0);
+  if (len < 1) strerr_die2x(111,FATAL,"learn to count stdin!");
+
+  if (fbuf0->empty) fbuf0->b = fbuf0->e = 0;
 
   ptr = fbuf0->buf + fbuf0->e;
 
@@ -361,29 +448,38 @@ void do_stdin(void)
     strerr_die2sys(111,FATAL,"unable to read stdin: ");
   }
 
-  if (!r) {
-    /* hmm.. eof? writer end must be closed so dont read anymore */
-    nlfound0 = 1;
-    return;
-  }
+  if (!r) { nlfound0 = 1; return; }
+
+  fbuf0->empty = 0;
 
   fbuf0->e += r;
+  fbuf0->e %= fbuf0->len;
 
-  if (ptr[r-1] == '\n') nllast0 = 1;
+  nllast0 = ptr[r-1] == '\n';
+
+  for ( x=r-1 ; x>=0 ; --x ) {
+    if (ptr[x] != '\n') continue;
+    fbuf0->n = &ptr[x] - fbuf0->buf;
+    fbuf0->nl = 1;
+    break;
+  }
+
   if (exitsoon) if (nllast0) nlfound0 = 1;
 }
 
 void do_fifo(void)
 {
-  int len,r;
   char *ptr;
+  int len,r,x;
 
   if (childdied) return;
 
-  len = exitsoon ? 1 : fbuf0->len - fbuf0->e;
-  if (!len) strerr_die2x(111,FATAL,"learn to count fifo!");
+  len = exitsoon ? 1 : FB_CANREAD(fbuf1);
+  if (len < 1) strerr_die2x(111,FATAL,"learn to count fifo!");
 
-  ptr = fbuf0->buf + fbuf0->e;
+  if (fbuf1->empty) fbuf1->b = fbuf1->e = 0;
+
+  ptr = fbuf1->buf + fbuf1->e;
 
   if ((r = read(fifo_rd,ptr,len)) == -1) {
     if (errno == error_intr) return;
@@ -393,9 +489,20 @@ void do_fifo(void)
 
   if (!r) return;
 
-  fbuf0->e += r;
+  fbuf1->empty = 0;
 
-  if (ptr[r-1] == '\n') nllast1 = 1;
+  fbuf1->e += r;
+  fbuf1->e %= fbuf1->len;
+
+  nllast1 = ptr[r-1] == '\n';
+
+  for ( x=r-1 ; x>=0 ; --x) {
+    if (ptr[x] != '\n') continue;
+    fbuf1->n = &ptr[x] - fbuf1->buf;
+    fbuf1->nl = 1;
+    break;
+  }
+
   if (exitsoon) if (nllast1) nlfound1 = 1;
 }
 
@@ -529,18 +636,17 @@ void select_loop(void)
   int max;
   fd_set rfds,wfds;
   int add_fifo,add_child,add_stdin;
-  fifobuffer *tmpfb;
 
   for (;;) {
-    if (nlfound0 && nlfound1 && !fbuf0->e && !fbuf1->e) break;
+    if (nlfound0 && nlfound1 && fbuf0->empty && fbuf1->empty) break;
 
     add_fifo = add_stdin = 0;
-    if (BUFFER_CANADD(fbuf0)) {
-      add_fifo = !nlfound1;
-      add_stdin = !nlfound0;
-    }
+    if (fbuf_pref != fbuf1 && FB_CANREAD(fbuf0) > 0) add_stdin = !nlfound0;
+    if (fbuf_pref != fbuf0 && FB_CANREAD(fbuf1) > 0) add_fifo = !nlfound1;
 
-    add_child = BUFFER_CANSUB(fbuf1);
+    add_child = exitsoon
+      ? ( FB_CANWRITE_ALL(fbuf0) > 0 || FB_CANWRITE_ALL(fbuf1) > 0 ? 1 : 0 )
+      : ( FB_CANWRITE_NL(fbuf0)  > 0 || FB_CANWRITE_NL(fbuf1)  > 0 ? 1 : 0 );
 
     FD_ZERO(&rfds);
     FD_ZERO(&wfds);
@@ -557,25 +663,16 @@ void select_loop(void)
     if (add_fifo) max = max > fifo_rd ? max : fifo_rd;
     if (add_child) max = max > fdchild[1] ? max : fdchild[1];
 
-    if (select(max+1,&rfds,&wfds,NULL,NULL) == -1) {
+    if (select(max+1,&rfds,&wfds,0,0) == -1) {
       if (errno == error_intr) continue;
       strerr_die2sys(111,FATAL,"unable to select: ");
     }
 
     if (FD_ISSET(fdself[0],&rfds)) { do_self(); continue; }
-    if (add_child) if (FD_ISSET(fdchild[1],&wfds)) do_child();
 
-    /* one or the other. NOT both! */
+    if (add_child && FD_ISSET(fdchild[1],&wfds)) do_child();
     if (add_stdin && FD_ISSET(0,&rfds)) do_stdin();
-    else if (add_fifo && FD_ISSET(fifo_rd,&rfds)) do_fifo();
-
-    if (!fbuf1->e) {
-      if (fbuf0->b != fbuf0->e) {
-        tmpfb = fbuf0;
-        fbuf0 = fbuf1;
-        fbuf1 = tmpfb;
-      }
-    }
+    if (add_fifo && FD_ISSET(fifo_rd,&rfds)) do_fifo();
   }
 }
 

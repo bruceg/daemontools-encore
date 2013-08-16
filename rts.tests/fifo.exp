@@ -48,13 +48,13 @@ Im bored
 Something has to change.
 
 0
---- fifo continues after SIGTERM until newline
+--- fifo continues after SIGTERM until newline, intermingled
 fifostart
 line 1 stdin
-line 2 Whiskey, gin and brandy
+Whiskey, gin and brandy
 With a glass I'm pretty handy
-I'm trying to walk stdin
-a straight line
+line 2 stdin
+I'm trying to walk a straight line
 
 0
 --- fifo continues after SIGTERM until newline, child dies early
