@@ -69,7 +69,7 @@ static int stat_exists(const char *path)
 
 static void die_nomem(void)
 {
-  strerr_die2sys(111,FATAL,"unable to allocate memory");
+  strerr_die2sys(111,FATAL,"unable to allocate memory: ");
 }
 
 static void trigger(void)

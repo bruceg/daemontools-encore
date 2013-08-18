@@ -20,7 +20,7 @@ int main(int argc,char **argv)
   if (!svpath_init())
     strerr_die4sys(111,FATAL,"unable to setup control path for ",argv[1],": ");
   if ((fnok = svpath_make("/ok")) == 0)
-    strerr_die2sys(111,FATAL,"unable to allocate memory");
+    strerr_die2sys(111,FATAL,"unable to allocate memory: ");
   fd = open_write(fnok);
   if (fd == -1) {
     if (errno == error_noent) _exit(100);

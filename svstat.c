@@ -23,7 +23,7 @@ int check_log = -1;
 
 static void die_nomem(void)
 {
-  strerr_die2sys(111,FATAL,"unable to allocate memory");
+  strerr_die2sys(111,FATAL,"unable to allocate memory: ");
 }
 
 static void die_usage(void)
