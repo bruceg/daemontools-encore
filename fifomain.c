@@ -387,7 +387,6 @@ void fb_to_child(fifobuffer *fb,const char *src,int *nlfound,int nllast)
     else fbuf_pref = fb;
     if (fb->b == fb->e) fb->empty = 1;
     if (fb->empty) fb->b = fb->e = fb->n = fb->nl = 0;
-    fbuf_pref = 0;
     return;
   }
 
