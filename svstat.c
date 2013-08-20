@@ -110,7 +110,7 @@ void doit(const char *dir)
     return;
   }
   if (!svpath_init()) {
-    strerr_warn4sys(WARNING,"unable to set up control path for ",dir,": ");
+    strerr_warn4sys(WARNING,"unable to set up control path for ",dir,"");
     return;
   }
 
@@ -207,13 +207,13 @@ int main(int argc,const char *const *argv)
 
   fdorigdir = open_read(".");
   if (fdorigdir == -1)
-    strerr_die2sys(111,FATAL,"unable to open current directory: ");
+    strerr_die2sys(111,FATAL,"unable to open current directory");
 
   while ((dir = *argv++) != 0) {
     doit(dir);
     buffer_puts(&b,"\n");
     if (fchdir(fdorigdir) == -1)
-      strerr_die2sys(111,FATAL,"unable to set directory: ");
+      strerr_die2sys(111,FATAL,"unable to set directory");
   }
 
   buffer_flush(&b);

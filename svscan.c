@@ -48,7 +48,7 @@ void start(const char *fn)
   if (fn[0] == '.' && !islog) return;
 
   if (stat(fn,&st) == -1) {
-    strerr_warn4sys(WARNING,"unable to stat ",fn,": ");
+    strerr_warn4sys(WARNING,"unable to stat ",fn,"");
     return;
   }
 
@@ -78,14 +78,14 @@ void start(const char *fn)
 	x[i].flaglog = S_ISDIR(st.st_mode);
       else
 	if (errno != error_noent) {
-          strerr_warn4sys(WARNING,"unable to stat ",fn,"/log: ");
+          strerr_warn4sys(WARNING,"unable to stat ",fn,"/log");
           return;
 	}
     }
 
     if (x[i].flaglog) {
       if (pipe(x[i].pi) == -1) {
-        strerr_warn4sys(WARNING,"unable to create pipe for ",fn,": ");
+        strerr_warn4sys(WARNING,"unable to create pipe for ",fn,"");
         return;
       }
       closeonexec(x[i].pi[0]);
@@ -99,20 +99,20 @@ void start(const char *fn)
   if (!x[i].pid)
     switch(child = fork()) {
       case -1:
-        strerr_warn4sys(WARNING,"unable to fork for ",fn,": ");
+        strerr_warn4sys(WARNING,"unable to fork for ",fn,"");
         return;
       case 0:
         if (x[i].flaglog)
 	  if (fd_move(1,x[i].pi[1]) == -1)
-            strerr_die4sys(111,WARNING,"unable to set up descriptors for ",fn,": ");
+            strerr_die3sys(111,WARNING,"unable to set up descriptors for ",fn);
 	if (i == logx)
 	  if (fd_move(0,logpipe[0]) == -1)
-	    strerr_die4sys(111,WARNING,"unable to set up descriptors for ",fn,": ");
+	    strerr_die3sys(111,WARNING,"unable to set up descriptors for ",fn);
         args[0] = "supervise";
         args[1] = fn;
         args[2] = 0;
 	pathexec_run(*args,args,(const char*const*)environ);
-        strerr_die4sys(111,WARNING,"unable to start supervise ",fn,": ");
+        strerr_die3sys(111,WARNING,"unable to start supervise ",fn);
       default:
 	x[i].pid = child;
     }
@@ -120,18 +120,18 @@ void start(const char *fn)
   if (x[i].flaglog && !x[i].pidlog)
     switch(child = fork()) {
       case -1:
-        strerr_warn4sys(WARNING,"unable to fork for ",fn,"/log: ");
+        strerr_warn4sys(WARNING,"unable to fork for ",fn,"/log");
         return;
       case 0:
         if (fd_move(0,x[i].pi[0]) == -1)
-          strerr_die4sys(111,WARNING,"unable to set up descriptors for ",fn,"/log: ");
+          strerr_die4sys(111,WARNING,"unable to set up descriptors for ",fn,"/log");
 	if (chdir(fn) == -1)
-          strerr_die4sys(111,WARNING,"unable to switch to ",fn,": ");
+          strerr_die3sys(111,WARNING,"unable to switch to ",fn);
         args[0] = "supervise";
         args[1] = "log";
         args[2] = 0;
 	pathexec_run(*args,args,(const char*const*)environ);
-        strerr_die4sys(111,WARNING,"unable to start supervise ",fn,"/log: ");
+        strerr_die4sys(111,WARNING,"unable to start supervise ",fn,"/log");
       default:
 	x[i].pidlog = child;
     }
@@ -139,7 +139,7 @@ void start(const char *fn)
 
 void direrror(void)
 {
-  strerr_warn2sys(WARNING,"unable to read directory: ");
+  strerr_warn2sys(WARNING,"unable to read directory");
 }
 
 void doit(void)
@@ -215,7 +215,7 @@ static void start_log(void)
   if (logdir && stat(logdir,&st) == 0 && S_ISDIR(st.st_mode)) {
     logx = numx;
     if (pipe(logpipe) == -1)
-      strerr_die4sys(111,FATAL,"unable to create pipe for ",logdir,": ");
+      strerr_die3sys(111,FATAL,"unable to create pipe for ",logdir);
     closeonexec(logpipe[0]);
     closeonexec(logpipe[1]);
     start(logdir);
@@ -231,7 +231,7 @@ int main(int argc,char **argv)
 {
   if (argc >= 2)
     if (chdir(argv[1]) == -1)
-      strerr_die4sys(111,FATAL,"unable to chdir to ",argv[1],": ");
+      strerr_die3sys(111,FATAL,"unable to chdir to ",argv[1]);
   if (argc >= 3)
     logdir = argv[2];
 

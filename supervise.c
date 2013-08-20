@@ -84,7 +84,7 @@ static int forkexecve(const char *argv[],int fd)
 
   switch (f = fork()) {
     case -1:
-      strerr_warn4sys(WARNING,"unable to fork for ",dir,", sleeping 60 seconds: ");
+      strerr_warn4sys(WARNING,"unable to fork for ",dir,", sleeping 60 seconds");
       deepsleep(60);
       trigger();
       return -1;
@@ -98,7 +98,7 @@ static int forkexecve(const char *argv[],int fd)
 	close(logpipe[1]);
       }
       execve(argv[0],(char*const*)argv,environ);
-      strerr_die5sys(111,FATAL,"unable to start ",dir,argv[0]+1,": ");
+      strerr_die4sys(111,FATAL,"unable to start ",dir,argv[0]+1);
   }
   return f;
 }
@@ -136,7 +136,7 @@ void announce(void)
   }
 
   if (seek_begin(fdstatus)) {
-    strerr_warn2sys(WARNING,"unable to seek in status: ");
+    strerr_warn2sys(WARNING,"unable to seek in status");
     return;
   }
   r = write(fdstatus,status,w);
@@ -397,7 +397,7 @@ int main(int argc,char **argv)
     strerr_die1x(100,"supervise: usage: supervise dir");
 
   if (pipe(selfpipe) == -1)
-    strerr_die4sys(111,FATAL,"unable to create pipe for ",dir,": ");
+    strerr_die3sys(111,FATAL,"unable to create pipe for ",dir);
   closeonexec(selfpipe[0]);
   closeonexec(selfpipe[1]);
   ndelay_on(selfpipe[0]);
@@ -407,13 +407,13 @@ int main(int argc,char **argv)
   sig_catch(sig_child,trigger);
 
   if (chdir(dir) == -1)
-    strerr_die4sys(111,FATAL,"unable to chdir to ",dir,": ");
+    strerr_die3sys(111,FATAL,"unable to chdir to ",dir);
   if (!svpath_init())
-    strerr_die4sys(111,FATAL,"unable to setup control path for ",dir,": ");
+    strerr_die3sys(111,FATAL,"unable to setup control path for ",dir);
 
   if (stat_isexec("log") > 0) {
     if (pipe(logpipe) != 0)
-      strerr_die4sys(111,FATAL,"unable to create pipe for ",dir,": ");
+      strerr_die3sys(111,FATAL,"unable to create pipe for ",dir);
     svclog.flagwantup = 1;
   }
   if (stat("down",&st) != -1) {
@@ -422,32 +422,32 @@ int main(int argc,char **argv)
   }
   else
     if (errno != error_noent)
-      strerr_die4sys(111,FATAL,"unable to stat ",dir,"/down: ");
+      strerr_die4sys(111,FATAL,"unable to stat ",dir,"/down");
 
   if ((fntemp = svpath_make("")) == 0) die_nomem();
   if (mkdir(fntemp,0700) != 0 && errno != error_exist)
-    strerr_die4sys(111,FATAL,"unable to create ",fntemp,": ");
+    strerr_die3sys(111,FATAL,"unable to create ",fntemp);
   if ((fntemp = svpath_make("/status")) == 0) die_nomem();
   fdstatus = open_trunc(fntemp);
   if (fdstatus == -1)
-    strerr_die4sys(111,FATAL,"unable to open ",fntemp," for writing: ");
+    strerr_die4sys(111,FATAL,"unable to open ",fntemp," for writing");
   closeonexec(fdstatus);
   if ((fntemp = svpath_make("/lock")) == 0) die_nomem();
   fdlock = open_append(fntemp);
   if ((fdlock == -1) || (lock_exnb(fdlock) == -1))
-    strerr_die4sys(111,FATAL,"unable to acquire ",fntemp,": ");
+    strerr_die3sys(111,FATAL,"unable to acquire ",fntemp);
   closeonexec(fdlock);
 
   if ((fntemp = svpath_make("/control")) == 0) die_nomem();
   fifo_make(fntemp,0600);
   fdcontrol = open_read(fntemp);
   if (fdcontrol == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",fntemp,": ");
+    strerr_die3sys(111,FATAL,"unable to read ",fntemp);
   closeonexec(fdcontrol);
   ndelay_on(fdcontrol); /* shouldn't be necessary */
   fdcontrolwrite = open_write(fntemp);
   if (fdcontrolwrite == -1)
-    strerr_die4sys(111,FATAL,"unable to write ",fntemp,": ");
+    strerr_die3sys(111,FATAL,"unable to write ",fntemp);
   closeonexec(fdcontrolwrite);
 
   pidchange(&svcmain,0,0,0);
@@ -456,7 +456,7 @@ int main(int argc,char **argv)
   fifo_make(fntemp,0600);
   fdok = open_read(fntemp);
   if (fdok == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",fntemp,": ");
+    strerr_die3sys(111,FATAL,"unable to read ",fntemp);
   closeonexec(fdok);
 
   if (!svclog.flagwant || svclog.flagwantup) trystart(&svclog);

@@ -31,5 +31,5 @@ int main(int argc,const char *const *argv)
   if (!pathexec_env("UID",strnum)) nomem();
 
   pathexec(argv);
-  strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
+  strerr_die3sys(111,FATAL,"unable to run ",*argv);
 }

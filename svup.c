@@ -48,10 +48,10 @@ int main(int argc,const char *const *argv)
     die_usage();
 
   if (chdir(argv[0]) == -1)
-    strerr_die4sys(111,FATAL,"unable to chdir to ",argv[1],": ");
+    strerr_die3sys(111,FATAL,"unable to chdir to ",argv[1]);
 
   if (!svpath_init())
-    strerr_die4sys(111,FATAL,"unable to setup control path for ",argv[1],": ");
+    strerr_die3sys(111,FATAL,"unable to setup control path for ",argv[1]);
 
   if ((fn = svpath_make("/ok")) == 0)
     strerr_die2sys(111,FATAL,"unable to allocate memory");
@@ -59,7 +59,7 @@ int main(int argc,const char *const *argv)
   if (fd == -1) {
     if (errno == error_noent) _exit(100);
     if (errno == error_nodevice) _exit(100);
-    strerr_die4sys(111,FATAL,"unable to open ",fn,": ");
+    strerr_die3sys(111,FATAL,"unable to open ",fn);
   }
   close(fd);
 
@@ -68,10 +68,10 @@ int main(int argc,const char *const *argv)
   fd = open_read(fn);
   if (fd == -1) {
     if (errno == error_noent) _exit(100);
-    strerr_die4sys(111,FATAL,"unable to open ",fn,": ");
+    strerr_die3sys(111,FATAL,"unable to open ",fn);
   }
   if ((rd = read(fd,status,sizeof status)) == -1)
-    strerr_die4sys(111,FATAL,"unable to read ",fn,": ");
+    strerr_die3sys(111,FATAL,"unable to read ",fn);
   if (rd < 18)
     strerr_die4(111,FATAL,"bad data in ",fn,": truncated file",0);
 

@@ -58,14 +58,14 @@ void f_init(char **script)
     fd = -1;
     if (script[i][0] == '=') {
       if (fchdir(fdstartdir) == -1)
-        strerr_die2sys(111,FATAL,"unable to switch to starting directory: ");
+        strerr_die2sys(111,FATAL,"unable to switch to starting directory");
       fd = open_append(script[i] + 1);
       if (fd == -1)
-        strerr_die4sys(111,FATAL,"unable to create ",script[i] + 1,": ");
+        strerr_die3sys(111,FATAL,"unable to create ",script[i] + 1);
       close(fd);
       fd = open_write(script[i] + 1);
       if (fd == -1)
-        strerr_die4sys(111,FATAL,"unable to write ",script[i] + 1,": ");
+        strerr_die3sys(111,FATAL,"unable to write ",script[i] + 1);
       closeonexec(fd);
     }
     f[i] = fd;
@@ -151,7 +151,7 @@ void finish(struct cyclog *d,const char *file,const char *code)
   for (;;) {
     if (stat(file,&st) == 0) break;
     if (errno == error_noent) return;
-    pause5("unable to stat ",d->dir,"/",file,", pausing: ");
+    pause5("unable to stat ",d->dir,"/",file,", pausing");
   }
 
   if (st.st_nlink == 1)
@@ -163,16 +163,16 @@ void finish(struct cyclog *d,const char *file,const char *code)
       } while (*code++ != 0);
 
       if (link(file,fn.s) == 0) break;
-      pause5("unable to link to ",d->dir,"/",fn.s,", pausing: ");
+      pause5("unable to link to ",d->dir,"/",fn.s,", pausing");
     }
 
   while (unlink(file) == -1)
-    pause5("unable to remove ",d->dir,"/",file,", pausing: ");
+    pause5("unable to remove ",d->dir,"/",file,", pausing");
 
   for (;;)
     switch(filesfit(d)) {
       case 1: return;
-      case -1: pause3("unable to read ",d->dir,", pausing: ");
+      case -1: pause3("unable to read ",d->dir,", pausing");
     }
 }
 
@@ -213,38 +213,38 @@ void fullcurrent(struct cyclog *d)
   int wstat;
 
   while (fchdir(d->fddir) == -1)
-    pause3("unable to switch to ",d->dir,", pausing: ");
+    pause3("unable to switch to ",d->dir,", pausing");
 
   while (fsync(d->fdcurrent) == -1)
-    pause3("unable to write ",d->dir,"/current to disk, pausing: ");
+    pause3("unable to write ",d->dir,"/current to disk, pausing");
   close(d->fdcurrent);
 
   while (rename("current","previous") == -1)
-    pause3("unable to rename current to previous in directory ",d->dir,", pausing: ");
+    pause3("unable to rename current to previous in directory ",d->dir,", pausing");
   while ((d->fdcurrent = open_append("current")) == -1)
-    pause3("unable to create ",d->dir,"/current, pausing: ");
+    pause3("unable to create ",d->dir,"/current, pausing");
   closeonexec(d->fdcurrent);
   d->bytes = 0;
   while (fchmod(d->fdcurrent,0644) == -1)
-    pause3("unable to set mode of ",d->dir,"/current, pausing: ");
+    pause3("unable to set mode of ",d->dir,"/current, pausing");
 
   while (chmod("previous",0744) == -1)
-    pause3("unable to set mode of ",d->dir,"/previous, pausing: ");
+    pause3("unable to set mode of ",d->dir,"/previous, pausing");
 
   if (!d->processor)
     finish(d,"previous",d->code_finished);
   else {
     for (;;) {
       while ((pid = fork()) == -1)
-        pause3("unable to fork for processor in ",d->dir,", pausing: ");
+        pause3("unable to fork for processor in ",d->dir,", pausing");
       if (!pid) {
         startprocessor(d);
-        strerr_die4sys(111,FATAL,"unable to run ",d->processor,": ");
+        strerr_die3sys(111,FATAL,"unable to run ",d->processor);
       }
       if (wait_pid(&wstat,pid) == -1)
-        pause3("wait failed for processor in ",d->dir,", pausing: ");
+        pause3("wait failed for processor in ",d->dir,", pausing");
       else if (wait_crashed(wstat))
-        pause3("processor crashed in ",d->dir,", pausing: ");
+        pause3("processor crashed in ",d->dir,", pausing");
       else if (!wait_exitcode(wstat))
         break;
       strerr_warn4(WARNING,"processor failed in ",d->dir,", pausing",0);
@@ -252,23 +252,23 @@ void fullcurrent(struct cyclog *d)
     }
 
     while ((fd = open_append("processed")) == -1)
-      pause3("unable to create ",d->dir,"/processed, pausing: ");
+      pause3("unable to create ",d->dir,"/processed, pausing");
     while (fsync(fd) == -1)
-      pause3("unable to write ",d->dir,"/processed to disk, pausing: ");
+      pause3("unable to write ",d->dir,"/processed to disk, pausing");
     while (fchmod(fd,0744) == -1)
-      pause3("unable to set mode of ",d->dir,"/processed, pausing: ");
+      pause3("unable to set mode of ",d->dir,"/processed, pausing");
     close(fd);
 
     while ((fd = open_append("newstate")) == -1)
-      pause3("unable to create ",d->dir,"/newstate, pausing: ");
+      pause3("unable to create ",d->dir,"/newstate, pausing");
     while (fsync(fd) == -1)
-      pause3("unable to write ",d->dir,"/newstate to disk, pausing: ");
+      pause3("unable to write ",d->dir,"/newstate to disk, pausing");
     close(fd);
 
     while (unlink("previous") == -1)
-      pause3("unable to remove ",d->dir,"/previous, pausing: ");
+      pause3("unable to remove ",d->dir,"/previous, pausing");
     while (rename("newstate","state") == -1)
-      pause3("unable to rename newstate to state in directory ",d->dir,", pausing: ");
+      pause3("unable to rename newstate to state in directory ",d->dir,", pausing");
     finish(d,"processed",d->code_finished);
   }
 }
@@ -295,7 +295,7 @@ int c_write(int pos,char *buf,int len)
   for (;;) {
     w = write(d->fdcurrent,buf,len);
     if (w > 0) break;
-    pause3("unable to write to ",d->dir,"/current, pausing: ");
+    pause3("unable to write to ",d->dir,"/current, pausing");
   }
 
   d->bytes += w;
@@ -313,30 +313,30 @@ void restart(struct cyclog *d)
   int flagprocessed;
 
   if (fchdir(fdstartdir) == -1)
-    strerr_die2sys(111,FATAL,"unable to switch to starting directory: ");
+    strerr_die2sys(111,FATAL,"unable to switch to starting directory");
 
   mkdir(d->dir,0700);
   d->fddir = open_read(d->dir);
   if ((d->fddir == -1) || (fchdir(d->fddir) == -1))
-    strerr_die4sys(111,FATAL,"unable to open directory ",d->dir,": ");
+    strerr_die3sys(111,FATAL,"unable to open directory ",d->dir);
   closeonexec(d->fddir);
 
   d->fdlock = open_append("lock");
   if ((d->fdlock == -1) || (lock_exnb(d->fdlock) == -1))
-    strerr_die4sys(111,FATAL,"unable to lock directory ",d->dir,": ");
+    strerr_die3sys(111,FATAL,"unable to lock directory ",d->dir);
   closeonexec(d->fdlock);
 
   if (stat("current",&st) == -1) {
     if (errno != error_noent)
-      strerr_die4sys(111,FATAL,"unable to stat ",d->dir,"/current: ");
+      strerr_die4sys(111,FATAL,"unable to stat ",d->dir,"/current");
   }
   else
     if (st.st_mode & 0100) {
       fd = open_append("current");
       if (fd == -1)
-        strerr_die4sys(111,FATAL,"unable to append to ",d->dir,"/current: ");
+        strerr_die4sys(111,FATAL,"unable to append to ",d->dir,"/current");
       if (fchmod(fd,0644) == -1)
-        strerr_die4sys(111,FATAL,"unable to set mode of ",d->dir,"/current: ");
+        strerr_die4sys(111,FATAL,"unable to set mode of ",d->dir,"/current");
       closeonexec(fd);
       d->fdcurrent = fd;
       d->bytes = st.st_size;
@@ -349,7 +349,7 @@ void restart(struct cyclog *d)
   flagprocessed = 0;
   if (stat("processed",&st) == -1) {
     if (errno != error_noent)
-      strerr_die4sys(111,FATAL,"unable to stat ",d->dir,"/processed: ");
+      strerr_die4sys(111,FATAL,"unable to stat ",d->dir,"/processed");
   }
   else if (st.st_mode & 0100)
     flagprocessed = 1;
@@ -367,13 +367,13 @@ void restart(struct cyclog *d)
 
   fd = open_trunc("state");
   if (fd == -1)
-    strerr_die4sys(111,FATAL,"unable to write to ",d->dir,"/state: ");
+    strerr_die4sys(111,FATAL,"unable to write to ",d->dir,"/state");
   close(fd);
   fd = open_append("current");
   if (fd == -1)
-    strerr_die4sys(111,FATAL,"unable to write to ",d->dir,"/current: ");
+    strerr_die4sys(111,FATAL,"unable to write to ",d->dir,"/current");
   if (fchmod(fd,0644) == -1)
-    strerr_die4sys(111,FATAL,"unable to set mode of ",d->dir,"/current: ");
+    strerr_die4sys(111,FATAL,"unable to set mode of ",d->dir,"/current");
   closeonexec(fd);
   d->fdcurrent = fd;
   d->bytes = 0;
@@ -417,7 +417,7 @@ void c_init(char **script)
     else if (script[i][0] == 'w') {
       code_finished = script[i] + 1;
       if (!stralloc_ready(&fn,str_len(code_finished)+TIMESTAMP+1))
-	strerr_die2sys(111,FATAL,"unable to allocate memory: ");
+	strerr_die2sys(111,FATAL,"unable to allocate memory");
     }
     else if ((script[i][0] == '.') || (script[i][0] == '/')) {
       d->num = num;
@@ -438,9 +438,9 @@ void c_quit(void)
   for (j = 0;j < cnum;++j) {
     buffer_flush(&c[j].ss);
     while (fsync(c[j].fdcurrent) == -1)
-      pause3("unable to write ",c[j].dir,"/current to disk, pausing: ");
+      pause3("unable to write ",c[j].dir,"/current to disk, pausing");
     while (fchmod(c[j].fdcurrent,0744) == -1)
-      pause3("unable to set mode of ",c[j].dir,"/current, pausing: ");
+      pause3("unable to set mode of ",c[j].dir,"/current, pausing");
   }
 }
 
@@ -568,10 +568,10 @@ void doit(char **script)
           if (flagselected)
             for (;;) {
               while (seek_begin(f[i]) == -1)
-                pause3("unable to move to beginning of ",action + 1,", pausing: ");
+                pause3("unable to move to beginning of ",action + 1,", pausing");
               if (write(f[i],line,1001) == 1001)
                 break;
-              pause3("unable to write ",action + 1,", pausing: ");
+              pause3("unable to write ",action + 1,", pausing");
             }
           break;
         case '.':
@@ -613,11 +613,11 @@ int main(int argc,char **argv)
   umask(022);
 
   if (!stralloc_ready(&fn,40))
-    strerr_die2sys(111,FATAL,"unable to allocate memory: ");
+    strerr_die2sys(111,FATAL,"unable to allocate memory");
 
   fdstartdir = open_read(".");
   if (fdstartdir == -1)
-    strerr_die2sys(111,FATAL,"unable to switch to current directory: ");
+    strerr_die2sys(111,FATAL,"unable to switch to current directory");
   closeonexec(fdstartdir);
 
   sig_block(sig_term);

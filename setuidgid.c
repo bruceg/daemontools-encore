@@ -35,12 +35,12 @@ int main(int argc,const char *const *argv,const char *const *envp)
     strerr_die3x(111,FATAL,"unknown account ",account);
 
   if (prot_gid(pw->pw_gid) == -1)
-    strerr_die2sys(111,FATAL,"unable to setgid: ");
+    strerr_die2sys(111,FATAL,"unable to setgid");
   if (flag2ndgids && prot_gids(pw->pw_name, pw->pw_gid) == -1)
-    strerr_die2sys(111,FATAL,"unable to initgroups: ");
+    strerr_die2sys(111,FATAL,"unable to initgroups");
   if (prot_uid(pw->pw_uid) == -1)
-    strerr_die2sys(111,FATAL,"unable to setuid: ");
+    strerr_die2sys(111,FATAL,"unable to setuid");
 
   pathexec_run(*argv,argv,envp);
-  strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
+  strerr_die3sys(111,FATAL,"unable to run ",*argv);
 }

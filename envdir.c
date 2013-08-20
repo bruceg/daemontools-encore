@@ -38,24 +38,24 @@ int main(int argc,const char *const *argv)
 
   fdorigdir = open_read(".");
   if (fdorigdir == -1)
-    strerr_die2sys(111,FATAL,"unable to switch to current directory: ");
+    strerr_die2sys(111,FATAL,"unable to switch to current directory");
   if (chdir(fn) == -1)
-    strerr_die4sys(111,FATAL,"unable to switch to directory ",fn,": ");
+    strerr_die3sys(111,FATAL,"unable to switch to directory ",fn);
 
   dir = opendir(".");
   if (!dir)
-    strerr_die4sys(111,FATAL,"unable to read directory ",fn,": ");
+    strerr_die3sys(111,FATAL,"unable to read directory ",fn);
   for (;;) {
     errno = 0;
     d = readdir(dir);
     if (!d) {
       if (errno)
-        strerr_die4sys(111,FATAL,"unable to read directory ",fn,": ");
+        strerr_die3sys(111,FATAL,"unable to read directory ",fn);
       break;
     }
     if (d->d_name[0] != '.') {
       if (openreadclose(d->d_name,&sa,256) == -1)
-        strerr_die6sys(111,FATAL,"unable to read ",fn,"/",d->d_name,": ");
+        strerr_die5sys(111,FATAL,"unable to read ",fn,"/",d->d_name);
       if (sa.len) {
         sa.len = byte_chr(sa.s,sa.len,'\n');
         while (sa.len) {
@@ -78,9 +78,9 @@ int main(int argc,const char *const *argv)
   closedir(dir);
 
   if (fchdir(fdorigdir) == -1)
-    strerr_die2sys(111,FATAL,"unable to switch to starting directory: ");
+    strerr_die2sys(111,FATAL,"unable to switch to starting directory");
   close(fdorigdir);
 
   pathexec(argv);
-  strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
+  strerr_die3sys(111,FATAL,"unable to run ",*argv);
 }

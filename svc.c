@@ -45,31 +45,31 @@ int main(int argc,const char *const *argv)
 
   fdorigdir = open_read(".");
   if (fdorigdir == -1)
-    strerr_die2sys(111,FATAL,"unable to open current directory: ");
+    strerr_die2sys(111,FATAL,"unable to open current directory");
 
   while ((dir = *argv++) != 0) {
     if (chdir(dir) == -1)
-      strerr_warn4sys(WARNING,"unable to chdir to ",dir,": ");
+      strerr_warn4sys(WARNING,"unable to chdir to ",dir,"");
     else if (!svpath_init()
 	     || (fncontrol = svpath_make("/control")) == 0)
-      strerr_warn4sys(WARNING,"unable to setup control path for ",dir,": ");
+      strerr_warn4sys(WARNING,"unable to setup control path for ",dir,"");
     else {
       fd = open_write(fncontrol);
       if (fd == -1)
         if (errno == error_nodevice)
           strerr_warn4(WARNING,"unable to control ",dir,": supervise not running",0);
         else
-          strerr_warn4sys(WARNING,"unable to control ",dir,": ");
+          strerr_warn4sys(WARNING,"unable to control ",dir,"");
       else {
         ndelay_off(fd);
         buffer_init(&b,buffer_unixwrite,fd,bspace,sizeof bspace);
         if (buffer_putflush(&b,data,datalen) == -1)
-          strerr_warn4sys(WARNING,"error writing commands to ",dir,": ");
+          strerr_warn4sys(WARNING,"error writing commands to ",dir,"");
         close(fd);
       }
     }
     if (fchdir(fdorigdir) == -1)
-      strerr_die2sys(111,FATAL,"unable to set directory: ");
+      strerr_die2sys(111,FATAL,"unable to set directory");
   }
 
   _exit(0);

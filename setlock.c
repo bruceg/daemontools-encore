@@ -37,14 +37,14 @@ int main(int argc,const char *const *argv,const char *const *envp)
   fd = open_append(file);
   if (fd == -1) {
     if (flagx) _exit(0);
-    strerr_die4sys(111,FATAL,"unable to open ",file,": ");
+    strerr_die3sys(111,FATAL,"unable to open ",file);
   }
 
   if ((flagndelay ? lock_exnb : lock_ex)(fd) == -1) {
     if (flagx) _exit(0);
-    strerr_die4sys(111,FATAL,"unable to lock ",file,": ");
+    strerr_die3sys(111,FATAL,"unable to lock ",file);
   }
 
   pathexec_run(*argv,argv,envp);
-  strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
+  strerr_die3sys(111,FATAL,"unable to run ",*argv);
 }

@@ -22,7 +22,7 @@ static void doit(int resource,const char *arg)
   struct rlimit r;
 
   if (getrlimit(resource,&r) == -1)
-    strerr_die2sys(111,FATAL,"getrlimit failed: ");
+    strerr_die2sys(111,FATAL,"getrlimit failed");
 
   if (str_equal(arg,"="))
     r.rlim_cur = r.rlim_max;
@@ -34,7 +34,7 @@ static void doit(int resource,const char *arg)
   }
 
   if (setrlimit(resource,&r) == -1)
-    strerr_die2sys(111,FATAL,"setrlimit failed: ");
+    strerr_die2sys(111,FATAL,"setrlimit failed");
 }
 
 static void doenv(int resource,const char *name)
@@ -177,5 +177,5 @@ int main(int argc,const char *const *argv,const char *const *envp)
   if (!*argv) die_usage();
 
   pathexec_run(*argv,argv,envp);
-  strerr_die4sys(111,FATAL,"unable to run ",*argv,": ");
+  strerr_die3sys(111,FATAL,"unable to run ",*argv);
 }
