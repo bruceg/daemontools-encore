@@ -15,17 +15,8 @@ struct strerr {
 extern struct strerr strerr_sys;
 extern void strerr_sysinit(void);
 
-extern const char *strerr(const struct strerr *);
 extern void strerr_warn(const char *,const char *,const char *,const char *,const char *,const char *,const struct strerr *);
 extern void strerr_die(int,const char *,const char *,const char *,const char *,const char *,const char *,const struct strerr *) __attribute__((noreturn));
-
-#define STRERR(r,se,a) \
-{ se.who = 0; se.x = a; se.y = 0; se.z = 0; return r; }
-
-#define STRERR_SYS(r,se,a) \
-{ se.who = &strerr_sys; se.x = a; se.y = 0; se.z = 0; return r; }
-#define STRERR_SYS3(r,se,a,b,c) \
-{ se.who = &strerr_sys; se.x = a; se.y = b; se.z = c; return r; }
 
 #define strerr_warn6(x1,x2,x3,x4,x5,x6,se) \
 strerr_warn((x1),(x2),(x3),(x4),(x5),(x6),(se))
