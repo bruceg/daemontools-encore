@@ -48,7 +48,7 @@ void start(const char *fn)
   if (fn[0] == '.' && !islog) return;
 
   if (stat(fn,&st) == -1) {
-    strerr_warn4(WARNING,"unable to stat ",fn,": ",&strerr_sys);
+    strerr_warn4sys(WARNING,"unable to stat ",fn,": ");
     return;
   }
 
@@ -78,14 +78,14 @@ void start(const char *fn)
 	x[i].flaglog = S_ISDIR(st.st_mode);
       else
 	if (errno != error_noent) {
-          strerr_warn4(WARNING,"unable to stat ",fn,"/log: ",&strerr_sys);
+          strerr_warn4sys(WARNING,"unable to stat ",fn,"/log: ");
           return;
 	}
     }
 
     if (x[i].flaglog) {
       if (pipe(x[i].pi) == -1) {
-        strerr_warn4(WARNING,"unable to create pipe for ",fn,": ",&strerr_sys);
+        strerr_warn4sys(WARNING,"unable to create pipe for ",fn,": ");
         return;
       }
       closeonexec(x[i].pi[0]);
@@ -99,7 +99,7 @@ void start(const char *fn)
   if (!x[i].pid)
     switch(child = fork()) {
       case -1:
-        strerr_warn4(WARNING,"unable to fork for ",fn,": ",&strerr_sys);
+        strerr_warn4sys(WARNING,"unable to fork for ",fn,": ");
         return;
       case 0:
         if (x[i].flaglog)
@@ -120,7 +120,7 @@ void start(const char *fn)
   if (x[i].flaglog && !x[i].pidlog)
     switch(child = fork()) {
       case -1:
-        strerr_warn4(WARNING,"unable to fork for ",fn,"/log: ",&strerr_sys);
+        strerr_warn4sys(WARNING,"unable to fork for ",fn,"/log: ");
         return;
       case 0:
         if (fd_move(0,x[i].pi[0]) == -1)
@@ -139,7 +139,7 @@ void start(const char *fn)
 
 void direrror(void)
 {
-  strerr_warn2(WARNING,"unable to read directory: ",&strerr_sys);
+  strerr_warn2sys(WARNING,"unable to read directory: ");
 }
 
 void doit(void)

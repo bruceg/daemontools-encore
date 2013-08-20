@@ -31,6 +31,19 @@ strerr_warn((x1),(x2),0,0,0,0,(se))
 #define strerr_warn1(x1,se) \
 strerr_warn((x1),0,0,0,0,0,(se))
 
+#define strerr_warn6sys(x1,x2,x3,x4,x5,x6) \
+strerr_warn((x1),(x2),(x3),(x4),(x5),(x6),&strerr_sys)
+#define strerr_warn5sys(x1,x2,x3,x4,x5) \
+strerr_warn((x1),(x2),(x3),(x4),(x5),0,&strerr_sys)
+#define strerr_warn4sys(x1,x2,x3,x4) \
+strerr_warn((x1),(x2),(x3),(x4),0,0,&strerr_sys)
+#define strerr_warn3sys(x1,x2,x3) \
+strerr_warn((x1),(x2),(x3),0,0,0,&strerr_sys)
+#define strerr_warn2sys(x1,x2) \
+strerr_warn((x1),(x2),0,0,0,0,&strerr_sys)
+#define strerr_warn1sys(x1) \
+strerr_warn((x1),0,0,0,0,0,&strerr_sys)
+
 #define strerr_die6(e,x1,x2,x3,x4,x5,x6,se) \
 strerr_die((e),(x1),(x2),(x3),(x4),(x5),(x6),(se))
 #define strerr_die5(e,x1,x2,x3,x4,x5,se) \

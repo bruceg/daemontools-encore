@@ -29,13 +29,13 @@ extern int rename(const char *,const char *);
 
 void pause3(const char *s1,const char *s2,const char *s3)
 {
-  strerr_warn4(WARNING,s1,s2,s3,&strerr_sys);
+  strerr_warn4sys(WARNING,s1,s2,s3);
   deepsleep(5);
 }
 
 void pause5(const char *s1,const char *s2,const char *s3,const char *s4,const char *s5)
 {
-  strerr_warn6(WARNING,s1,s2,s3,s4,s5,&strerr_sys);
+  strerr_warn6sys(WARNING,s1,s2,s3,s4,s5);
   deepsleep(5);
 }
 

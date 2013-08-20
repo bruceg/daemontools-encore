@@ -84,7 +84,7 @@ static int forkexecve(const char *argv[],int fd)
 
   switch (f = fork()) {
     case -1:
-      strerr_warn4(WARNING,"unable to fork for ",dir,", sleeping 60 seconds: ",&strerr_sys);
+      strerr_warn4sys(WARNING,"unable to fork for ",dir,", sleeping 60 seconds: ");
       deepsleep(60);
       trigger();
       return -1;
@@ -136,7 +136,7 @@ void announce(void)
   }
 
   if (seek_begin(fdstatus)) {
-    strerr_warn2(WARNING,"unable to seek in status: ",&strerr_sys);
+    strerr_warn2sys(WARNING,"unable to seek in status: ");
     return;
   }
   r = write(fdstatus,status,w);

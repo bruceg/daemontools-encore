@@ -110,7 +110,7 @@ void doit(const char *dir)
     return;
   }
   if (!svpath_init()) {
-    strerr_warn4(WARNING,"unable to set up control path for ",dir,": ",&strerr_sys);
+    strerr_warn4sys(WARNING,"unable to set up control path for ",dir,": ");
     return;
   }
 
