@@ -162,9 +162,9 @@ char buf1[BUFFER_SIZE];
     struct stat sb;                                          \
     if (fifo_make((f),0600) == -1)                           \
       if (errno != error_exist)                              \
-        strerr_die2sys(111,FATAL,"unable to create fifo: "); \
+        strerr_die2sys(111,FATAL,"unable to create fifo");   \
     if (stat((f),&sb) == -1)                                 \
-      strerr_die2sys(111,FATAL,"unable to stat: ");          \
+      strerr_die2sys(111,FATAL,"unable to stat");            \
     if (!S_ISFIFO(sb.st_mode))                               \
       strerr_die3x(111,FATAL,"not a named pipe: ",(f));      \
   }
@@ -177,19 +177,19 @@ void die_usage(void)
 void sig_child_handler(void)
 {
   const char c = 'c';
-  WRITE(fdself[1],&c,1,"unable to send c command: ");
+  WRITE(fdself[1],&c,1,"unable to send c command");
 }
 
 void sig_alarm_handler(void)
 {
   const char c = 'a';
-  WRITE(fdself[1],&c,1,"unable to send a command: ");
+  WRITE(fdself[1],&c,1,"unable to send a command");
 }
 
 void sig_term_handler(void)
 {
   const char c = 't';
-  WRITE(fdself[1],&c,1,"unable to send t command: ");
+  WRITE(fdself[1],&c,1,"unable to send t command");
 }
 
 void buffer_init(fifobuffer *s,char *buf,unsigned int len)
@@ -233,7 +233,7 @@ int my_fd_copy(int to,int from)
 {
   if (to == from) return 0;
   if (fcntl(from,F_GETFL,0) == -1) return -1;
-  CLOSE(to,"unable to close destination: ");
+  CLOSE(to,"unable to close destination");
   if (fcntl(from,F_DUPFD,to) == -1) return -1;
   return 0;
 }
@@ -246,7 +246,7 @@ int my_fd_move(int to,int from)
 {
   if (to == from) return 0;
   if (my_fd_copy(to,from) == -1) return -1;
-  CLOSE(from,"unable to close source: ");
+  CLOSE(from,"unable to close source");
   return 0;
 }
 
@@ -259,7 +259,7 @@ void do_c(void)
     if ((dead = wait_nohang(&wstat)) != -1) break;
     if (errno == error_intr) continue;
     if (errno != error_child) break;
-    strerr_die2x(111,FATAL,"reaping failed: ");
+    strerr_die2x(111,FATAL,"reaping failed");
   }
   if (dead <= 0) {
     s[ fmt_uint(s,child) ] = '\0';
@@ -289,7 +289,7 @@ void do_c(void)
 
   else {
     s[ fmt_uint(s,child) ] = '\0';
-    strerr_die3x(111,FATAL,"child on fire: ",s);
+    strerr_die3x(111,FATAL,"child on fire",s);
   }
 
   childdied = 1;
@@ -322,7 +322,7 @@ int check_pipe_empty(void)
     FD_SET(fdchild[0],&rfds);
     if ((r = select(fdchild[0]+1,&rfds,0,0,&tv)) != -1) break;
     if (errno == error_intr) continue;
-    strerr_die2sys(111,FATAL,"unable to check pipe: ");
+    strerr_die2sys(111,FATAL,"unable to check pipe");
   }
   return( r ? 0 : 1 );
 }
@@ -334,7 +334,7 @@ void do_self(void)
   if ((r = read(fdself[0],&c,1)) == -1) {
     if (errno == error_intr) return;
     if (errno == error_again) return;
-    strerr_die2sys(111,FATAL,"unable to check self: ");
+    strerr_die2sys(111,FATAL,"unable to check self");
   }
   if (r >= 0) {
     switch (c) {
@@ -359,7 +359,7 @@ void check_self(void)
     FD_SET(fdself[0],&rfds);
     if ((r = select(fdself[0]+1,&rfds,0,0,&tv)) != -1) break;
     if (errno == error_intr) continue;
-    strerr_die2sys(111,FATAL,"unable to check self: ");
+    strerr_die2sys(111,FATAL,"unable to check self");
   }
   if (!r) return;
   if (FD_ISSET(fdself[0],&rfds)) do_self();
@@ -380,7 +380,7 @@ void fb_to_child(fifobuffer *fb,const char *src,int *nlfound,int nllast)
     if (!(len = FB_CANWRITE_NL(fb))) return;
     if ((w = write(fdchild[1],&fb->buf[fb->b],len)) == -1) {
       if (errno == error_intr) { fbuf_pref = fb; return; }
-      strerr_die4sys(111,FATAL,"unable to flush ",src," with newline: ");
+      strerr_die4sys(111,FATAL,"unable to flush ",src," with newline");
     }
     fb->b += w; fb->b %= fb->len;
     if (fb->b == fb->n + 1 || (!fb->b && fb->n == fb->len - 1)) fb->nl = 0;
@@ -394,7 +394,7 @@ void fb_to_child(fifobuffer *fb,const char *src,int *nlfound,int nllast)
     if (!(len = FB_CANWRITE_ALL(fb))) return;
     if ((w = write(fdchild[1],&fb->buf[fb->b],len)) == -1) {
       if (errno == error_intr) { fbuf_pref = fb; return; }
-      strerr_die4sys(111,FATAL,"unable to flush ",src," without newline: ");
+      strerr_die4sys(111,FATAL,"unable to flush ",src," without newline");
     }
     fb->b += w; fb->b %= fb->len;
     if (fb->b == fb->e) fb->empty = 1;
@@ -407,7 +407,7 @@ void fb_to_child(fifobuffer *fb,const char *src,int *nlfound,int nllast)
     if (!(len = FB_CANWRITE_ALL(fb))) return;
     if ((w = write(fdchild[1],&fb->buf[fb->b],len)) == -1) {
       if (errno == error_intr) { fbuf_pref = fb; return; }
-      strerr_die4sys(111,FATAL,"unable to flush ",src,": ");
+      strerr_die3sys(111,FATAL,"unable to flush ",src);
     }
     fb->b += w; fb->b %= fb->len;
     if (fb->b == fb->e) fb->empty = 1;
@@ -444,7 +444,7 @@ void do_stdin(void)
   if ((r = read(0,ptr,len)) == -1) {
     if (errno == error_intr) return;
     if (errno == error_again) return; /* shouldnt happen */
-    strerr_die2sys(111,FATAL,"unable to read stdin: ");
+    strerr_die2sys(111,FATAL,"unable to read stdin");
   }
 
   if (!r) { nlfound0 = 1; return; }
@@ -483,7 +483,7 @@ void do_fifo(void)
   if ((r = read(fifo_rd,ptr,len)) == -1) {
     if (errno == error_intr) return;
     if (errno == error_again) return;
-    strerr_die2sys(111,FATAL,"unable to read fifo: ");
+    strerr_die2sys(111,FATAL,"unable to read fifo");
   }
 
   if (!r) return;
@@ -514,18 +514,18 @@ void init_sigs(void)
 
 void init_fds(void)
 {
-  NDELAY_OFF(0,"unable to set blocking on stdin: ");
+  NDELAY_OFF(0,"unable to set blocking on stdin");
 
   FIFO_MAKE(fn);
 
-  OPEN_READ(fifo_rd,fn,"unable to open fifo for read: ");
-  OPEN_WRITE(fifo_wr,fn,"unable to open fifo for write: ");
+  OPEN_READ(fifo_rd,fn,"unable to open fifo for read");
+  OPEN_WRITE(fifo_wr,fn,"unable to open fifo for write");
 
-  PIPE(fdself,"unable to create pipe to self: ");
-  NDELAY_ON(fdself[0],"unable to set nonblocking on self: ");
+  PIPE(fdself,"unable to create pipe to self");
+  NDELAY_ON(fdself[0],"unable to set nonblocking on self");
 
-  PIPE(fdchild,"unable to create pipe to child: ");
-  FD_MOVE(1,fdchild[1],"unable to move pipe to stdout: ");
+  PIPE(fdchild,"unable to create pipe to child");
+  FD_MOVE(1,fdchild[1],"unable to move pipe to stdout");
   fdchild[1] = 1;
 
   /* now we have:
@@ -559,27 +559,27 @@ void fork_child(void)
         continue;
 
       case 0:
-        CLOSE(fdself[0],"unable to close self reader: ");
+        CLOSE(fdself[0],"unable to close self reader");
         fdself[0] = -1;
 
-        CLOSE(fdself[1],"unable to close self writer: ");
+        CLOSE(fdself[1],"unable to close self writer");
         fdself[1] = -1;
 
-        CLOSE(fifo_rd,"unable to close forked reader: ");
+        CLOSE(fifo_rd,"unable to close forked reader");
         fifo_rd = -1;
 
-        CLOSE(fifo_wr,"unable to close forked writer: ");
+        CLOSE(fifo_wr,"unable to close forked writer");
         fifo_wr = -1;
 
-        FD_MOVE(0,fdchild[0],"unable to move pipe to stdin: ");
+        FD_MOVE(0,fdchild[0],"unable to move pipe to stdin");
         fdchild[0] = 0;
 
-        OPEN_WRITE(null_wr,"/dev/null","unable to reopen null writer: ");
-        FD_MOVE(fdchild[1],null_wr,"unable to move null to stdout: ");
+        OPEN_WRITE(null_wr,"/dev/null","unable to reopen null writer");
+        FD_MOVE(fdchild[1],null_wr,"unable to move null to stdout");
         null_wr = fdchild[1];
         fdchild[1] = -1;
 
-        NDELAY_OFF(fdchild[0],"unable to set blocking on child: ");
+        NDELAY_OFF(fdchild[0],"unable to set blocking on child");
 
         /* now we have:
          * 0 - fdchild[0]
@@ -590,7 +590,7 @@ void fork_child(void)
         pathexec(saved_argv);
 
         /* make this 112 so we can see it later in the parent */
-        strerr_die4sys(112,WARNING,"unable to run ",*saved_argv,": ");
+        strerr_die3sys(112,WARNING,"unable to run ",*saved_argv);
     }
     break;
   }
@@ -611,7 +611,7 @@ void write_banner(void)
         millisleep(1);
         continue;
       }
-      strerr_die2sys(111,FATAL,"unable to write banner: ");
+      strerr_die2sys(111,FATAL,"unable to write banner");
     }
     bptr += wrote;
     blen -= wrote;
@@ -664,7 +664,7 @@ void select_loop(void)
 
     if (select(max+1,&rfds,&wfds,0,0) == -1) {
       if (errno == error_intr) continue;
-      strerr_die2sys(111,FATAL,"unable to select: ");
+      strerr_die2sys(111,FATAL,"unable to select");
     }
 
     if (FD_ISSET(fdself[0],&rfds)) { do_self(); continue; }
@@ -689,12 +689,12 @@ void stop_child(void)
   }
 
   sig_block(sig_child);
-  CLOSE(fdchild[1],"unable to close pipe to child: ");
+  CLOSE(fdchild[1],"unable to close pipe to child");
   fdchild[1] = -1;
 
   if (wait_pid(&wstat,child) == -1)
     if (errno != error_child)
-      strerr_die2sys(111,FATAL,"waiting failed: ");
+      strerr_die2sys(111,FATAL,"waiting failed");
 }
 
 int main(int argc,const char *const *argv)
