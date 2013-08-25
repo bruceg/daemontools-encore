@@ -134,8 +134,8 @@ int filesfit(struct cyclog *d)
     if (x->d_name[0] == '@')
       if (str_len(x->d_name) >= 25)
         if (str_start(x->d_name,fn.s)) {
-	  unlink(x->d_name);
-	  break;
+          unlink(x->d_name);
+          break;
         }
   }
   if (errno) { closedir(dir); return -1; }
@@ -159,7 +159,7 @@ void finish(struct cyclog *d,const char *file,const char *code)
       fnlen = fmt_tai64nstamp(fn.s);
       fn.s[fnlen++] = '.';
       do {
-	fn.s[fnlen++] = *code;
+        fn.s[fnlen++] = *code;
       } while (*code++ != 0);
 
       if (link(file,fn.s) == 0) break;
@@ -417,7 +417,7 @@ void c_init(char **script)
     else if (script[i][0] == 'w') {
       code_finished = script[i] + 1;
       if (!stralloc_ready(&fn,str_len(code_finished)+TIMESTAMP+1))
-	strerr_die2sys(111,FATAL,"unable to allocate memory");
+        strerr_die2sys(111,FATAL,"unable to allocate memory");
     }
     else if ((script[i][0] == '.') || (script[i][0] == '/')) {
       d->num = num;
@@ -467,7 +467,7 @@ int flushread(int fd,char *buf,int len)
   if (flagforcerotate) {
     for (j = 0;j < cnum;++j)
       if (c[j].bytes > 0)
-	fullcurrent(&c[j]);
+        fullcurrent(&c[j]);
     flagforcerotate = 0;
   }
 
@@ -496,6 +496,10 @@ buffer ssin = BUFFER_INIT(flushread,0,inbuf,sizeof inbuf);
 char line[1001];
 int linelen; /* 0 <= linelen <= 1000 */
 
+int oldlinelen = 1001; /* same as line[] size */
+
+int (*timestamp_fn)(char s[TIMESTAMP]);
+
 void doit(char **script)
 {
   int flageof;
@@ -511,12 +515,17 @@ void doit(char **script)
     if (script[0][0] == 't' || script[0][0] == 'T')
       flagtimestamp = script[0][0];
 
+  if (flagtimestamp) {
+    timestamp_fn = (flagtimestamp == 't')
+      ? fmt_tai64nstamp
+      : fmt_accustamp;
+  }
+
   for (i = 0;i <= 1000;++i) line[i] = '\n';
   linelen = 0;
 
   flageof = 0;
   for (;;) {
-    for (i = 0;i < linelen;++i) line[i] = '\n';
     linelen = 0;
 
     while (linelen < 1000) {
@@ -527,15 +536,15 @@ void doit(char **script)
       }
       if (!linelen)
         if (flagtimestamp) {
-	  linelen = (flagtimestamp == 't')
-	    ? fmt_tai64nstamp(line)
-	    : fmt_accustamp(line);
+          linelen = timestamp_fn(line);
           line[linelen++] = ' ';
         }
       if (ch == '\n')
         break;
       line[linelen++] = ch;
     }
+
+    for (i = linelen;i < oldlinelen;++i) line[i] = '\n';
 
     flagselected = 1;
     j = 0;
@@ -598,13 +607,14 @@ void doit(char **script)
             buffer_PUTC(&c[j].ss,ch);
       }
 
+    ch = '\n';
     for (j = 0;j < cnum;++j)
-      if (c[j].flagselected) {
-	ch = '\n';
+      if (c[j].flagselected)
         buffer_PUTC(&c[j].ss,ch);
-      }
 
     if (flageof) return;
+
+    oldlinelen = linelen;
   }
 }
 
