@@ -134,8 +134,8 @@ int filesfit(struct cyclog *d)
     if (x->d_name[0] == '@')
       if (str_len(x->d_name) >= 25)
         if (str_start(x->d_name,fn.s)) {
-	  unlink(x->d_name);
-	  break;
+          unlink(x->d_name);
+          break;
         }
   }
   if (errno) { closedir(dir); return -1; }
@@ -159,7 +159,7 @@ void finish(struct cyclog *d,const char *file,const char *code)
       fnlen = fmt_tai64nstamp(fn.s);
       fn.s[fnlen++] = '.';
       do {
-	fn.s[fnlen++] = *code;
+        fn.s[fnlen++] = *code;
       } while (*code++ != 0);
 
       if (link(file,fn.s) == 0) break;
@@ -417,7 +417,7 @@ void c_init(char **script)
     else if (script[i][0] == 'w') {
       code_finished = script[i] + 1;
       if (!stralloc_ready(&fn,str_len(code_finished)+TIMESTAMP+1))
-	strerr_die2sys(111,FATAL,"unable to allocate memory");
+        strerr_die2sys(111,FATAL,"unable to allocate memory");
     }
     else if ((script[i][0] == '.') || (script[i][0] == '/')) {
       d->num = num;
@@ -467,7 +467,7 @@ int flushread(int fd,char *buf,int len)
   if (flagforcerotate) {
     for (j = 0;j < cnum;++j)
       if (c[j].bytes > 0)
-	fullcurrent(&c[j]);
+        fullcurrent(&c[j]);
     flagforcerotate = 0;
   }
 
