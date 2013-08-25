@@ -496,6 +496,8 @@ buffer ssin = BUFFER_INIT(flushread,0,inbuf,sizeof inbuf);
 char line[1001];
 int linelen; /* 0 <= linelen <= 1000 */
 
+int (*timestamp_fn)(char s[TIMESTAMP]);
+
 void doit(char **script)
 {
   int flageof;
@@ -510,6 +512,12 @@ void doit(char **script)
   if (script[0])
     if (script[0][0] == 't' || script[0][0] == 'T')
       flagtimestamp = script[0][0];
+
+  if (flagtimestamp) {
+    timestamp_fn = (flagtimestamp == 't')
+      ? fmt_tai64nstamp
+      : fmt_accustamp;
+  }
 
   for (i = 0;i <= 1000;++i) line[i] = '\n';
   linelen = 0;
@@ -527,9 +535,7 @@ void doit(char **script)
       }
       if (!linelen)
         if (flagtimestamp) {
-	  linelen = (flagtimestamp == 't')
-	    ? fmt_tai64nstamp(line)
-	    : fmt_accustamp(line);
+          linelen = timestamp_fn(line);
           line[linelen++] = ' ';
         }
       if (ch == '\n')
