@@ -607,11 +607,10 @@ void doit(char **script)
             buffer_PUTC(&c[j].ss,ch);
       }
 
+    ch = '\n';
     for (j = 0;j < cnum;++j)
-      if (c[j].flagselected) {
-	ch = '\n';
+      if (c[j].flagselected)
         buffer_PUTC(&c[j].ss,ch);
-      }
 
     if (flageof) return;
 
