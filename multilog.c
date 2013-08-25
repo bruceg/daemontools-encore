@@ -496,6 +496,8 @@ buffer ssin = BUFFER_INIT(flushread,0,inbuf,sizeof inbuf);
 char line[1001];
 int linelen; /* 0 <= linelen <= 1000 */
 
+int oldlinelen = 1001; /* same as line[] size */
+
 int (*timestamp_fn)(char s[TIMESTAMP]);
 
 void doit(char **script)
@@ -524,7 +526,6 @@ void doit(char **script)
 
   flageof = 0;
   for (;;) {
-    for (i = 0;i < linelen;++i) line[i] = '\n';
     linelen = 0;
 
     while (linelen < 1000) {
@@ -542,6 +543,8 @@ void doit(char **script)
         break;
       line[linelen++] = ch;
     }
+
+    for (i = linelen;i < oldlinelen;++i) line[i] = '\n';
 
     flagselected = 1;
     j = 0;
@@ -611,6 +614,8 @@ void doit(char **script)
       }
 
     if (flageof) return;
+
+    oldlinelen = linelen;
   }
 }
 
