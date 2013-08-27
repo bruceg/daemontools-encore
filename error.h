@@ -23,6 +23,7 @@ extern int error_proto;
 extern int error_isdir;
 extern int error_connrefused;
 extern int error_notdir;
+extern int error_child;
 
 extern const char *error_str(int);
 extern int error_temp(int);
