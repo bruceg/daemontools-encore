@@ -22,6 +22,8 @@
 #include "match.h"
 #include "deepsleep.h"
 
+#define MAXLINE 1000
+
 extern int rename(const char *,const char *);
 
 #define FATAL "multilog: fatal: "
@@ -493,8 +495,8 @@ int flushread(int fd,char *buf,int len)
 char inbuf[1024];
 buffer ssin = BUFFER_INIT(flushread,0,inbuf,sizeof inbuf);
 
-char line[1001];
-int linelen; /* 0 <= linelen <= 1000 */
+char line[MAXLINE+1];
+int linelen; /* 0 <= linelen <= MAXLINE */
 
 void doit(char **script)
 {
@@ -511,7 +513,7 @@ void doit(char **script)
     if (script[0][0] == 't' || script[0][0] == 'T')
       flagtimestamp = script[0][0];
 
-  for (i = 0;i <= 1000;++i) line[i] = '\n';
+  for (i = 0;i <= MAXLINE;++i) line[i] = '\n';
   linelen = 0;
 
   flageof = 0;
@@ -519,7 +521,7 @@ void doit(char **script)
     for (i = 0;i < linelen;++i) line[i] = '\n';
     linelen = 0;
 
-    while (linelen < 1000) {
+    while (linelen < MAXLINE) {
       if (buffer_GETC(&ssin,&ch) <= 0) {
         if (!linelen) return;
         flageof = 1;
@@ -569,7 +571,7 @@ void doit(char **script)
             for (;;) {
               while (seek_begin(f[i]) == -1)
                 pause3("unable to move to beginning of ",action + 1,", pausing");
-              if (write(f[i],line,1001) == 1001)
+              if (write(f[i],line,MAXLINE+1) == MAXLINE+1)
                 break;
               pause3("unable to write ",action + 1,", pausing");
             }
@@ -585,7 +587,7 @@ void doit(char **script)
       if (c[j].flagselected)
         buffer_put(&c[j].ss,line,linelen);
         
-    if (linelen == 1000)
+    if (linelen == MAXLINE)
       for (;;) {
         if (buffer_GETC(&ssin,&ch) <= 0) {
           flageof = 1;
