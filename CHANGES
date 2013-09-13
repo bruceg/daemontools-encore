@@ -1,3 +1,6 @@
+Increased the multilog file size limit to 2GB.
+(Thanks to SATOH Fumiyasu)
+
 Fixed missing separator between system error texts.
 
 Changes in daemontools-encore-1.06
