@@ -53,7 +53,7 @@ int main()
       }
       secs -= 4611686018427387914ULL;
       t = localtime(&secs);
-      out(num,fmt_ulong(num,1900 + t->tm_year));
+      out(num,fmt_ulong(num,1900UL + t->tm_year));
       out("-",1); out(num,fmt_uint0(num,1 + t->tm_mon,2));
       out("-",1); out(num,fmt_uint0(num,t->tm_mday,2));
       out(" ",1); out(num,fmt_uint0(num,t->tm_hour,2));
