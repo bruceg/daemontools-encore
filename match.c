@@ -1,6 +1,8 @@
+#include <fnmatch.h>
+#include "byte.h"
 #include "match.h"
 
-int match(const char *pattern,const char *buf,unsigned int len)
+int match_simple(const char *pattern,const char *buf,unsigned int len)
 {
   char ch;
 
@@ -22,3 +24,13 @@ int match(const char *pattern,const char *buf,unsigned int len)
     ++buf; --len;
   }
 }
+
+int match_fnmatch(const char *pattern,const char *buf,unsigned int len)
+{
+  char tmp[len+1];
+  byte_copy(tmp,len,buf);
+  tmp[len] = 0;
+  return fnmatch(pattern,tmp,0) == 0;
+}
+
+int (*match)(const char *pattern,const char *buf,unsigned int len) = match_simple;
