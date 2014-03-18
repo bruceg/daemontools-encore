@@ -43,3 +43,49 @@ matchtest '* * one' 'x y one'
 matchtest '* * one' 'one'
 matchtest '* * one' ' one'
 matchtest '* * one' '   one'
+
+echo '--- fnmatch handles literal string'
+matchtest Fone one
+matchtest Fone ''
+matchtest Fone on
+matchtest Fone onf
+matchtest Fone 'one*'
+matchtest Fone onetwo
+
+echo '--- fnmatch handles empty string'
+matchtest 'F' ''
+matchtest 'F' x
+
+echo '--- fnmatch handles full-line wildcard'
+matchtest 'F*' ''
+matchtest 'F*' x
+matchtest 'F*' '*'
+matchtest 'F*' one
+
+echo '--- fnmatch handles ending wildcard'
+matchtest 'Fone*' one
+matchtest 'Fone*' 'one*'
+matchtest 'Fone*' onetwo
+matchtest 'Fone*' ''
+matchtest 'Fone*' x
+matchtest 'Fone*' on
+matchtest 'Fone*' onf
+
+echo '--- fnmatch handles wildcard termination'
+matchtest 'F* one' ' one'
+matchtest 'F* one' 'x one'
+matchtest 'F* one' '* one'
+matchtest 'F* one' 'xy one'
+matchtest 'F* one' 'one'
+matchtest 'F* one' ' two'
+matchtest 'F* one' '  one'
+matchtest 'F* one' 'xy one '
+
+echo '--- fnmatch handles multiple wildcards'
+matchtest 'F* * one' '  one'
+matchtest 'F* * one' 'x  one'
+matchtest 'F* * one' ' y one'
+matchtest 'F* * one' 'x y one'
+matchtest 'F* * one' 'one'
+matchtest 'F* * one' ' one'
+matchtest 'F* * one' '   one'
