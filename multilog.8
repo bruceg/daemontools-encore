@@ -36,18 +36,25 @@ If
 receives a TERM signal, it will read and process data until the next newline,
 and then exit, leaving stdin at the first byte of data it has not processed.
 .SH SELECTING LINES
-Each line is initially selected. The action 
+Each line is initially selected. The following actions change this:
 .TP
 .B -\fIpattern
 deselects the line if
 .I pattern
-matches the line. The action 
+matches the line.
 .TP
 .B +\fIpattern
 selects the line if
 .I pattern
-matches the line. 
+matches the line.
+.TP
+.B F
+changes the pattern match mode to use fnmatch for all subsequent patterns.
+.TP
+.B S
+changes the pattern match mode back to use simple patterns (the default).
 .PP
+.SS SIMPLE PATTERNS
 .I pattern
 is a string of stars and non-stars. It matches any concatenation of strings
 matched by all the stars and non-stars in the same order. A non-star matches
@@ -81,6 +88,54 @@ deselects every line.
 To save memory,
 .B multilog
 actually checks pattern against only the first 1000 characters of each line.
+.SS FNMATCH PATTERNS
+When fnmatch mode is selected,
+.B multilog
+uses the system's
+.B fnmatch
+function to match
+.IR pattern .
+This mode is less efficient than the simple patterns, but more flexable
+in the types of patterns it allows.
+
+In particular,
+.TP
+.I ?
+(not between brackets) matches any single character,
+.TP
+.I *
+(not between brackets) matches any string, including the empty string,
+.TP
+.I [...]
+matches a single character, and
+.TP
+\fI\\?\fR, \fI\\*\fR, and \fI\\[
+match
+.IR ? ,
+.IR * ,
+.I [
+exactly, respectively.
+.P
+The expression
+.I [...]
+matches any single character enclosed by the brackets.
+If the first character within the brackets is
+.IR ! ,
+the expression matches any character except those enclosed by the brackets.
+Two characters within the brackets separated by
+.I -
+denote a range.
+.I [A-F]
+is equivalent to
+.IR [ABCDEF] .
+The characters
+.IR ? ,
+.IR * ,
+and
+.I [
+lose their special meaning within the brackets.
+
+See the fnmatch(3) or glob(7) man pages for more details.
 .SH ALERTS
 The action 
 .TP
@@ -289,6 +344,8 @@ actions.  This is useful when using a
 that compresses or otherwise translates the completed log file into a
 different file format.
 .SH SEE ALSO
+fnmatch(3),
+glob(7),
 supervise(8),
 svc(8),
 svok(8),

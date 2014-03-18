@@ -1,3 +1,5 @@
+Added support for fnmatch patterns in multilog.
+
 Increased the multilog file size limit to 2GB.
 (Thanks to SATOH Fumiyasu)
 

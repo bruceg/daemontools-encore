@@ -543,6 +543,12 @@ void doit(char **script)
     j = 0;
     for (i = 0;(action = script[i]) != 0;++i)
       switch(*action) {
+        case 'F':
+	  match = match_fnmatch;
+	  break;
+        case 'S':
+	  match = match_simple;
+	  break;
         case '+':
           if (!flagselected)
             if (match(action + 1,line,linelen))

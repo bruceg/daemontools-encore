@@ -26,6 +26,12 @@ echo '--- multilog handles wildcard -'
 echo '--- multilog handles literal +'
 ( echo one; echo two ) | multilog '-*' '+one' e 2>&1; echo $?
 
+echo '--- multilog handles fnmatch -'
+( echo one; echo two ) | multilog F '-*' e 2>&1; echo $?
+
+echo '--- multilog handles fnmatch +'
+( echo one; echo two; echo one two ) | multilog F '-*' '+*o*' e 2>&1; echo $?
+
 echo '--- multilog handles long lines for stderr'
 echo 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678 \
 | multilog e 2>&1; echo $?
