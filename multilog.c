@@ -496,9 +496,6 @@ char inbuf[1024];
 buffer ssin = BUFFER_INIT(flushread,0,inbuf,sizeof inbuf);
 
 char line[MAXLINE+1];
-int linelen; /* 0 <= linelen <= MAXLINE */
-
-int oldlinelen = MAXLINE+1; /* same as line[] size */
 
 void doit(char **script)
 {
@@ -509,6 +506,8 @@ void doit(char **script)
   const char *action;
   int flagselected;
   int flagtimestamp;
+  int linelen; /* 0 <= linelen <= MAXLINE */
+  int oldlinelen = sizeof line;
 
   flagtimestamp = 0;
   if (script[0])
