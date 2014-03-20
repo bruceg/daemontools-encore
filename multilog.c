@@ -521,19 +521,19 @@ void doit(char **script)
   for (;;) {
     linelen = 0;
 
+    if (buffer_feed(&ssin) <= 0)
+      return;
+    if (flagtimestamp) {
+      linelen = (flagtimestamp == 't')
+	? fmt_tai64nstamp(line)
+	: fmt_accustamp(line);
+      line[linelen++] = ' ';
+    }
     while (linelen < MAXLINE) {
       if (buffer_GETC(&ssin,&ch) <= 0) {
-        if (!linelen) return;
         flageof = 1;
         break;
       }
-      if (!linelen)
-        if (flagtimestamp) {
-	  linelen = (flagtimestamp == 't')
-	    ? fmt_tai64nstamp(line)
-	    : fmt_accustamp(line);
-          line[linelen++] = ' ';
-        }
       if (ch == '\n')
         break;
       line[linelen++] = ch;
