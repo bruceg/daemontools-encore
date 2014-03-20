@@ -1,6 +1,6 @@
 dependon compile direntry.h hasattribute.h hasflock.h hasmkffo.h hassgact.h \
 	hassgprm.h hasshsgr.h haswaitp.h iopause.h load select.h systype \
-	uint64.h
+	uint64.h hasmemrchr.h
 formake 'rm -f sysdeps'
 formake 'cat systype compile load >> sysdeps'
 formake 'grep sysdep direntry.h >> sysdeps'
@@ -14,3 +14,4 @@ formake 'grep sysdep hasmkffo.h >> sysdeps'
 formake 'grep sysdep hasflock.h >> sysdeps'
 formake 'grep sysdep hasshsgr.h >> sysdeps'
 formake 'grep sysdep hasattribute.h >> sysdeps'
+formake 'grep sysdep hasmemrchr.h >> sysdeps'

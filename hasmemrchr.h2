@@ -1,0 +1,4 @@
+/* Public domain. */
+
+/* sysdep: +hasmemrchr */
+#define HASMEMRCHR 1

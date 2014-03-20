@@ -1,9 +1,14 @@
 /* Public domain. */
 
 #include "byte.h"
+#include "hasmemrchr.h"
 
 unsigned int byte_rchr(const char *s,unsigned int n,int c)
 {
+#ifdef HASMEMRCHR
+  const char *u = memrchr(s,c,n);
+  return (u == NULL) ? n : u - s;
+#else
   char ch;
   const char *t;
   const char *u;
@@ -19,4 +24,5 @@ unsigned int byte_rchr(const char *s,unsigned int n,int c)
   }
   if (!u) u = t;
   return u - s;
+#endif
 }
