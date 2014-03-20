@@ -7,6 +7,7 @@ buffer_2.o
 buffer_copy.o
 buffer_copyline.o
 buffer_get.o
+buffer_gets.o
 buffer_put.o
 buffer_read.o
 buffer_write.o

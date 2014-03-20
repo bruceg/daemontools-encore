@@ -34,6 +34,7 @@ extern int buffer_putsflush(buffer *,const char *);
 extern int buffer_get(buffer *,char *,unsigned int);
 extern int buffer_bget(buffer *,char *,unsigned int);
 extern int buffer_feed(buffer *);
+extern int buffer_gets(buffer *in,char *buf,unsigned int len,char eol,unsigned int *linelen);
 
 extern char *buffer_peek(buffer *);
 extern void buffer_seek(buffer *,unsigned int);
