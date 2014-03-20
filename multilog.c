@@ -506,8 +506,8 @@ void doit(char **script)
   const char *action;
   int flagselected;
   int flagtimestamp;
-  int linelen; /* 0 <= linelen <= MAXLINE */
-  int oldlinelen = sizeof line;
+  unsigned int linelen; /* 0 <= linelen <= MAXLINE */
+  unsigned int oldlinelen = sizeof line;
 
   flagtimestamp = 0;
   if (script[0])
@@ -515,7 +515,6 @@ void doit(char **script)
       flagtimestamp = script[0][0];
 
   for (i = 0;i <= MAXLINE;++i) line[i] = '\n';
-  linelen = 0;
 
   flageof = 0;
   for (;;) {
@@ -529,15 +528,8 @@ void doit(char **script)
 	: fmt_accustamp(line);
       line[linelen++] = ' ';
     }
-    while (linelen < MAXLINE) {
-      if (buffer_GETC(&ssin,&ch) <= 0) {
-        flageof = 1;
-        break;
-      }
-      if (ch == '\n')
-        break;
-      line[linelen++] = ch;
-    }
+    if (buffer_gets(&ssin,line+linelen,MAXLINE-linelen,'\n',&linelen) < 0)
+      flageof = 1;
 
     for (i = linelen;i < oldlinelen;++i) line[i] = '\n';
 
@@ -595,18 +587,18 @@ void doit(char **script)
       if (c[j].flagselected)
         buffer_put(&c[j].ss,line,linelen);
         
-    if (linelen == MAXLINE)
-      for (;;) {
-        if (buffer_GETC(&ssin,&ch) <= 0) {
-          flageof = 1;
-          break;
-        }
-        if (ch == '\n')
-          break;
-        for (j = 0;j < cnum;++j)
-          if (c[j].flagselected)
-            buffer_PUTC(&c[j].ss,ch);
+    while (linelen == MAXLINE) {
+      linelen = 0;
+      if (buffer_gets(&ssin,line,MAXLINE,'\n',&linelen) < 0) {
+	flageof = 1;
+	break;
       }
+      if (linelen == 0)
+	break;
+      for (j = 0;j < cnum;++j)
+	if (c[j].flagselected)
+	  buffer_put(&c[j].ss,line,linelen);
+    }
 
     for (j = 0;j < cnum;++j)
       if (c[j].flagselected) {
