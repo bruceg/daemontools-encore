@@ -47,7 +47,8 @@ extern void buffer_seek(buffer *,unsigned int);
     : buffer_get((s),(c),1) \
   )
 
-extern int buffer_copy(buffer *,buffer *);
+extern int buffer_copy(buffer *out,buffer *in);
+extern int buffer_copyline(buffer *out,buffer *in,char eol);
 
 extern int buffer_unixread(int,char *,unsigned int);
 extern int buffer_unixwrite(int,const char *,unsigned int);
