@@ -5,6 +5,8 @@ Increased the multilog file size limit to 2GB.
 
 Fixed missing separator between system error texts.
 
+Major speed ups in multilog, tai64n, and tai64nlocal.
+
 Changes in daemontools-encore-1.06
 ==================================
 
