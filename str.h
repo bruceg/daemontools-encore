@@ -3,8 +3,10 @@
 #ifndef STR_H
 #define STR_H
 
-extern int str_diff(const char *,const char *);
-extern unsigned int str_len(const char *);
+#include <string.h>
+
+#define str_diff(S,T) strcmp((S),(T))
+#define str_len(S) strlen(S)
 extern unsigned int str_chr(const char *,int);
 extern int str_start(const char *,const char *);
 
