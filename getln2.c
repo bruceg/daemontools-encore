@@ -8,7 +8,7 @@ int getln2(buffer *buf,stralloc *sa,
 {
   char *x;
   unsigned int i;
-  unsigned int n;
+  int n;
  
   if (!stralloc_ready(sa,0)) return -1;
   sa->len = 0;
