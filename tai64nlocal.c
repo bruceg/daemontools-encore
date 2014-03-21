@@ -61,10 +61,8 @@ int main()
       out(":",1); out(num,fmt_uint0(num,t->tm_sec,2));
       out(".",1); out(num,fmt_uint0(num,nanosecs,9));
     }
-    for (;;) {
-      out(&ch,1);
-      if (ch == '\n') break;
-      get(&ch);
-    }
+    out(&ch,1);
+    if (ch != '\n')
+      buffer_copyline(buffer_1,buffer_0,'\n');
   }
 }
