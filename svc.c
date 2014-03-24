@@ -30,9 +30,9 @@ int main(int argc,const char *const *argv)
 
   sig_ignore(sig_pipe);
 
-  while ((opt = getopt(argc,argv,"+Lludopchaitkwxq12")) != opteof)
+  while ((opt = getopt(argc,argv,"+=Lludopchaitkwxq12")) != opteof)
     if (opt == '?')
-      strerr_die1x(100,"svc options: + kill process group, L kill log, l kill main, u up, d down, o once, x exit, p pause, c continue, h hup, a alarm, i interrupt, t term, k kill, q quit, 1 SIGUSR1, 2 SIGUSR2, w SIGWINCH");
+      strerr_die1x(100,"svc options: + kill process group, = kill parent process, L kill log, l kill main, u up, d down, o once, x exit, p pause, c continue, h hup, a alarm, i interrupt, t term, k kill, q quit, 1 SIGUSR1, 2 SIGUSR2, w SIGWINCH");
     else if (datalen >= sizeof data)
       strerr_die2x(100,FATAL,"too many options");
     else if (opt == 'L' || opt == 'l') {

@@ -329,7 +329,10 @@ void doit(void)
     while (read(fdcontrol,&ch,1) == 1)
       switch(ch) {
         case '+':
-	  killpid = -svc->pid;
+	  if (killpid > 0) killpid = -killpid;
+	  break;
+        case '=':
+	  if (killpid < 0) killpid = -killpid;
 	  break;
         case 'L':
 	  svc = &svclog;
