@@ -10,6 +10,7 @@ extern int sig_hangup;
 extern int sig_int;
 extern int sig_pipe;
 extern int sig_term;
+extern int sig_ttystop;
 
 extern void (*sig_defaulthandler)();
 extern void (*sig_ignorehandler)();

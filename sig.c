@@ -10,6 +10,7 @@ int sig_hangup = SIGHUP;
 int sig_int = SIGINT;
 int sig_pipe = SIGPIPE;
 int sig_term = SIGTERM;
+int sig_ttystop = SIGTSTP;
 
 void (*sig_defaulthandler)() = SIG_DFL;
 void (*sig_ignorehandler)() = SIG_IGN;
