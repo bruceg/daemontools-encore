@@ -14,6 +14,7 @@ envuidgid
 fghack
 hasattribute.h
 hasflock.h
+hasmemrchr.h
 hasmkffo.h
 hassgact.h
 hassgprm.h
