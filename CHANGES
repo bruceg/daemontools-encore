@@ -7,6 +7,9 @@ Fixed missing separator between system error texts.
 
 Major speed ups in multilog, tai64n, and tai64nlocal.
 
+Added support for signal propagation and disabling setsid behavior in
+supervise.  (Thanks to Alan Grow)
+
 Changes in daemontools-encore-1.06
 ==================================
 
