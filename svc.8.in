@@ -5,7 +5,7 @@ svc \- controls services monitored by
 .SH SYNOPSIS
 .B svc
 [
-.B \-+L12udopchaitkwx
+.B \-+=Ll12udopchaitkwxq
 ]
 .I services
 .SH DESCRIPTION
@@ -19,9 +19,17 @@ applies all the options to each
 in turn.
 .SH OPTIONS
 .TP
+.B \-\=
+Send all subsequent signals to the parent process instead of its
+process group. This is the default when the file
+.IB s/no-setsid
+is present.
+.TP
 .B \-\+
 Send all subsequent signals to the entire process group instead of just
-the parent process.
+the parent process. This is the default unless the file
+.IB s/no-setsid
+is present.
 .TP
 .B \-L
 Send all subsequent signals to the running
