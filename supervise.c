@@ -99,7 +99,7 @@ static void resume(void)
   ignored = write(selfpipe[1],"",1);
 }
 
-static int forkexecve(struct svc *svc,const char *argv[],int fd,int sid)
+static int forkexecve(struct svc *svc,const char *argv[],int fd)
 {
   int f;
 
@@ -116,7 +116,8 @@ static int forkexecve(struct svc *svc,const char *argv[],int fd,int sid)
       sig_uncatch(sig_term);
       sig_uncatch(sig_ttystop);
       sig_uncatch(sig_cont);
-      if (sid) setsid();	/* shouldn't fail; if it does, too bad */
+      if (stat_exists("no-setsid") == 0)
+	setsid();	       /* shouldn't fail; if it does, too bad */
       if (fd >= 0 && logpipe[0] >= 0) {
 	dup2(logpipe[fd],fd);
 	close(logpipe[0]);
@@ -187,7 +188,7 @@ static void notify(const struct svc *svc,const char *notice,int code,int oldpid)
 
   pidnum[fmt_uint(pidnum,oldpid)] = 0;
   codenum[fmt_uint(codenum,code)] = 0;
-  forkexecve(0,argv,-1,stat_exists("no-setsid")==0);
+  forkexecve(0,argv,-1);
 }
 
 void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
@@ -223,7 +224,7 @@ void trystart(struct svc *svc)
     svcmain.flagstatus = firstrun ? svstatus_starting : svstatus_running;
     fd = 1;
   }
-  if ((f = forkexecve(svc,argv,fd,stat_exists("no-setsid")==0)) < 0)
+  if ((f = forkexecve(svc,argv,fd)) < 0)
     return;
   pidchange(svc,"start",0,f);
   deepsleep(1);
@@ -243,7 +244,7 @@ void trystop(struct svc *svc)
     return;
   }
   runscript = argv[0];
-  if ((f = forkexecve(svc,argv,1,stat_exists("no-setsid")==0)) < 0)
+  if ((f = forkexecve(svc,argv,1)) < 0)
     return;
   svc->ranstop = 1;
   pidchange(svc,"start",0,f);
