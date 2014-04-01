@@ -325,7 +325,6 @@ void doit(void)
 
     svc = &svcmain;
     killpid = svc->pid;
-    if (stat_exists("no-setsid")==0) killpid = -killpid;
     while (read(fdcontrol,&ch,1) == 1)
       switch(ch) {
         case '+':
@@ -341,7 +340,6 @@ void doit(void)
         case 'l':
 	  svc = &svcmain;
 	  killpid = svc->pid;
-	  if (stat_exists("no-setsid")==0) killpid = -killpid;
 	  break;
 	case 'd':
 	  svc->flagwant = 1;

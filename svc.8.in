@@ -21,15 +21,11 @@ in turn.
 .TP
 .B \-\=
 Send all subsequent signals to the parent process instead of its
-process group. This is the default when the file
-.IB s/no-setsid
-is present.
+process group. This is the default.
 .TP
 .B \-\+
 Send all subsequent signals to the entire process group instead of just
-the parent process. This is the default unless the file
-.IB s/no-setsid
-is present.
+the parent process.
 .TP
 .B \-L
 Send all subsequent signals to the running
