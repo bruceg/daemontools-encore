@@ -24,8 +24,10 @@ static void doit(int resource,const char *arg)
   if (getrlimit(resource,&r) == -1)
     strerr_die2sys(111,FATAL,"getrlimit failed");
 
-  if (str_equal(arg,"="))
+  if (str_equal(arg,"=") || str_equal(arg,"hard"))
     r.rlim_cur = r.rlim_max;
+  else if (str_equal(arg,"-") || str_equal(arg,"unlimited"))
+    r.rlim_cur = r.rlim_max = RLIM_INFINITY;
   else {
     if (arg[scan_ulong(arg,&u)]) die_usage();
     r.rlim_cur = u;

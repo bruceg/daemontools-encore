@@ -22,8 +22,13 @@ It then runs
 In each of the following
 .IB opts ,
 .I n
-may be =, indicating that the soft limit should be set equal to the hard
-limit. 
+can be a number in the unit specified for the resource
+or one of the special values
+.B hard
+(\fB=\fP), or
+.B unlimited
+(\fB-\fP),
+which stand for the current hard limit, and no limit, respectively.
 
 .I opts
 .B controlling memory use: 
