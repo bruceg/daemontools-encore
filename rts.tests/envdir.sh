@@ -20,3 +20,6 @@ echo '--- envdir removes variables'
 mkdir env2
 touch env2/Message
 envdir env1 envdir env2 sh -c 'echo $Message'; echo $?
+
+echo '--- envdir adds prefix'
+envdir -p prefix_ env1 sh -c 'echo $Message; echo $prefix_Message'; echo $?

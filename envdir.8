@@ -4,6 +4,9 @@ envdir \- runs another program with environment modified according to files
 in a specified directory.
 .SH SYNOPSIS
 .B envdir
+[
+.B \-p prefix
+]
 .I d
 .I child
 .SH DESCRIPTION
@@ -47,6 +50,11 @@ is completely empty (0 bytes long),
 removes an environment variable named
 .I s
 if one exists, without adding a new variable.
+.SH OPTIONS
+.TP
+.B \-p \fIprefix
+Prefix all environment variable names with
+.IR prefix .
 .SH EXIT CODES
 .B envdir
 exits 111 if it has trouble reading

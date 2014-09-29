@@ -1,5 +1,5 @@
 --- envdir requires arguments
-envdir: usage: envdir dir child
+envdir: usage: envdir [ -p prefix ] dir child
 111
 --- envdir complains if it cannot read directory
 envdir: fatal: unable to switch to directory env1: symbolic link loop
@@ -12,4 +12,8 @@ This is a test. This is only a test.
 0
 --- envdir removes variables
 
+0
+--- envdir adds prefix
+
+This is a test. This is only a test.
 0
