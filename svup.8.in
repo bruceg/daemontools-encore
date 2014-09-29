@@ -50,5 +50,5 @@ with all slashes ("/") replaced with colons (":").
 .SH SEE ALSO
 supervise(8),
 svc(8),
-svstat(8),
-svok(8)
+svok(8),
+svstat(8)
