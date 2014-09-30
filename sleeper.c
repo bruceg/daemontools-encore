@@ -1,12 +1,15 @@
 #include <signal.h>
+#include "byte.h"
 #include "sig.h"
 #include "str.h"
 #include <unistd.h>
 
 static void catch_sig(int sig)
 {
+  char buf[7+14+2] = "Caught ";
   const char *name;
   int ignored;
+  int i;
   switch (sig) {
   case SIGALRM: name = "ALRM"; break;
   case SIGCONT: name = "CONT"; break;
@@ -19,9 +22,11 @@ static void catch_sig(int sig)
   case SIGWINCH: name = "WINCH"; break;
   default: name = "unknown signal";
   }
-  ignored = write(1, "Caught ", 7);
-  ignored = write(1, name, str_len(name));
-  ignored = write(1, "\n", 1);
+  i = str_len(name);
+  byte_copy(buf+7,i,name);
+  i += 7;
+  buf[i++] = '\n';
+  ignored = write(1,buf,i);
   if (sig != SIGCONT)
     _exit(1);
 }
