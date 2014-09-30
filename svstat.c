@@ -86,6 +86,8 @@ static void showstatus(const char status[19], int r, int normallyup)
     case svstatus_failed: x=", failed"; break;
     default: x = ", status unknown";
     }
+    if (pid && (want == '\000'))
+      buffer_puts(&b,", once");
     if (x)
       buffer_puts(&b,x);
   }

@@ -10,9 +10,9 @@ test.sv: supervise not running
 --- svc -ox works
 hi
 --- svstat and svup work for up services
-.: up (pid x) x seconds, normally down, running
+.: up (pid x) x seconds, normally down, once, running
 0
-.: up (pid x) x seconds, normally down, running
+.: up (pid x) x seconds, normally down, once, running
 0
 .: no log service
 0
@@ -20,12 +20,12 @@ hi
 100
 0
 --- svstat and svup work for logged services
-.: up (pid x) x seconds, normally down, running
-. log: up (pid x) x seconds, normally down, running
+.: up (pid x) x seconds, normally down, once, running
+. log: up (pid x) x seconds, normally down, once, running
 0
-.: up (pid x) x seconds, normally down, running
+.: up (pid x) x seconds, normally down, once, running
 0
-. log: up (pid x) x seconds, normally down, running
+. log: up (pid x) x seconds, normally down, once, running
 0
 0
 0

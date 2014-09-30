@@ -2,6 +2,8 @@ Added new program envini to read environment variables from an INI file.
 
 Added support for adding a prefix in envdir.
 
+Added "once" flag output to svstat.
+
 Fixed sleeper to do a single atomic write.
 
 Changes in daemontools-encore-1.10
