@@ -132,6 +132,7 @@ is an absolute path, it is suffixed with the path to
 with all slashes ("/") replaced with colons (":").
 .SH SEE ALSO
 envdir(8),
+envini(8),
 envuidgid(8),
 fghack(8),  
 multilog(8),

@@ -1,5 +1,6 @@
 d:::755:/man8::
 c:::644:/man8/:envdir.8:
+c:::644:/man8/:envini.8:
 c:::644:/man8/:envuidgid.8:
 c:::644:/man8/:fghack.8:
 c:::644:/man8/:multilog.8:

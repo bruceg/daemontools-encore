@@ -1,0 +1,14 @@
+--- envini requires arguments
+envini: usage: envini [ -p prefix ] inifile child
+111
+--- envini complains if it cannot read file
+envini: fatal: unable to read envi: symbolic link loop
+111
+--- envini adds variables
+This is a test.
+This is only a test.
+0
+--- envini adds prefix
+
+This is a test.
+0

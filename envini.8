@@ -1,0 +1,76 @@
+.TH envini 8
+.SH NAME
+envini \- runs another program with environment modified according to an ini file
+in a specified directory.
+.SH SYNOPSIS
+.B envini
+[
+.B \-p prefix
+]
+.I f
+.I child
+.SH DESCRIPTION
+.I f
+is a single argument.
+.I child
+consists of one or more arguments. 
+
+.B envini
+sets various environment variables as specified by the ini file named
+.IR f .
+It then runs
+.IR child .
+
+The file
+.I f
+is read in and parsed one line at a time.
+
+Lines of the form
+.BI [ s ]
+set a section prefix. All subsequent environment variables will have
+their name prefixed by
+.IR s_ .
+Prior to the first section, the prefix is empty.
+
+Lines of the form
+.IB n = v
+adds an environment variable named
+.I pn
+where
+.I p
+is the section prefix set above.
+Spaces and tabes at the start and end of the variable are removed.
+
+All other lines are ignored.
+.SH OPTIONS
+.TP
+.B \-p \fIprefix
+Prefix all environment variable names with
+.IR prefix .
+.SH EXIT CODES
+.B envini
+exits 111 if it has trouble reading
+.IR f ,
+if it runs out of memory for environment variables, or if it cannot run
+.IR child .
+Otherwise its exit code is the same as that of
+.IR child .
+.SH SEE ALSO
+envdir(8),
+envini(8),
+envuidgid(8),
+fghack(8),
+multilog(8),
+pgrphack(8),
+readproctitle(8),
+setlock(8)
+setuidgid(8),
+softlimit(8),
+supervise(8),
+svc(8),
+svok(8),
+svscan(8),
+svscanboot(8),
+svstat(8),
+tai64n(8),
+tai64nlocal(8)

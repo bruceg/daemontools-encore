@@ -10,6 +10,7 @@ conf_supervise.c
 direntry.h
 dosubst
 envdir
+envini
 envuidgid
 fghack
 hasattribute.h

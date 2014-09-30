@@ -1,5 +1,6 @@
 dependon \
 envdir.8 \
+envini.8 \
 envuidgid.8 \
 fghack.8 \
 multilog.8 \
