@@ -36,6 +36,7 @@ rts-tmp
 select.h
 setlock
 setuidgid
+setuser
 sleeper
 softlimit
 supervise

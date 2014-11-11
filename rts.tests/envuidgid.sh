@@ -2,6 +2,7 @@
 
 # envuidgid sets GID
 # setuidgid
+# setuser
 
 echo '--- envuidgid insists on two arguments'
 envuidgid; echo $?
