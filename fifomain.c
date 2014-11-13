@@ -1,11 +1,11 @@
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include "fifo.h"
 #include "open.h"
 #include "strerr.h"
 #include "error.h"
-#include "substdio.h"
-#include "readwrite.h"
+#include "buffer.h"
 #include "ndelay.h"
 
 #define FATAL "fifo: fatal: "
@@ -15,18 +15,18 @@ int fd;
 int fdwrite;
 
 char outbuf[1024];
-substdio ssout = SUBSTDIO_FDBUF(write,1,outbuf,sizeof outbuf);
+buffer ssout = BUFFER_INIT(buffer_unixwrite,1,outbuf,sizeof outbuf);
 
 char inbuf[1024];
-substdio ssin;
+buffer ssin;
 
 int myread(fd,buf,len) int fd; char *buf; int len;
 {
-  if (substdio_flush(&ssout) == -1) return -1;
-  return read(fd,buf,len);
+  if (buffer_flush(&ssout) == -1) return -1;
+  return buffer_unixread(fd,buf,len);
 }
 
-void main(argc,argv)
+int main(argc,argv)
 int argc;
 char **argv;
 {
@@ -47,9 +47,9 @@ char **argv;
     strerr_die4sys(111,FATAL,"unable to open ",fn," for writing: ");
 
   ndelay_off(fd);
-  substdio_fdbuf(&ssin,myread,fd,inbuf,sizeof inbuf);
+  buffer_init(&ssin,myread,fd,inbuf,sizeof inbuf);
 
-  switch (substdio_copy(&ssout,&ssin)) {
+  switch (buffer_copy(&ssout,&ssin)) {
     case -2:
       strerr_die4sys(111,FATAL,"unable to read ",fn,": ");
     case -3:
@@ -57,4 +57,5 @@ char **argv;
     case 0:
       strerr_die3x(111,FATAL,"end of file on ",fn);
   }
+  _exit(0);
 }
