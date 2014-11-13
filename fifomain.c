@@ -36,24 +36,24 @@ char **argv;
 
   if (fifo_make(fn,0600) == -1)
     if (errno != error_exist)
-      strerr_die4sys(111,FATAL,"unable to create ",fn,": ");
+      strerr_die3sys(111,FATAL,"unable to create ",fn);
 
   fd = open_read(fn);
   if (fd == -1)
-    strerr_die4sys(111,FATAL,"unable to open ",fn," for reading: ");
+    strerr_die4sys(111,FATAL,"unable to open ",fn," for reading");
 
   fdwrite = open_write(fn);
   if (fdwrite == -1)
-    strerr_die4sys(111,FATAL,"unable to open ",fn," for writing: ");
+    strerr_die4sys(111,FATAL,"unable to open ",fn," for writing");
 
   ndelay_off(fd);
   buffer_init(&ssin,myread,fd,inbuf,sizeof inbuf);
 
   switch (buffer_copy(&ssout,&ssin)) {
     case -2:
-      strerr_die4sys(111,FATAL,"unable to read ",fn,": ");
+      strerr_die3sys(111,FATAL,"unable to read ",fn);
     case -3:
-      strerr_die2sys(111,FATAL,"unable to write output: ");
+      strerr_die2sys(111,FATAL,"unable to write output");
     case 0:
       strerr_die3x(111,FATAL,"end of file on ",fn);
   }

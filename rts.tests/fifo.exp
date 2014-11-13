@@ -9,8 +9,8 @@ fifo: fatal: end of file on pipe
 hi there
 fifo: fatal: end of file on pipe
 --- fifo complains about reading
-fifo: fatal: unable to open pipe for reading: : access denied
+fifo: fatal: unable to open pipe for reading: access denied
 111
 --- fifo complains about writing
-fifo: fatal: unable to open pipe for writing: : access denied
+fifo: fatal: unable to open pipe for writing: access denied
 111
