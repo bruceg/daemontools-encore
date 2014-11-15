@@ -11,7 +11,7 @@
 #define FATAL "fifo: fatal: "
 
 char *fn;
-int fd;
+int fdread;
 int fdwrite;
 
 char outbuf[1024];
@@ -38,16 +38,16 @@ char **argv;
     if (errno != error_exist)
       strerr_die3sys(111,FATAL,"unable to create ",fn);
 
-  fd = open_read(fn);
-  if (fd == -1)
+  fdread = open_read(fn);
+  if (fdread == -1)
     strerr_die4sys(111,FATAL,"unable to open ",fn," for reading");
 
   fdwrite = open_write(fn);
   if (fdwrite == -1)
     strerr_die4sys(111,FATAL,"unable to open ",fn," for writing");
 
-  ndelay_off(fd);
-  buffer_init(&ssin,myread,fd,inbuf,sizeof inbuf);
+  ndelay_off(fdread);
+  buffer_init(&ssin,myread,fdread,inbuf,sizeof inbuf);
 
   switch (buffer_copy(&ssout,&ssin)) {
     case -2:
