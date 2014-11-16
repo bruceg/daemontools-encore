@@ -3,6 +3,7 @@ envdir.8 \
 envini.8 \
 envuidgid.8 \
 fghack.8 \
+fifo.8 \
 multilog.8 \
 pgrphack.8 \
 readproctitle.8 \
