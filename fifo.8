@@ -1,0 +1,36 @@
+.TH fifo 8
+.SH NAME
+fifo \- create and read a named pipe writing to stdout.
+.SH SYNOPSIS
+.B fifo
+.I file
+.SH DESCRIPTION
+.B fifo
+prints everything fed to the named pipe
+.I file
+to standard
+output.
+.I file
+is held open for writing so that other programs can
+repeatedly open and close.
+
+.B fifo
+creates
+.I file
+with mode 0600 if it does not exist.
+
+.B fifo
+does not read stardard input.
+
+.B fifo
+normally runs forever.
+.SH EXIT CODES
+.B fifo
+exits 100 for improper usage with a message on standard error.
+
+.B fifo
+exits 111 for any other problems with a message on standard error.
+.SH SEE ALSO
+mkfifo(1),
+mkfifo(2),
+pipe(7)
