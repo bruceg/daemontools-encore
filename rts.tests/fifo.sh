@@ -14,6 +14,7 @@ fifo pipe > fifo.out 2>&1 &
 fifopid=$!
 echo $?
 echo 'hi there' > pipe
+sleep 1
 cat fifo.out
 kill $fifopid >/dev/null 2>&1
 wait >/dev/null 2>&1
