@@ -13,6 +13,7 @@ envdir
 envini
 envuidgid
 fghack
+fifo
 hasattribute.h
 hasflock.h
 hasmemrchr.h
