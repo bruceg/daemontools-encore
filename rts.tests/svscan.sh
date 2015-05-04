@@ -13,7 +13,7 @@ EOF
 
 catexe svc1/log <<EOF
 #!/bin/sh
-cat > output
+exec cat > output
 EOF
 
 catexe svc2/run <<EOF
@@ -23,7 +23,7 @@ EOF
 
 catexe svc2/log/run <<EOF
 #!/bin/sh
-cat > ../output
+exec cat > ../output
 EOF
 
 ln -s `pwd`/svc[0-9] service/
@@ -41,7 +41,7 @@ kill $svscanpid
 wait >/dev/null 2>&1
 
 svc -dx svc[0-9] svc2/log
-until ! svok svc0 && ! svok svc1 && ! svok svc2 && ! svok svc2/log
+while svok svc0 || svok svc1 || svok svc2 || svok svc2/log
 do
   sleep 1
 done
