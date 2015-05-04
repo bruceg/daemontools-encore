@@ -9,7 +9,8 @@ rm -f test.sv/stop
 echo
 
 echo '--- supervise stops log after main'
-( echo '#!/bin/sh'; echo 'exec ../../sleeper' ) >test.sv/log
+( echo '#!/bin/sh'; echo sleep 2; echo svc -dx . ) >test.sv/run
+( echo '#!/bin/sh'; echo '(sleep 1; kill -STOP $$) &'; echo 'exec ../../sleeper' ) >test.sv/log
 chmod +x test.sv/log
 supervise test.sv
 wait
