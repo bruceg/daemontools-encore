@@ -3,7 +3,7 @@
 t=makemake.targetd
 T=makemake.TARGETS
 S=makemake.SOURCES
-trap 'rm -fv *.tmp.$$ $T $S; rm -r $t' EXIT
+trap 'rm -f *.tmp.$$ $T $S; rm -r $t' EXIT
 rm -rf $t $T $S
 mkdir -p $t
 rm -f `cat TARGETS`
