@@ -26,6 +26,8 @@ static void doit(int resource,const char *arg)
 
   if (str_equal(arg,"="))
     r.rlim_cur = r.rlim_max;
+  else if (str_equal(arg,"-"))
+    r.rlim_cur = r.rlim_max = RLIM_INFINITY;
   else {
     if (arg[scan_ulong(arg,&u)]) die_usage();
     r.rlim_cur = u;
