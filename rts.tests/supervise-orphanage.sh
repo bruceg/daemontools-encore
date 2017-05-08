@@ -2,9 +2,9 @@ echo '--- supervise properly runs an orphanage'
 catexe test.sv/run <<EOF
 #!/bin/sh
 nohup ../../sleeper >output &
-echo \$! >pid
 mv run2 run
-echo the first run is done
+echo the first run
+exec ../../sleeper
 EOF
 catexe test.sv/run2 <<EOF
 #!/bin/sh
@@ -20,18 +20,19 @@ done
 if svok test.sv
 then
     svc -u test.sv
-    until [ -e test.sv/pid ]
+    while [ -e test.sv/run2 ]
     do
       sleep 1
     done
     svstat test.sv | filter_svstat
+    svc -t test.sv
     until svstat test.sv | grep -q orphanage
     do
       sleep 1
     done
     svstat test.sv | filter_svstat
     cat test.sv/output
-    kill $(cat test.sv/pid)
+    svc -+h test.sv
     wait
     cat test.sv/output
 else
