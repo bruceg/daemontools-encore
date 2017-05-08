@@ -45,7 +45,7 @@ int fdok;
 int fdstatus;
 
 int flagexit = 0;
-int flagsubreaper = 0;
+int flagorphanage = 0;
 int firstrun = 1;
 const char *runscript = 0;
 
@@ -297,7 +297,7 @@ void doit(void)
     for (;;) {
       r = wait_nohang(&wstat);
       if (!r) break;
-      if (flagsubreaper && r == svcmain.pid) {
+      if (flagorphanage && r == svcmain.pid) {
         svcmain.flagstatus = svstatus_orphanage;
         announce();
         continue;
@@ -452,16 +452,16 @@ int main(int argc,char **argv)
   if (!svpath_init())
     strerr_die3sys(111,FATAL,"unable to setup control path for ",dir);
 
-  if (stat_exists("subreaper") != 0) {
-    flagsubreaper = 1;
+  if (stat_exists("orphanage") != 0) {
+    flagorphanage = 1;
     if (set_subreaper())
       strerr_die2sys(111,FATAL,"could not set subreaper attribute");
   }
   if (stat_isexec("log") > 0) {
     if (pipe(logpipe) != 0)
       strerr_die3sys(111,FATAL,"unable to create pipe for ",dir);
-    else if (flagsubreaper)
-      strerr_die2sys(111,FATAL,"subreaper and log are mutually exclusive");
+    else if (flagorphanage)
+      strerr_die2sys(111,FATAL,"orphanage and log are mutually exclusive");
     svclog.flagwantup = 1;
   }
   if (stat("down",&st) != -1) {

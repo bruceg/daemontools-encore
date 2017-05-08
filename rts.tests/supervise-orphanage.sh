@@ -11,7 +11,7 @@ catexe test.sv/run2 <<EOF
 echo the second run
 svc -x .
 EOF
-touch test.sv/subreaper
+touch test.sv/orphanage
 supervise test.sv &
 until svok test.sv || ! jobs %% >/dev/null 2>&1
 do
@@ -39,4 +39,4 @@ else
     echo "(everything which is not Linux or FreeBSD)"
     echo "as they have no subprocess reapers"
 fi
-rm test.sv/subreaper
+rm test.sv/orphanage
