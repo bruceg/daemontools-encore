@@ -8,6 +8,7 @@ enum svstatus {
   svstatus_running,
   svstatus_stopping,
   svstatus_failed,
+  svstatus_orphanage,
 };
 
 #endif
