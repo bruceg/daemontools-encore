@@ -88,6 +88,14 @@ The fourth is the exit code or kill signal number, or
 .B 0
 on start.
 
+If the file
+.IB s /orphanage
+exists,
+.B supervise
+will wait until all ancestors of the supervised process have also exited,
+before it will consider the process stopped. In the meantime, the process
+is considered to be in an "orphanage" state.
+
 .B supervise
 maintains status information in a binary format inside the directory
 .IR s\fB/supervise ,
