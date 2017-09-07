@@ -302,7 +302,8 @@ void doit(void)
         announce();
         continue;
       }
-      if ((r == svcmain.pid) || ((r == -1) && (errno == ECHILD)))
+      if ((r == svcmain.pid) || ((svcmain.flagstatus == svstatus_orphanage)
+                                 && (r == -1) && (errno == ECHILD)))
 	svc = &svcmain;
       else if (r == svclog.pid)
 	svc = &svclog;
