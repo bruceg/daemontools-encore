@@ -460,11 +460,6 @@ int main(int argc,char **argv)
   if ((fntemp = svpath_make("")) == 0) die_nomem();
   if (mkdir(fntemp,0700) != 0 && errno != error_exist)
     strerr_die3sys(111,FATAL,"unable to create ",fntemp);
-  if ((fntemp = svpath_make("/status")) == 0) die_nomem();
-  fdstatus = open_trunc(fntemp);
-  if (fdstatus == -1)
-    strerr_die4sys(111,FATAL,"unable to open ",fntemp," for writing");
-  closeonexec(fdstatus);
   if ((fntemp = svpath_make("/lock")) == 0) die_nomem();
   fdlock = open_append(fntemp);
   if ((fdlock == -1) || (lock_exnb(fdlock) == -1))
@@ -482,6 +477,12 @@ int main(int argc,char **argv)
   if (fdcontrolwrite == -1)
     strerr_die3sys(111,FATAL,"unable to write ",fntemp);
   closeonexec(fdcontrolwrite);
+
+  if ((fntemp = svpath_make("/status")) == 0) die_nomem();
+  fdstatus = open_trunc(fntemp);
+  if (fdstatus == -1)
+    strerr_die4sys(111,FATAL,"unable to open ",fntemp," for writing");
+  closeonexec(fdstatus);
 
   pidchange(&svcmain,0,0,0);
 
