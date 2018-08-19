@@ -2,6 +2,6 @@
 in stop
 
 --- supervise stops log after main
-Caught CONT
 Caught TERM
+Caught CONT
 
