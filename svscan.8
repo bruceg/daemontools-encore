@@ -70,6 +70,19 @@ is given a command-line argument
 it switches to that
 .I directory
 when it starts.
+
+If
+.B svscan
+receives a TERM signal, it will send TERM signals to all top-level
+.BR supervise (8)
+processes then wait for them to exit.
+.B svscan
+then sends TERM signals to all log-level
+.BR supervise (8)
+processes then waits for those to exit.
+.B svscan
+then exits.
+
 .SH SEE ALSO
 envdir(8),
 envini(8),

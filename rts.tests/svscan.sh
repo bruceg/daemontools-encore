@@ -40,7 +40,6 @@ done
 kill $svscanpid
 wait >/dev/null 2>&1
 
-svc -dx svc[0-9] svc2/log
 while svok svc0 || svok svc1 || svok svc2 || svok svc2/log
 do
   sleep 1
