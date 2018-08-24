@@ -73,14 +73,16 @@ when it starts.
 
 If
 .B svscan
-receives a TERM signal, it sends TERM signals to all top-level
+receives a TERM signal, it sends TERM signals to all non-log child
 .BR supervise (8)
-processes. The usual five second directory scan is reduced to one second
-and no new processes are started. As each
+processes and the five second service scan is reduced to one second. New
+services are ignored and if a running
+.BR supervise (8)
+stops, it is not restarted. As each existing
 .BR supervise (8)
 exits,
 .B svscan
-sends TERM signals to the corresponding log-level
+sends a TERM signal to the corresponding log
 .BR supervise (8),
 if one exists. After all child processes exit,
 .B svscan
