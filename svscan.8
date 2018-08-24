@@ -73,15 +73,18 @@ when it starts.
 
 If
 .B svscan
-receives a TERM signal, it will send TERM signals to all top-level
+receives a TERM signal, it sends TERM signals to all top-level
 .BR supervise (8)
-processes then wait for them to exit.
-.B svscan
-then sends TERM signals to all log-level
+processes. The usual five second directory scan is reduced to one second
+and no new processes are started. As each
 .BR supervise (8)
-processes then waits for those to exit.
+exits,
 .B svscan
-then exits.
+sends TERM signals to the corresponding log-level
+.BR supervise (8),
+if one exists. After all child processes exit,
+.B svscan
+exits.
 
 .SH SEE ALSO
 envdir(8),
