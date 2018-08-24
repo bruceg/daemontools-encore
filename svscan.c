@@ -264,7 +264,7 @@ int main(int argc,char **argv)
     exit_now = 1;
     doit();
     if (exit_now) break;
-    sleep(5);
+    sleep(exit_soon ? 1 : 5);
   }
   return 0;
 }
