@@ -1,0 +1,52 @@
+--- svscan handles sigterm
+
+--- svscanboot started
+
+--- svscanboot pid looks sane
+
+--- svscan started
+
+--- svscan pid looks sane
+
+--- readproctitle started
+
+--- readproctitle pid looks sane
+
+--- svscanboot is running
+
+--- svscan is running
+
+--- readproctitle is running
+
+--- supervise svc0 is running
+
+--- supervise svc1 is running
+
+--- supervise svc1/log is running
+
+--- sigterm sent
+
+--- supervise svc0 is down
+
+--- supervise svc1 is down
+
+--- supervise svc1/log is down
+
+--- svscan is stopped
+
+--- readproctitle is stopped
+
+--- svscanboot is stopped
+
+--- svscanboot log
+
+--- svc0 log
+svc0 ran
+
+--- svc1 main log
+svc1-main ran
+
+--- svc1 log log
+svc1-log ran
+
+
