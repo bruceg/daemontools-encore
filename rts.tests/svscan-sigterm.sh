@@ -43,9 +43,12 @@ sed -r                                      \
   -e 's,^exec 2?>.+,,'                      \
   -e 's,/command/svc -dx .+,,g'             \
   -e 's,/?service,service,g'                \
-  -e 's,readproctitle..*,& \&\n,'           \
-  -e '$aecho $! > readproctitle.pid'        \
-  -e '$await'                               \
+  -e 's,readproctitle..*,& \& \
+,'                                          \
+  -e '$a\
+echo $! > readproctitle.pid'                \
+  -e '$a\
+wait'                                       \
 < ../../svscanboot                          \
 | catexe svscanboot
 test -x svscanboot || die "Could not create svscanboot stub"
