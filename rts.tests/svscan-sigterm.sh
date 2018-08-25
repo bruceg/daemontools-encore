@@ -6,6 +6,10 @@
 #     log supervise is signaled? if so, can we avoid it?
 #
 
+# svc0 - no log
+# svc1 - svscan-managed log
+# svc2 - supervise-managed log
+
 echo '--- svscan handles sigterm'
 echo
 
@@ -14,11 +18,13 @@ mkdir test.boot/service  || die "Could not create test.boot/service"
 mkdir test.boot/svc0     || die "Could not create test.boot/svc0"
 mkdir test.boot/svc1     || die "Could not create test.boot/svc1"
 mkdir test.boot/svc1/log || die "Could not create test.boot/svc1/log"
+mkdir test.boot/svc2     || die "Could not create test.boot/svc2"
 
 cd test.boot || die "Could not change to test.boot"
 
 ln -s ../svc0 service || die "Could not link svc0"
 ln -s ../svc1 service || die "Could not link svc1"
+ln -s ../svc2 service || die "Could not link svc2"
 
 catexe svscan <<'EOF' || die "Could not create svscan wrapper"
 #!/bin/sh
@@ -69,6 +75,18 @@ catexe svc1/log/run <<'EOF' || die "Could not create svc1/log/run script"
 #!/bin/sh
 echo svc1-log ran        >> ../../svc1-log.log
 exec ../../../../sleeper >> ../../svc1-log.log
+EOF
+
+catexe svc2/run <<'EOF' || die "Could not create svc2/run script"
+#!/bin/sh
+echo svc2-main ran    >> ../svc2-main.log
+exec ../../../sleeper >> ../svc2-main.log
+EOF
+
+catexe svc2/log <<'EOF' || die "Could not create svc2/log script"
+#!/bin/sh
+echo svc2-log ran     >> ../svc2-log.log
+exec ../../../sleeper >> ../svc2-log.log
 EOF
 
 echo '--- svscanboot started'
@@ -173,6 +191,10 @@ echo '--- supervise svc1/log is running'
 svok svc1/log || echo no
 echo
 
+echo '--- supervise svc2 is running'
+svok svc2 || echo no
+echo
+
 echo '--- sigterm sent'
 kill -TERM $svscanpid || echo no
 echo
@@ -219,6 +241,20 @@ for i in 10 9 8 7 6 5 4 3 2 1 0; do
 done
 echo
 
+echo '--- supervise svc2 is down'
+for i in 10 9 8 7 6 5 4 3 2 1 0; do
+  if ! svok svc2; then
+    break
+  fi
+  if [ $i -eq 0 ]; then
+    echo no
+    svc -dx svc2
+    break
+  fi
+  sleep 1
+done
+echo
+
 echo '--- svscan is stopped'
 if [ $svscanpid -ne 0 ]; then
   kill -0 $svscanpid 2>/dev/null \
@@ -254,6 +290,14 @@ echo
 
 echo '--- svc1 log log'
 cat svc1-log.log
+echo
+
+echo '--- svc2 main log'
+cat svc2-main.log
+echo
+
+echo '--- svc2 log log'
+cat svc2-log.log
 echo
 
 echo

@@ -24,6 +24,8 @@
 
 --- supervise svc1/log is running
 
+--- supervise svc2 is running
+
 --- sigterm sent
 
 --- supervise svc0 is down
@@ -31,6 +33,8 @@
 --- supervise svc1 is down
 
 --- supervise svc1/log is down
+
+--- supervise svc2 is down
 
 --- svscan is stopped
 
@@ -52,6 +56,16 @@ Caught TERM
 
 --- svc1 log log
 svc1-log ran
+Caught CONT
+Caught TERM
+
+--- svc2 main log
+svc2-main ran
+Caught CONT
+Caught TERM
+
+--- svc2 log log
+svc2-log ran
 Caught CONT
 Caught TERM
 
