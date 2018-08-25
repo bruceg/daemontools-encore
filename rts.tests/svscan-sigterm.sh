@@ -89,6 +89,20 @@ echo svc2-log ran     >> ../svc2-log.log
 exec ../../../sleeper >> ../svc2-log.log
 EOF
 
+timed_read() {
+  for i in 10 9 8 7 6 5 4 3 2 1 0; do
+    if [ -f $1 ]; then
+      cat $1
+      break
+    fi
+    if [ $i -eq 0 ]; then
+      echo 0
+      break
+    fi
+    sleep 1
+  done
+}
+
 echo '--- svscanboot started'
 ./svscanboot service > svscanboot.log 2>&1 &
 svscanbootpid=$!
@@ -105,18 +119,7 @@ fi
 echo
 
 echo '--- svscan started'
-for i in 10 9 8 7 6 5 4 3 2 1 0; do
-  if [ -f svscan.pid ]; then
-    svscanpid=`cat svscan.pid`
-    break
-  fi
-  if [ $i -eq 0 ]; then
-    echo no
-    svscanpid=0
-    break
-  fi
-  sleep 1
-done
+svscanpid=`timed_read svscan.pid`
 echo
 
 echo '--- svscan pid looks sane'
@@ -132,18 +135,7 @@ fi
 echo
 
 echo '--- readproctitle started'
-for i in 10 9 8 7 6 5 4 3 2 1 0; do
-  if [ -f readproctitle.pid ]; then
-    readproctitlepid=`cat readproctitle.pid`
-    break
-  fi
-  if [ $i -eq 0 ]; then
-    echo no
-    readproctitlepid=0
-    break
-  fi
-  sleep 1
-done
+readproctitlepid=`timed_read readproctitle.pid`
 echo
 
 echo '--- readproctitle pid looks sane'
