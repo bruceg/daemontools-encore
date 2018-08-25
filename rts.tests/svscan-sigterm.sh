@@ -191,60 +191,34 @@ echo '--- sigterm sent'
 kill -TERM $svscanpid || echo no
 echo
 
+timed_ok() {
+  for i in 10 9 8 7 6 5 4 3 2 1 0; do
+    if ! svok $1; then
+      break
+    fi
+    if [ $i -eq 0 ]; then
+      echo no
+      svc -dx $1
+      break
+    fi
+    sleep 1
+  done
+}
+
 echo '--- supervise svc0 is down'
-for i in 10 9 8 7 6 5 4 3 2 1 0; do
-  if ! svok svc0; then
-    break
-  fi
-  if [ $i -eq 0 ]; then
-    echo no
-    svc -dx svc0
-    break
-  fi
-  sleep 1
-done
+timed_ok svc0
 echo
 
 echo '--- supervise svc1 is down'
-for i in 10 9 8 7 6 5 4 3 2 1 0; do
-  if ! svok svc1; then
-    break
-  fi
-  if [ $i -eq 0 ]; then
-    echo no
-    svc -dx svc1
-    break
-  fi
-  sleep 1
-done
+timed_ok svc1
 echo
 
 echo '--- supervise svc1/log is down'
-for i in 10 9 8 7 6 5 4 3 2 1 0; do
-  if ! svok svc1/log; then
-    break
-  fi
-  if [ $i -eq 0 ]; then
-    echo no
-    svc -dx svc1/log
-    break
-  fi
-  sleep 1
-done
+timed_ok svc1/log
 echo
 
 echo '--- supervise svc2 is down'
-for i in 10 9 8 7 6 5 4 3 2 1 0; do
-  if ! svok svc2; then
-    break
-  fi
-  if [ $i -eq 0 ]; then
-    echo no
-    svc -dx svc2
-    break
-  fi
-  sleep 1
-done
+timed_ok svc2
 echo
 
 echo '--- svscan is stopped'
