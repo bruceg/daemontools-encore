@@ -257,8 +257,9 @@ echo '--- svc1 log log'
 cat svc1-log.log
 echo
 
+# FIXME: on freebsd we get 2 (or more) CONT sigs + TERM
 echo '--- svc2 main log'
-cat svc2-main.log
+cat svc2-main.log | uniq
 echo
 
 echo '--- svc2 log log'
