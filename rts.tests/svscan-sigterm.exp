@@ -42,11 +42,17 @@
 
 --- svc0 log
 svc0 ran
+Caught CONT
+Caught TERM
 
 --- svc1 main log
 svc1-main ran
+Caught CONT
+Caught TERM
 
 --- svc1 log log
 svc1-log ran
+Caught CONT
+Caught TERM
 
 

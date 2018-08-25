@@ -55,17 +55,20 @@ test -x svscanboot || die "Could not create svscanboot stub"
 
 catexe svc0/run <<'EOF' || die "Could not create svc0/run script"
 #!/bin/sh
-echo svc0 ran >> ../svc0.log
+echo svc0 ran         >> ../svc0.log
+exec ../../../sleeper >> ../svc0.log
 EOF
 
 catexe svc1/run <<'EOF' || die "Could not create svc1/run script"
 #!/bin/sh
-echo svc1-main ran >> ../svc1-main.log
+echo svc1-main ran    >> ../svc1-main.log
+exec ../../../sleeper >> ../svc1-main.log
 EOF
 
 catexe svc1/log/run <<'EOF' || die "Could not create svc1/log/run script"
 #!/bin/sh
-echo svc1-log ran >> ../../svc1-log.log
+echo svc1-log ran        >> ../../svc1-log.log
+exec ../../../../sleeper >> ../../svc1-log.log
 EOF
 
 echo '--- svscanboot started'
@@ -242,15 +245,15 @@ cat svscanboot.log
 echo
 
 echo '--- svc0 log'
-head -n 1 svc0.log
+cat svc0.log
 echo
 
 echo '--- svc1 main log'
-head -n 1 svc1-main.log
+cat svc1-main.log
 echo
 
 echo '--- svc1 log log'
-head -n 1 svc1-log.log
+cat svc1-log.log
 echo
 
 echo
