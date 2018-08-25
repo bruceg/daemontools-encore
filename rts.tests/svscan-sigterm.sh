@@ -266,6 +266,9 @@ echo '--- svc2 log log'
 cat svc2-log.log
 echo
 
+# just in case
+svc -dx svc0 svc1 svc1/log svc2 2>/dev/null
+
 echo
 cd $TOP
 
