@@ -26,6 +26,7 @@ ln -s ../svc0 service || die "Could not link svc0"
 ln -s ../svc1 service || die "Could not link svc1"
 ln -s ../svc2 service || die "Could not link svc2"
 
+
 catexe svscan <<'EOF' || die "Could not create svscan wrapper"
 #!/bin/sh
 PATH=`echo $PATH | cut -d':' -f2-`
@@ -89,6 +90,7 @@ echo svc2-log ran     >> ../svc2-log.log
 exec ../../../sleeper >> ../svc2-log.log
 EOF
 
+
 timed_read() {
   for i in 10 9 8 7 6 5 4 3 2 1 0; do
     if [ -f $1 ]; then
@@ -108,6 +110,15 @@ echo '--- svscanboot started'
 svscanbootpid=$!
 echo
 
+echo '--- svscan started'
+svscanpid=`timed_read svscan.pid`
+echo
+
+echo '--- readproctitle started'
+readproctitlepid=`timed_read readproctitle.pid`
+echo
+
+
 check_pid_sanity() {
   if [ `echo $1 | grep -E '^[1-9][0-9]{0,4}$' | wc -l` != "1" ] \
     || [ $1 -le 1 ]                                             \
@@ -124,23 +135,16 @@ svscanbootpid=`check_pid_sanity $svscanbootpid`
 [ "$svscanbootpid" != "0" ] || echo no
 echo
 
-echo '--- svscan started'
-svscanpid=`timed_read svscan.pid`
-echo
-
 echo '--- svscan pid looks sane'
 svscanpid=`check_pid_sanity $svscanpid`
 [ "$svscanpid" != "0" ] || echo no
-echo
-
-echo '--- readproctitle started'
-readproctitlepid=`timed_read readproctitle.pid`
 echo
 
 echo '--- readproctitle pid looks sane'
 readproctitlepid=`check_pid_sanity $readproctitlepid`
 [ "$readproctitlepid" != "0" ] || echo no
 echo
+
 
 echo '--- svscanboot is running'
 if ! kill -0 $svscanbootpid; then
@@ -179,9 +183,11 @@ echo '--- supervise svc2 is running'
 svok svc2 || echo no
 echo
 
+
 echo '--- sigterm sent'
 kill -TERM $svscanpid || echo no
 echo
+
 
 timed_ok() {
   for i in 10 9 8 7 6 5 4 3 2 1 0; do
@@ -213,6 +219,7 @@ echo '--- supervise svc2 is down'
 timed_ok svc2
 echo
 
+
 timed_ng() {
   if [ $1 -ne 0 ]; then
     for i in 10 9 8 7 6 5 4 3 2 1 0; do
@@ -241,6 +248,7 @@ echo '--- svscanboot is stopped'
 timed_ng $svscanbootpid
 echo
 
+
 echo '--- svscanboot log'
 cat svscanboot.log
 echo
@@ -266,9 +274,9 @@ echo '--- svc2 log log'
 cat svc2-log.log
 echo
 
+
 # just in case
 svc -dx svc0 svc1 svc1/log svc2 2>/dev/null
 
-echo
 cd $TOP
 

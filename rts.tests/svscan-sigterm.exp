@@ -2,13 +2,13 @@
 
 --- svscanboot started
 
---- svscanboot pid looks sane
-
 --- svscan started
 
---- svscan pid looks sane
-
 --- readproctitle started
+
+--- svscanboot pid looks sane
+
+--- svscan pid looks sane
 
 --- readproctitle pid looks sane
 
@@ -68,5 +68,4 @@ Caught TERM
 svc2-log ran
 Caught CONT
 Caught TERM
-
 
