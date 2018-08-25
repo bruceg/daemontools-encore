@@ -108,14 +108,20 @@ echo '--- svscanboot started'
 svscanbootpid=$!
 echo
 
+check_pid_sanity() {
+  if [ `echo $1 | grep -E '^[1-9][0-9]{0,4}$' | wc -l` != "1" ] \
+    || [ $1 -le 1 ]                                             \
+    || [ $1 -ge 65536 ]
+  then
+    echo 0
+  else
+    echo $1
+  fi
+}
+
 echo '--- svscanboot pid looks sane'
-if [ `echo $svscanbootpid | grep -E '^[1-9][0-9]{0,4}$' | wc -l` != "1" ]; then
-  echo no
-  svscanbootpid=0
-elif [ $svscanbootpid -le 1 ] || [ $svscanbootpid -ge 65536 ]; then
-  echo no
-  svscanbootpid=0
-fi
+svscanbootpid=`check_pid_sanity $svscanbootpid`
+[ "$svscanbootpid" != "0" ] || echo no
 echo
 
 echo '--- svscan started'
@@ -123,15 +129,8 @@ svscanpid=`timed_read svscan.pid`
 echo
 
 echo '--- svscan pid looks sane'
-if [ `echo $svscanpid | grep -E ^[1-9][0-9]*$ | wc -l` != '1' ]
-then
-  echo no
-  svscanpid=0
-elif [ $svscanpid -le 1 ] || [ $svscanpid -ge 65536 ]
-then
-  echo no
-  svscanpid=0
-fi
+svscanpid=`check_pid_sanity $svscanpid`
+[ "$svscanpid" != "0" ] || echo no
 echo
 
 echo '--- readproctitle started'
@@ -139,15 +138,8 @@ readproctitlepid=`timed_read readproctitle.pid`
 echo
 
 echo '--- readproctitle pid looks sane'
-if [ `echo $readproctitlepid | grep -E ^[1-9][0-9]*$ | wc -l` != '1' ]
-then
-  echo no
-  readproctitlepid=0
-elif [ $readproctitlepid -le 1 ] || [ $readproctitlepid -ge 65536 ]
-then
-  echo no
-  readproctitlepid=0
-fi
+readproctitlepid=`check_pid_sanity $readproctitlepid`
+[ "$readproctitlepid" != "0" ] || echo no
 echo
 
 echo '--- svscanboot is running'
