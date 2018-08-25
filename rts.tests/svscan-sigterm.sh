@@ -221,25 +221,32 @@ echo '--- supervise svc2 is down'
 timed_ok svc2
 echo
 
+timed_ng() {
+  if [ $1 -ne 0 ]; then
+    for i in 10 9 8 7 6 5 4 3 2 1 0; do
+      if ! kill -0 $1 2>/dev/null; then
+        break
+      fi
+      if [ $i -eq 0 ]; then
+        echo no
+        kill -HUP $1
+        break
+      fi
+      sleep 1
+    done
+  fi
+}
+
 echo '--- svscan is stopped'
-if [ $svscanpid -ne 0 ]; then
-  kill -0 $svscanpid 2>/dev/null \
-  && echo no
-fi
+timed_ng $svscanpid
 echo
 
 echo '--- readproctitle is stopped'
-if [ $readproctitlepid -ne 0 ]; then
-  kill -0 $readproctitlepid 2>/dev/null \
-  && echo no
-fi
+timed_ng $readproctitlepid
 echo
 
 echo '--- svscanboot is stopped'
-if [ $svscanbootpid -ne 0 ]; then
-  kill -0 $svscanbootpid 2>/dev/null \
-  && echo no
-fi
+timed_ng $svscanbootpid
 echo
 
 echo '--- svscanboot log'
