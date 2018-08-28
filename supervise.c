@@ -161,6 +161,7 @@ void announce(void)
   if (logpipe[0] < 0)
     w = 20;
   else {
+    taia_now(&svclog.when);
     make_status(&svclog,status + 20);
     w = 40;
   }
