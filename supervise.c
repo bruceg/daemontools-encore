@@ -161,7 +161,6 @@ void announce(void)
   if (logpipe[0] < 0)
     w = 20;
   else {
-    taia_now(&svclog.when);
     make_status(&svclog,status + 20);
     w = 40;
   }
@@ -484,6 +483,7 @@ int main(int argc,char **argv)
     strerr_die3sys(111,FATAL,"unable to write ",fntemp);
   closeonexec(fdcontrolwrite);
 
+  taia_now(&svclog.when);
   pidchange(&svcmain,0,0,0);
 
   if ((fntemp = svpath_make("/ok")) == 0) die_nomem();
