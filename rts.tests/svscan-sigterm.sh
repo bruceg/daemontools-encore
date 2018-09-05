@@ -122,7 +122,7 @@ echo
 check_pid_sanity() {
   if [ `echo $1 | grep -E '^[1-9][0-9]{0,4}$' | wc -l` != "1" ] \
     || [ $1 -le 1 ]                                             \
-    || [ $1 -ge 65536 ]
+    || [ $1 -ge 99999 ]
   then
     echo 0
   else
