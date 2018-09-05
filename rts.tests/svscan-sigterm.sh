@@ -185,7 +185,11 @@ echo
 
 
 echo '--- sigterm sent'
-kill -TERM $svscanpid || echo no
+if [ "$svscanpid" != "0" ]; then
+  kill -TERM $svscanpid || echo no
+else
+  echo no
+fi
 echo
 
 
