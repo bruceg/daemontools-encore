@@ -41,7 +41,8 @@ done
 echo
 
 # stop svscan and clean up
-kill $svscanpid
+kill $svscanpid &
+wait >/dev/null 2>&1
 wait >/dev/null 2>&1
 
 while svok svc0 || svok svc1 || svok svc2 || svok svc2/log
