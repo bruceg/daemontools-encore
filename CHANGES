@@ -10,6 +10,8 @@ Fixed sleeper to do a single atomic write.
 
 Added support for resetting limits in softlimit.
 
+Fixed initial supervise "down" status.
+
 Changes in daemontools-encore-1.10
 ==================================
 

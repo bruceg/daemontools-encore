@@ -38,12 +38,12 @@ and then exit, leaving stdin at the first byte of data it has not processed.
 .SH SELECTING LINES
 Each line is initially selected. The following actions change this:
 .TP
-.B -\fIpattern
+.BI - pattern
 deselects the line if
 .I pattern
 matches the line.
 .TP
-.B +\fIpattern
+.BI + pattern
 selects the line if
 .I pattern
 matches the line.
@@ -144,7 +144,7 @@ prints (the first 200 bytes of) each selected line to stderr.
 .SH STATUS FILES
 The action 
 .TP
-.B =\fIfile
+.BI = file
 replaces the contents of
 .I file
 with (the first 1000 bytes of) each selected line, padded with newlines to
@@ -262,7 +262,7 @@ to 744, and renames
 .I current
 as an old log file.
 .TP
-.B s\fIsize
+.BI s size
 sets the maximum file size for subsequent
 .I dir
 actions.
@@ -290,7 +290,7 @@ is big enough, if
 .I current
 is nonempty.
 .TP
-.B n\fInum
+.BI n num
 sets the number of log files for subsequent
 .I dir
 actions. After renaming
@@ -304,7 +304,7 @@ timestamp.
 .I num
 must be at least 2. The default number of log files is 10.
 .TP
-.B !\fIprocessor
+.BI ! processor
 sets a
 .I processor
 for subsequent
@@ -332,11 +332,11 @@ will then run it again. Note that running
 may block any program feeding input to
 .BR multilog .
 .TP
-.B w\fIcode
+.BI w code
 Changes the "safely written" code from
 .B .s
 as described above to
-.B .\fIcode
+.BI . code
 for subsequent
 .I dir
 actions.  This is useful when using a

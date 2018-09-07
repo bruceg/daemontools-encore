@@ -48,8 +48,8 @@ int firstrun = 1;
 const char *runscript = 0;
 
 int logpipe[2] = {-1,-1};
-struct svc svcmain = {0,svstatus_starting,1,1};
-struct svc svclog = {0,svstatus_starting,1,0};
+struct svc svcmain = {0,svstatus_stopped,1,1};
+struct svc svclog = {0,svstatus_stopped,1,0};
 
 static int stat_isexec(const char *path)
 {

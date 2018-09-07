@@ -2,7 +2,7 @@
 100
 100
 100
-test.sv: down x seconds, starting
+test.sv: down x seconds, stopped
 0
 0
 test.sv: supervise not running
