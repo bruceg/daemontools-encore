@@ -1,0 +1,181 @@
+
+svscanboot
+
+                           ..................
+                           :   svscanboot   :
+                           :                :
+                    null--->             out>---null
+                           :             err>---null
+                           :................:
+
+
+===============================================================================
+
+svscan
+
+    mkdir -p /service /svc0
+    cat <<EOF > /svc0/run
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    ln -s /svc0 /service/svc0
+    svscanboot &
+
+           .................             .....................
+           :    svscan     :             :   readproctitle   :
+           :               :             :                   :
+    null--->in          out>--*---*------>in              out>---null
+           :            err>--'   |      :                err>---null
+           :...............:      |      :...................:
+                                  |
+           .................      |
+           :   supervise   :      |
+           :               :      |
+    null--->in          out>--*---*
+           :            err>--'   |
+           :...............:      |
+                                  |
+           .................      |
+           :     main      :      |
+           :    process    :      |
+           :               :      |
+    null--->in          out>--*---'
+           :            err>--'
+           :...............:
+
+
+===============================================================================
+
+svscan log management
+
+    mkdir -p /service /svc1 /svc1/log
+    cat <<EOF > /svc1/run
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    cat <<EOF > /svc1/log/run
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    ln -s /svc1 /service/svc1
+    svscanboot &
+
+            ..............                   .....................
+            :   svscan   :                   :   readproctitle   :
+            :            :                   :                   :
+     null--->in       out>--*-----------*---->in              out>---null
+            :         err>--'           |    :                err>---null
+        .--->copy    copy>-----.        |    :...................:
+        |   :............:     |        |
+        `----------------------*        *---------------------------.
+                               |        |                           |
+           .................   |        |    .................      |
+           :   supervise   :   |        |    :   supervise   :      |
+           :               :   |        |    :               :      |
+    null--->in          out>---*--------)---->in          out>--*---*
+           :            err>---)--------*    :            err>--'   |
+           :...............:   |        |    :...............:      |
+                               |        |                           |
+           .................   |        |    .................      |
+           :     main      :   |        |    :      log      :      |
+           :    process    :   |        |    :    process    :      |
+           :               :   |        |    :               :      |
+    null--->in          out>---*--------)---->in          out>--*---'
+           :            err>------------'    :            err>--'
+           :...............:                 :...............:
+
+
+===============================================================================
+
+supervise log management
+
+    mkdir -p /service /svc2
+    cat <<EOF > /svc2/run
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    cat <<EOF > /svc2/log
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    ln -s /svc2 /service/svc2
+    svscanboot &
+
+            ..............                   .....................
+            :   svscan   :                   :   readproctitle   :
+            :            :                   :                   :
+     null--->in       out>---*----------*---->in              out>---null
+            :         err>---'          |    :                err>---null
+            :............:              |    :...................:
+                                        |
+           .................            |
+           :   supervise   :            |
+           :               :            |
+    null--->in          out>---*--------*-----------------------.
+           :            err>---'        |                       |
+       .--->copy       copy>---.        |                       |
+       |   :...............:   |        |                       |
+       `-----------------------*        |                       |
+                               |        |                       |
+            ...............    |        |     ...............   |
+            :    main     :    |        |     :     log     :   |
+            :   process   :    |        |     :   process   :   |
+            :             :    |        |     :             :   |
+     null--->in        out>----*--------)----->in        out>---*
+            :          err>-------------'     :          err>---'
+            :.............:                   :.............:
+
+
+===============================================================================
+
+combination svscan and supervise log management
+
+    mkdir -p /service /svc3 /svc3/log
+    cat <<EOF > /svc3/run
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    cat <<EOF > /svc3/log/run
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    cat <<EOF > /svc3/log/log
+    #!/bin/sh
+    exec /bin/sleep 9999
+    EOF
+    ln -s /svc3 /service/svc3
+    svscanboot &
+
+            ..............                  .....................
+            :   svscan   :                  :   readproctitle   :
+            :            :                  :                   :
+     null--->in       out>-----*----*------->in              out>---null
+            :         err>-----'    |       :                err>---null
+        .--->copy    copy>-----.    |       :...................:
+        |   :............:     |    |
+        `----------------------*    *---------------------------------.
+                               |    |                                 |
+           .................   |    |         .................       |
+           :   supervise   :   |    |         :   supervise   :       |
+           :               :   |    |         :               :       |
+    null--->in          out>---*----)--------->in          out>---*---*
+           :            err>---)----*         :            err>---'   |
+           :...............:   |    |    .---->copy       copy>---.   |
+                               |    |    |    :...............:   |   |
+                               |    |    *------------------------*   |
+                               |    |    |                        |   |
+            ...............    |    |    |    ................    |   |
+            :    main     :    |    |    |    :   log main   :    |   |
+            :   process   :    |    |    |    :              :    |   |
+            :             :    |    |    |    :              :    |   |
+     null--->in        out>----*----)----)---->in         out>----'   |
+            :          err>---------'    |    :           err>--------*
+            :.............:              |    :..............:        |
+                                         |                            |
+                                         |    ...............         |
+                                         |    :   log log   :         |
+                                         |    :             :         |
+                                         `---->in        out>-----*---'
+                                              :          err>-----'
+                                              :.............:
+
