@@ -33,6 +33,7 @@ struct svc
   int flagpaused;
   struct taia when;
   int ranstop;
+  struct taia after;
 };
 
 const char *dir;
@@ -205,6 +206,7 @@ void trystart(struct svc *svc)
   const char *argv[] = { 0,0 };
   int f;
   int fd;
+  struct taia now;
 
   if (svc == &svclog) {
     argv[0] = "./log";
@@ -224,10 +226,14 @@ void trystart(struct svc *svc)
     svcmain.flagstatus = firstrun ? svstatus_starting : svstatus_running;
     fd = 1;
   }
+  taia_now(&now);
+  iopause(0,0,&svc->after,&now);
   if ((f = forkexecve(svc,argv,fd)) < 0)
     return;
   pidchange(svc,"start",0,f);
-  deepsleep(1);
+  taia_now(&now);
+  taia_uint(&svc->after,1);
+  taia_add(&svc->after,&svc->after,&now);
 }
 
 void trystop(struct svc *svc)
@@ -304,10 +310,14 @@ void doit(void)
 	continue;
       killpid = svc->pid;
       svc->pid = 0;
-      if ((firstrun && (wait_crashed(wstat) || wait_exitcode(wstat) != 0))
-	   || (!wait_crashed(wstat) && wait_exitcode(wstat) == 100)) {
-	svc->flagwantup = 0;
-	svc->flagstatus = svstatus_failed;
+      if (firstrun && (wait_crashed(wstat) || wait_exitcode(wstat) != 0)) {
+        svc->flagwantup = 0;
+        svc->flagstatus = svstatus_failed;
+      }
+      if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
+        svc->flagwantup = 0;
+        svc->flagstatus = svstatus_failed;
+        taia_now(&svc->after);
       }
       else if (!svc->flagwant || !svc->flagwantup)
 	svc->flagstatus = svstatus_stopped;
@@ -443,6 +453,9 @@ int main(int argc,char **argv)
     strerr_die3sys(111,FATAL,"unable to chdir to ",dir);
   if (!svpath_init())
     strerr_die3sys(111,FATAL,"unable to setup control path for ",dir);
+
+  taia_now(&svclog.after);
+  svcmain.after = svclog.after;
 
   if (stat_isexec("log") > 0) {
     if (pipe(logpipe) != 0)
