@@ -22,6 +22,8 @@ svc -2 test.sv
 sleep 1
 svc -w test.sv
 sleep 1
+svc -p test.sv
+sleep 1
 svc -d test.sv
 sleep 1
 svc -xk test.sv
