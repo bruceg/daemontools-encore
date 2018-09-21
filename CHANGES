@@ -14,6 +14,8 @@ Fixed initial supervise "down" status.
 
 Fix supervise removing "status" before locking the service.
 
+Fix initialization of uptime on down service with log.
+
 Changes in daemontools-encore-1.10
 ==================================
 

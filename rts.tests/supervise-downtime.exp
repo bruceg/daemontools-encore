@@ -1,0 +1,3 @@
+--- supervise has reasonable downtimes
+test.sv: down ok
+test.sv log: down ok
