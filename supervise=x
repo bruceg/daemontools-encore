@@ -1,5 +1,6 @@
 deepsleep.o
 svpath.o
+subreaper.o
 time.a
 unix.a
 byte.a

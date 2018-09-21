@@ -84,6 +84,7 @@ static void showstatus(const char status[19], int r, int normallyup)
     case svstatus_running: x = ", running"; break;
     case svstatus_stopping: x = ", stopping"; break;
     case svstatus_failed: x=", failed"; break;
+    case svstatus_orphanage: x=", orphanage"; break;
     default: x = ", status unknown";
     }
     if (pid && (want == '\000'))

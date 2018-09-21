@@ -17,6 +17,7 @@
 #include "iopause.h"
 #include "taia.h"
 #include "deepsleep.h"
+#include "subreaper.h"
 #include "stralloc.h"
 #include "svpath.h"
 #include "svstatus.h"
@@ -44,6 +45,7 @@ int fdok;
 int fdstatus;
 
 int flagexit = 0;
+int flagorphanage = 0;
 int firstrun = 1;
 const char *runscript = 0;
 
@@ -295,11 +297,18 @@ void doit(void)
     for (;;) {
       r = wait_nohang(&wstat);
       if (!r) break;
-      if ((r == -1) && (errno != error_intr)) break;
-      if (r == svcmain.pid)
+      if (flagorphanage && r == svcmain.pid) {
+        svcmain.flagstatus = svstatus_orphanage;
+        announce();
+        continue;
+      }
+      if ((r == svcmain.pid) || ((svcmain.flagstatus == svstatus_orphanage)
+                                 && (r == -1) && (errno == ECHILD)))
 	svc = &svcmain;
       else if (r == svclog.pid)
 	svc = &svclog;
+      else if ((r == -1) && (errno != error_intr))
+        break;
       else
 	continue;
       killpid = svc->pid;
@@ -444,9 +453,16 @@ int main(int argc,char **argv)
   if (!svpath_init())
     strerr_die3sys(111,FATAL,"unable to setup control path for ",dir);
 
+  if (stat_exists("orphanage") != 0) {
+    flagorphanage = 1;
+    if (set_subreaper())
+      strerr_die2sys(111,FATAL,"could not set subreaper attribute");
+  }
   if (stat_isexec("log") > 0) {
     if (pipe(logpipe) != 0)
       strerr_die3sys(111,FATAL,"unable to create pipe for ",dir);
+    else if (flagorphanage)
+      strerr_die2sys(111,FATAL,"orphanage and log are mutually exclusive");
     svclog.flagwantup = 1;
   }
   if (stat("down",&st) != -1) {

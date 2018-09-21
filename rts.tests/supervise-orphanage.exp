@@ -1,0 +1,7 @@
+--- supervise properly runs an orphanage
+the first run
+test.sv: up (pid x) x seconds, normally down, running
+Caught TERM
+test.sv: up (pid x) x seconds, normally down, orphanage
+the second run
+Caught HUP
