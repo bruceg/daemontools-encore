@@ -1,0 +1,14 @@
+--- supervise leaves locked service intact
+prw------- 0 control
+-rw------- 0 lock
+prw------- 0 ok
+-rw-r--r-- 20 status
+supervise: fatal: unable to acquire supervise/lock: temporary failure
+111
+prw------- 0 control
+-rw------- 0 lock
+prw------- 0 ok
+-rw-r--r-- 20 status
+0
+test.sv: supervise not running
+0

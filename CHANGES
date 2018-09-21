@@ -12,6 +12,8 @@ Added support for resetting limits in softlimit.
 
 Fixed initial supervise "down" status.
 
+Fix supervise removing "status" before locking the service.
+
 Changes in daemontools-encore-1.10
 ==================================
 
