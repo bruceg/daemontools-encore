@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
+#include "sig.h"
 #include "direntry.h"
 #include "strerr.h"
 #include "error.h"
@@ -32,8 +34,14 @@ int numx = 0;
 int logx = -1;
 int logpipe[2];
 const char *logdir = 0;
+int exit_now, exit_soon=0;
 
 char fnlog[260];
+
+void catch_sig(int sig)
+{
+  exit_soon = 1;
+}
 
 void start(const char *fn)
 {
@@ -96,7 +104,7 @@ void start(const char *fn)
 
   x[i].flagactive = 1;
 
-  if (!x[i].pid)
+  if (!x[i].pid && !exit_soon)
     switch(child = fork()) {
       case -1:
         strerr_warn4sys(WARNING,"unable to fork for ",fn,"");
@@ -115,9 +123,16 @@ void start(const char *fn)
         strerr_die3sys(111,WARNING,"unable to start supervise ",fn);
       default:
         x[i].pid = child;
+        exit_now = 0;
+    }
+  else
+    if (x[i].pid) {
+      exit_now = 0;
+      if (exit_soon)
+        kill(x[i].pid,SIGTERM);
     }
 
-  if (x[i].flaglog && !x[i].pidlog)
+  if (x[i].flaglog && !x[i].pidlog && !exit_soon)
     switch(child = fork()) {
       case -1:
         strerr_warn4sys(WARNING,"unable to fork for ",fn,"/log");
@@ -134,6 +149,13 @@ void start(const char *fn)
         strerr_die4sys(111,WARNING,"unable to start supervise ",fn,"/log");
       default:
         x[i].pidlog = child;
+        exit_now = 0;
+    }
+  else
+    if (x[i].flaglog && x[i].pidlog) {
+      exit_now = 0;
+      if (exit_soon && !x[i].pid)
+        kill(x[i].pidlog,SIGTERM);
     }
 }
 
@@ -236,9 +258,13 @@ int main(int argc,char **argv)
     logdir = argv[2];
 
   start_log();
+  sig_catch(SIGTERM,catch_sig);
 
   for (;;) {
+    exit_now = 1;
     doit();
-    sleep(5);
+    if (exit_now) break;
+    sleep(exit_soon ? 1 : 5);
   }
+  return 0;
 }
