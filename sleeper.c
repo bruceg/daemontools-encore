@@ -29,6 +29,8 @@ static void catch_sig(int sig)
   ignored = write(1,buf,i);
   if (sig != SIGCONT)
     _exit(1);
+  /* avoid warning */
+  if (ignored) {}
 }
 
 int main(void)

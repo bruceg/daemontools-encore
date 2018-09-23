@@ -48,4 +48,6 @@ int main(int argc,const char * const *argv,const char * const *envp)
   if (wait_crashed(wstat))
     strerr_die2x(111,FATAL,"child crashed");
   _exit(wait_exitcode(wstat));
+  /* avoid warning */
+  if (ignored) {}
 }

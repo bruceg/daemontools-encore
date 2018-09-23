@@ -76,6 +76,8 @@ static void trigger(void)
 {
   int ignored;
   ignored = write(selfpipe[1],"",1);
+  /* avoid warning */
+  if (ignored) {}
 }
 
 static void terminate(void)
@@ -83,6 +85,8 @@ static void terminate(void)
   int ignored;
   ignored = write(fdcontrolwrite,"dx",2);
   ignored = write(selfpipe[1],"",1);
+  /* avoid warning */
+  if (ignored) {}
 }
 
 static void ttystop(void)
@@ -90,6 +94,8 @@ static void ttystop(void)
   int ignored;
   ignored = write(fdcontrolwrite,"p",1);
   ignored = write(selfpipe[1],"",1);
+  /* avoid warning */
+  if (ignored) {}
 }
 
 static void resume(void)
@@ -97,6 +103,8 @@ static void resume(void)
   int ignored;
   ignored = write(fdcontrolwrite,"c",1);
   ignored = write(selfpipe[1],"",1);
+  /* avoid warning */
+  if (ignored) {}
 }
 
 static int forkexecve(struct svc *svc,const char *argv[],int fd)
