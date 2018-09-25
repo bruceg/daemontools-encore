@@ -234,6 +234,8 @@ void trystart(struct svc *svc)
   taia_now(&now);
   taia_uint(&svc->after,1);
   taia_add(&svc->after,&svc->after,&now);
+  if (svc == &svclog)
+    svcmain.after = svclog.after;
 }
 
 void trystop(struct svc *svc)
