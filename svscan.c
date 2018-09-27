@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
+#include "sig.h"
 #include "direntry.h"
 #include "strerr.h"
 #include "error.h"
@@ -32,8 +34,14 @@ int numx = 0;
 int logx = -1;
 int logpipe[2];
 const char *logdir = 0;
+int exit_now, exit_soon=0;
 
 char fnlog[260];
+
+void catch_sig(int sig)
+{
+  exit_soon = 1;
+}
 
 void start(const char *fn)
 {
@@ -57,7 +65,7 @@ void start(const char *fn)
   for (i = 0;i < numx;++i)
     if (x[i].ino == st.st_ino)
       if (x[i].dev == st.st_dev)
-	break;
+        break;
 
   if (i == numx) {
     if (numx >= SERVICES) {
@@ -75,12 +83,12 @@ void start(const char *fn)
       byte_copy(fnlog,fnlen,fn);
       byte_copy(fnlog + fnlen,5,"/log");
       if (stat(fnlog,&st) == 0)
-	x[i].flaglog = S_ISDIR(st.st_mode);
+        x[i].flaglog = S_ISDIR(st.st_mode);
       else
-	if (errno != error_noent) {
+        if (errno != error_noent) {
           strerr_warn4sys(WARNING,"unable to stat ",fn,"/log");
           return;
-	}
+        }
     }
 
     if (x[i].flaglog) {
@@ -96,28 +104,35 @@ void start(const char *fn)
 
   x[i].flagactive = 1;
 
-  if (!x[i].pid)
+  if (!x[i].pid && !exit_soon)
     switch(child = fork()) {
       case -1:
         strerr_warn4sys(WARNING,"unable to fork for ",fn,"");
         return;
       case 0:
         if (x[i].flaglog)
-	  if (fd_move(1,x[i].pi[1]) == -1)
+          if (fd_move(1,x[i].pi[1]) == -1)
             strerr_die3sys(111,WARNING,"unable to set up descriptors for ",fn);
-	if (i == logx)
-	  if (fd_move(0,logpipe[0]) == -1)
-	    strerr_die3sys(111,WARNING,"unable to set up descriptors for ",fn);
+        if (i == logx)
+          if (fd_move(0,logpipe[0]) == -1)
+            strerr_die3sys(111,WARNING,"unable to set up descriptors for ",fn);
         args[0] = "supervise";
         args[1] = fn;
         args[2] = 0;
-	pathexec_run(*args,args,(const char*const*)environ);
+        pathexec_run(*args,args,(const char*const*)environ);
         strerr_die3sys(111,WARNING,"unable to start supervise ",fn);
       default:
-	x[i].pid = child;
+        x[i].pid = child;
+        exit_now = 0;
+    }
+  else
+    if (x[i].pid) {
+      exit_now = 0;
+      if (exit_soon)
+        kill(x[i].pid,SIGTERM);
     }
 
-  if (x[i].flaglog && !x[i].pidlog)
+  if (x[i].flaglog && !x[i].pidlog && !exit_soon)
     switch(child = fork()) {
       case -1:
         strerr_warn4sys(WARNING,"unable to fork for ",fn,"/log");
@@ -125,15 +140,22 @@ void start(const char *fn)
       case 0:
         if (fd_move(0,x[i].pi[0]) == -1)
           strerr_die4sys(111,WARNING,"unable to set up descriptors for ",fn,"/log");
-	if (chdir(fn) == -1)
+        if (chdir(fn) == -1)
           strerr_die3sys(111,WARNING,"unable to switch to ",fn);
         args[0] = "supervise";
         args[1] = "log";
         args[2] = 0;
-	pathexec_run(*args,args,(const char*const*)environ);
+        pathexec_run(*args,args,(const char*const*)environ);
         strerr_die4sys(111,WARNING,"unable to start supervise ",fn,"/log");
       default:
-	x[i].pidlog = child;
+        x[i].pidlog = child;
+        exit_now = 0;
+    }
+  else
+    if (x[i].flaglog && x[i].pidlog) {
+      exit_now = 0;
+      if (exit_soon && !x[i].pid)
+        kill(x[i].pidlog,SIGTERM);
     }
 }
 
@@ -236,9 +258,13 @@ int main(int argc,char **argv)
     logdir = argv[2];
 
   start_log();
+  sig_catch(SIGTERM,catch_sig);
 
   for (;;) {
+    exit_now = 1;
     doit();
-    sleep(5);
+    if (exit_now) break;
+    sleep(exit_soon ? 1 : 5);
   }
+  return 0;
 }
