@@ -1,3 +1,4 @@
+echo '--- svscan setup'
 # set up services
 mkdir service svc0 svc1 svc2 svc2/log
 
@@ -27,7 +28,9 @@ exec cat > ../output
 EOF
 
 ln -s `pwd`/svc[0-9] service/
+echo
 
+echo '--- svscan start'
 svscan `pwd`/service >svscan.log 2>&1 &
 svscanpid=$!
 
@@ -35,17 +38,19 @@ until svok svc0 && svok svc1 && svok svc2 && svok svc2/log
 do
   sleep 1
 done
+echo
 
 # stop svscan and clean up
-kill $svscanpid
+kill $svscanpid &
+wait >/dev/null 2>&1
 wait >/dev/null 2>&1
 
-svc -dx svc[0-9] svc2/log
 while svok svc0 || svok svc1 || svok svc2 || svok svc2/log
 do
   sleep 1
 done
 
+echo '--- svscan out'
 head -n 1 svc[0-9]/output
 cat svscan.log
 rm -r svc0 svc1 svc2 service
