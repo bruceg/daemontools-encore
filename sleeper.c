@@ -29,6 +29,7 @@ static void catch_sig(int sig)
   ignored = write(1,buf,i);
   if (sig != SIGCONT)
     _exit(1);
+  (void)ignored;
 }
 
 int main(void)
