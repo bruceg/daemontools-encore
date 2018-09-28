@@ -1,3 +1,6 @@
+Enhanced svscan to stop its services when it is stopped.
+(Thanks to Rick Myers)
+
 Added new program setuser to setuid, setenv, plus chdir before exec.
 
 Added new program envini to read environment variables from an INI file.
