@@ -9,8 +9,8 @@ die() {
 }
 
 catexe() {
-    cat > $1
-    chmod +x $1
+    cat > $1 || die "Could not create \"$1\""
+    chmod +x $1 || die "Could not chmod \"$1\""
 }
 
 filter_svstat() {
