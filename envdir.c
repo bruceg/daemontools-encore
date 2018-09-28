@@ -71,14 +71,14 @@ int main(int argc,const char *const *argv)
       if (sa.len) {
         sa.len = byte_chr(sa.s,sa.len,'\n');
         while (sa.len) {
-	  if (sa.s[sa.len - 1] != ' ')
-	    if (sa.s[sa.len - 1] != '\t')
-	      break;
-	  --sa.len;
+          if (sa.s[sa.len - 1] != ' ')
+            if (sa.s[sa.len - 1] != '\t')
+              break;
+          --sa.len;
         }
         for (i = 0;i < sa.len;++i)
-	  if (!sa.s[i])
-	    sa.s[i] = '\n';
+          if (!sa.s[i])
+            sa.s[i] = '\n';
         if (!stralloc_0(&sa)) nomem();
         if (!pathexec_env(saname.s,sa.s)) nomem();
       }

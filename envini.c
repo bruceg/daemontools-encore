@@ -47,28 +47,28 @@ static void parse(void)
       ++start;
     if (end > start) {
       if (sa.s[start] == '[' && sa.s[end-1] == ']') {
-	if (!stralloc_copyb(&section,sa.s+start+1,end-start-2)) nomem();
-	if (!stralloc_append(&section,'_')) nomem();
+        if (!stralloc_copyb(&section,sa.s+start+1,end-start-2)) nomem();
+        if (!stralloc_append(&section,'_')) nomem();
       }
       else if (sa.s[start] == ';')
-	;
+        ;
       else {
-	i = start;
-	while (i < end && sa.s[i] != '=' && !is_space(sa.s[i]))
-	  ++i;
-	if (!stralloc_copys(&name,prefix)) nomem();
-	if (!stralloc_cat(&name,&section)) nomem();
-	if (!stralloc_catb(&name,sa.s+start,i-start)) nomem();
-	if (!stralloc_0(&name)) nomem();
-	while (i < end && is_space(sa.s[i]))
-	  ++i;
-	if (i >= end || sa.s[i++] != '=')
-	  continue;		/* Ignore misformatted lines */
-	while (i < end && is_space(sa.s[i]))
-	  ++i;
-	if (!stralloc_copyb(&value,sa.s+i,end-i)) nomem();
-	if (!stralloc_0(&value)) nomem();
-	if (!pathexec_env(name.s,value.s)) nomem();
+        i = start;
+        while (i < end && sa.s[i] != '=' && !is_space(sa.s[i]))
+          ++i;
+        if (!stralloc_copys(&name,prefix)) nomem();
+        if (!stralloc_cat(&name,&section)) nomem();
+        if (!stralloc_catb(&name,sa.s+start,i-start)) nomem();
+        if (!stralloc_0(&name)) nomem();
+        while (i < end && is_space(sa.s[i]))
+          ++i;
+        if (i >= end || sa.s[i++] != '=')
+          continue;     /* Ignore misformatted lines */
+        while (i < end && is_space(sa.s[i]))
+          ++i;
+        if (!stralloc_copyb(&value,sa.s+i,end-i)) nomem();
+        if (!stralloc_0(&value)) nomem();
+        if (!pathexec_env(name.s,value.s)) nomem();
       }
     }
   }
@@ -81,8 +81,8 @@ int main(int argc,const char *const *argv)
 
   while ((opt = getopt(argc,argv,"p:")) != opteof)
     switch (opt) {
-    case 'p': prefix = optarg; break;
-    default: die_usage();
+      case 'p': prefix = optarg; break;
+      default: die_usage();
     }
   argv += optind;
 

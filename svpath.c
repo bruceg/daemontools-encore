@@ -19,7 +19,7 @@ int svpath_init(void)
       return 0;
     for (ptr = cwd+1; *ptr != 0; ++ptr)
       if (*ptr == '/')
-	*ptr = ':';
+        *ptr = ':';
     if (!stralloc_cats(&svdir, cwd))
       return 0;
   }
