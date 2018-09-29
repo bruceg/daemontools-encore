@@ -33,3 +33,5 @@ hi
 --- svc -u works
 first
 second
+--- svc -o works first time with start
+ok
