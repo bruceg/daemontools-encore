@@ -9,6 +9,8 @@ Added support for adding a prefix in envdir.
 
 Added "once" flag output to svstat.
 
+Fixed supervise to run "start" on down services and "svc -o".
+
 Fixed sleeper to do a single atomic write.
 
 Added support for resetting limits in softlimit.
