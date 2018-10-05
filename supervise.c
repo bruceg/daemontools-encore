@@ -305,30 +305,28 @@ static void reaper(void)
 static void controller(void)
 {
   struct svc *svc = &svcmain;
-  int killpid = svc->pid;
+  int killgroup = 1;
   char ch;
 
   while (read(fdcontrol,&ch,1) == 1)
     switch(ch) {
     case '+':
-      if (killpid > 0) killpid = -killpid;
+      killgroup = -1;
       break;
     case '=':
-      if (killpid < 0) killpid = -killpid;
+      killgroup = 1;
       break;
     case 'L':
       svc = &svclog;
-      killpid = svc->pid;
       break;
     case 'l':
       svc = &svcmain;
-      killpid = svc->pid;
       break;
     case 'd':
       svc->flagwant = 1;
       svc->flagwantup = 0;
-      if (killpid)
-        stopsvc(killpid,svc);
+      if (svc->pid)
+        stopsvc(killgroup*svc->pid,svc);
       else
         trystop(svc);
       announce();
@@ -349,41 +347,41 @@ static void controller(void)
       if (!svc->pid) trystart(svc);
       break;
     case 'a':
-      if (killpid) kill(killpid,SIGALRM);
+      if (svc->pid) kill(killgroup*svc->pid,SIGALRM);
       break;
     case 'h':
-      if (killpid) kill(killpid,SIGHUP);
+      if (svc->pid) kill(killgroup*svc->pid,SIGHUP);
       break;
     case 'k':
-      if (killpid) kill(killpid,SIGKILL);
+      if (svc->pid) kill(killgroup*svc->pid,SIGKILL);
       break;
     case 't':
-      if (killpid) kill(killpid,SIGTERM);
+      if (svc->pid) kill(killgroup*svc->pid,SIGTERM);
       break;
     case 'i':
-      if (killpid) kill(killpid,SIGINT);
+      if (svc->pid) kill(killgroup*svc->pid,SIGINT);
       break;
     case 'q':
-      if (killpid) kill(killpid,SIGQUIT);
+      if (svc->pid) kill(killgroup*svc->pid,SIGQUIT);
       break;
     case '1':
-      if (killpid) kill(killpid,SIGUSR1);
+      if (svc->pid) kill(killgroup*svc->pid,SIGUSR1);
       break;
     case '2':
-      if (killpid) kill(killpid,SIGUSR2);
+      if (svc->pid) kill(killgroup*svc->pid,SIGUSR2);
       break;
     case 'w':
-      if (killpid) kill(killpid,SIGWINCH);
+      if (svc->pid) kill(killgroup*svc->pid,SIGWINCH);
       break;
     case 'p':
       svc->flagpaused = 1;
       announce();
-      if (killpid) kill(killpid,SIGSTOP);
+      if (svc->pid) kill(killgroup*svc->pid,SIGSTOP);
       break;
     case 'c':
       svc->flagpaused = 0;
       announce();
-      if (killpid) kill(killpid,SIGCONT);
+      if (svc->pid) kill(killgroup*svc->pid,SIGCONT);
       break;
     case 'x':
       flagexit = 1;
