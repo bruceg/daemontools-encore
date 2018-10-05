@@ -121,11 +121,11 @@ static int forkexecve(struct svc *svc,const char *argv[],int fd)
       sig_uncatch(sig_ttystop);
       sig_uncatch(sig_cont);
       if (stat_exists("no-setsid") == 0)
-	setsid();	       /* shouldn't fail; if it does, too bad */
+        setsid();   /* shouldn't fail; if it does, too bad */
       if (fd >= 0 && logpipe[0] >= 0) {
-	dup2(logpipe[fd],fd);
-	close(logpipe[0]);
-	close(logpipe[1]);
+        dup2(logpipe[fd],fd);
+        close(logpipe[0]);
+        close(logpipe[1]);
       }
       execve(argv[0],(char*const*)argv,environ);
       strerr_die4sys(111,FATAL,"unable to start ",dir,argv[0]+1);
@@ -410,8 +410,8 @@ void doit(void)
     controller();
 
     if (flagexit
-	&& svcmain.flagstatus == svstatus_stopped
-	&& (svclog.flagstatus == svstatus_running || svclog.flagstatus == svstatus_started))
+    && svcmain.flagstatus == svstatus_stopped
+    && (svclog.flagstatus == svstatus_running || svclog.flagstatus == svstatus_started))
       stopsvc(&svclog,1);
   }
 }

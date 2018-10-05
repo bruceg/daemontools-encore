@@ -13,7 +13,7 @@ static int checkstatus(const char status[19], int r)
   /* Check for a PID */
   return (status[12] || status[13] || status[14] || status[15]) /* Check for a PID */
     || (r > 18
-	&& (status[18] == svstatus_started || status[18] == svstatus_running));
+    && (status[18] == svstatus_started || status[18] == svstatus_running));
 }
 
 static void die_usage(void)
@@ -82,11 +82,11 @@ int main(int argc,const char *const *argv)
   if (check_log != 0) {
     if (rd < 20+18) {
       if (check_log > 0)
-	_exit(100);
+        _exit(100);
     }
     else
       if (!checkstatus(status+20,rd-20))
-	_exit(100);
+        _exit(100);
   }
   _exit(0);
 }

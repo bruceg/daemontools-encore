@@ -50,8 +50,7 @@ int main(int argc,const char *const *argv)
   while ((dir = *argv++) != 0) {
     if (chdir(dir) == -1)
       strerr_warn4sys(WARNING,"unable to chdir to ",dir,"");
-    else if (!svpath_init()
-	     || (fncontrol = svpath_make("/control")) == 0)
+    else if (!svpath_init() || (fncontrol = svpath_make("/control")) == 0)
       strerr_warn4sys(WARNING,"unable to setup control path for ",dir,"");
     else {
       fd = open_write(fncontrol);
