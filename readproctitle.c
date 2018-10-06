@@ -17,14 +17,14 @@ int main(int argc,char **argv)
   for (;;)
     switch(read(0,&ch,1)) {
       case 1:
-	if (ch) {
-	  for (i = 4;i < len;++i) buf[i - 1] = buf[i];
-	  buf[len - 1] = ch;
-	}
-	break;
+        if (ch) {
+          for (i = 4;i < len;++i) buf[i - 1] = buf[i];
+          buf[len - 1] = ch;
+        }
+        break;
       case 0:
-	_exit(0);
+        _exit(0);
       case -1:
-	if (errno != error_intr) _exit(111);
+        if (errno != error_intr) _exit(111);
     }
 }

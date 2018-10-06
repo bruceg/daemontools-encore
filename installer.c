@@ -94,36 +94,36 @@ void doit(stralloc *line)
     case 'd':
       if (mkdir(target.s,0700) == -1)
         if (errno != error_exist)
-	  strerr_die3sys(111,FATAL,"unable to mkdir ",target.s);
+          strerr_die3sys(111,FATAL,"unable to mkdir ",target.s);
       break;
 
     case 'c':
       fdin = open_read(name);
       if (fdin == -1) {
-	if (opt)
-	  return;
-	else
-	  strerr_die3sys(111,FATAL,"unable to read ",name);
+        if (opt)
+          return;
+        else
+          strerr_die3sys(111,FATAL,"unable to read ",name);
       }
       buffer_init(&bufin,buffer_unixread,fdin,inbuf,sizeof(inbuf));
 
       fdout = open_trunc(target.s);
       if (fdout == -1)
-	strerr_die3sys(111,FATAL,"unable to write ",target.s);
+        strerr_die3sys(111,FATAL,"unable to write ",target.s);
       buffer_init(&bufout,buffer_unixwrite,fdout,outbuf,sizeof(outbuf));
 
       switch(buffer_copy(&bufout,&bufin)) {
-	case -2:
-	  strerr_die3sys(111,FATAL,"unable to read ",name);
-	case -3:
-	  strerr_die3sys(111,FATAL,"unable to write ",target.s);
+        case -2:
+          strerr_die3sys(111,FATAL,"unable to read ",name);
+        case -3:
+          strerr_die3sys(111,FATAL,"unable to write ",target.s);
       }
 
       close(fdin);
       if (buffer_flush(&bufout) == -1)
-	strerr_die3sys(111,FATAL,"unable to write ",target.s);
+        strerr_die3sys(111,FATAL,"unable to write ",target.s);
       if (fsync(fdout) == -1)
-	strerr_die3sys(111,FATAL,"unable to write ",target.s);
+        strerr_die3sys(111,FATAL,"unable to write ",target.s);
       close(fdout);
       break;
 
