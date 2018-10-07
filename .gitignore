@@ -24,6 +24,7 @@ haswaitp.h
 installer
 iopause.h
 load
+makefifo
 makelib
 matchtest
 multilog
