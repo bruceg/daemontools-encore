@@ -308,15 +308,23 @@ void doit(void)
         continue;
       killpid = svc->pid;
       svc->pid = 0;
-      if (((svc == &svcmain && svc->flagstatus == svstatus_starting) && (wait_crashed(wstat) || wait_exitcode(wstat) != 0))
-        || (!wait_crashed(wstat) && wait_exitcode(wstat) == 100)) {
+      if ((svc == &svcmain && svc->flagstatus == svstatus_starting) && (wait_crashed(wstat) || wait_exitcode(wstat) != 0)) {
         svc->flagwantup = 0;
         svc->flagstatus = svstatus_failed;
       }
+      else if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
+        if (svc->flagwantup) {
+          svc->flagstatus = svstatus_starting;
+        }
+        else {
+          svc->flagstatus = svstatus_failed;
+        }
+      }
       else if (svc == &svcmain && svc->flagstatus == svstatus_starting) {
       }
-      else if (!svc->flagwant || !svc->flagwantup)
+      else if (!svc->flagwant || !svc->flagwantup) {
         svc->flagstatus = svstatus_stopped;
+      }
       pidchange(svc, wait_crashed(wstat) ? "killed" : "exit",
         wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat),
         killpid);
