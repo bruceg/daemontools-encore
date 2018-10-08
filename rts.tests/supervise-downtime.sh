@@ -19,7 +19,7 @@ svpid=$!
 
 until svok test.sv
 do
-  sleep 1
+  sleep 0
 done
 
 svstat test.sv \

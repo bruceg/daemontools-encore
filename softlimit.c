@@ -99,7 +99,7 @@ int main(int argc,const char *const *argv,const char *const *envp)
   while ((opt = getopt(argc,argv,"a:c:d:f:l:m:o:p:r:s:t:")) != opteof)
     switch(opt) {
       case '?':
-	die_usage();
+        die_usage();
       case 'a':
 #ifdef RLIMIT_AS
         doit(RLIMIT_AS,optarg);
@@ -144,7 +144,7 @@ int main(int argc,const char *const *argv,const char *const *envp)
 #ifdef RLIMIT_AS
         doit(RLIMIT_AS,optarg);
 #endif
-	break;
+        break;
       case 'o':
 #ifdef RLIMIT_NOFILE
         doit(RLIMIT_NOFILE,optarg);

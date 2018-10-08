@@ -173,8 +173,8 @@ void doit(const char *dir)
   if (check_log != 0) {
     if (r >= 20+18) {
       if (check_log < 0) {
-	buffer_puts(&b,"\n");
-	buffer_puts(&b,dir);
+        buffer_puts(&b,"\n");
+        buffer_puts(&b,dir);
       }
       buffer_puts(&b," log: ");
       showstatus(status+20,r-20,normallyup);

@@ -1,0 +1,35 @@
+--- sleeper -w works
+sleeper: warning: -w missing argument
+sleeper: usage: sleeper [-d delay] [-p pfifo] [-w wfifo] [-x code]
+sleeper: fatal: unable to stat foo: file does not exist
+ok
+Caught CONT
+Caught TERM
+
+--- sleeper -d works
+sleeper: warning: -d missing argument
+sleeper: usage: sleeper [-d delay] [-p pfifo] [-w wfifo] [-x code]
+sleeper: warning: -d invalid argument
+sleeper: usage: sleeper [-d delay] [-p pfifo] [-w wfifo] [-x code]
+ok
+Caught CONT
+Caught TERM
+
+--- sleeper -p works
+sleeper: warning: -p missing argument
+sleeper: usage: sleeper [-d delay] [-p pfifo] [-w wfifo] [-x code]
+sleeper: fatal: unable to stat foo: file does not exist
+ok
+Caught ALRM
+Caught HUP
+Caught CONT
+Caught TERM
+
+--- sleeper -x works
+sleeper: warning: -x missing argument
+sleeper: usage: sleeper [-d delay] [-p pfifo] [-w wfifo] [-x code]
+sleeper: warning: -x invalid argument
+sleeper: usage: sleeper [-d delay] [-p pfifo] [-w wfifo] [-x code]
+ok
+Caught CONT
+Caught TERM

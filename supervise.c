@@ -33,6 +33,8 @@ struct svc
   int flagpaused;
   struct taia when;
   int ranstop;
+  struct taia after;
+  struct taia stopafter;
 };
 
 const char *dir;
@@ -50,6 +52,7 @@ const char *runscript = 0;
 int logpipe[2] = {-1,-1};
 struct svc svcmain = {0,svstatus_stopped,1,1};
 struct svc svclog = {0,svstatus_stopped,1,0};
+struct taia half;
 
 static int stat_isexec(const char *path)
 {
@@ -121,11 +124,11 @@ static int forkexecve(struct svc *svc,const char *argv[],int fd)
       sig_uncatch(sig_ttystop);
       sig_uncatch(sig_cont);
       if (stat_exists("no-setsid") == 0)
-	setsid();	       /* shouldn't fail; if it does, too bad */
+        setsid();   /* shouldn't fail; if it does, too bad */
       if (fd >= 0 && logpipe[0] >= 0) {
-	dup2(logpipe[fd],fd);
-	close(logpipe[0]);
-	close(logpipe[1]);
+        dup2(logpipe[fd],fd);
+        close(logpipe[0]);
+        close(logpipe[1]);
       }
       execve(argv[0],(char*const*)argv,environ);
       strerr_die4sys(111,FATAL,"unable to start ",dir,argv[0]+1);
@@ -209,6 +212,7 @@ void trystart(struct svc *svc)
   const char *argv[] = { 0,0 };
   int f;
   int fd;
+  struct taia now;
 
   if (svc == &svclog) {
     argv[0] = "./log";
@@ -228,16 +232,22 @@ void trystart(struct svc *svc)
     svcmain.flagstatus = firstrun ? svstatus_starting : svstatus_running;
     fd = 1;
   }
+  taia_now(&now);
+  iopause(0,0,&svc->after,&now);
   if ((f = forkexecve(svc,argv,fd)) < 0)
     return;
   pidchange(svc,"start",0,f);
-  deepsleep(1);
+  taia_now(&now);
+  taia_add(&svc->after,&half,&now);
+  if (svc == &svclog)
+    svcmain.after = svclog.after;
 }
 
 void trystop(struct svc *svc)
 {
   const char *argv[] = { "./stop",0 };
   int f;
+  struct taia now;
 
   if (svc->ranstop
       || svc != &svcmain
@@ -247,21 +257,34 @@ void trystop(struct svc *svc)
     announce();
     return;
   }
+  taia_now(&now);
+  iopause(0,0,&svc->stopafter,&now);
   runscript = argv[0];
   if ((f = forkexecve(svc,argv,1)) < 0)
     return;
   svc->ranstop = 1;
   pidchange(svc,"start",0,f);
-  deepsleep(1);
+  taia_now(&now);
+  taia_add(&svc->stopafter,&half,&now);
+  if (svc == &svclog)
+    svcmain.stopafter = svclog.stopafter;
 }
 
 static void stopsvc(int killpid,struct svc *svc)
 {
+  struct taia now;
+
+  taia_now(&now);
+  iopause(0,0,&svc->stopafter,&now);
   kill(killpid,SIGTERM);
   kill(killpid,SIGCONT);
   svc->flagpaused = 0;
   svc->flagstatus = svstatus_stopping;
   svc->ranstop = 0;
+  taia_now(&now);
+  taia_add(&svc->stopafter,&half,&now);
+  if (svc == &svclog)
+    svcmain.stopafter = svclog.stopafter;
 }
 
 void doit(void)
@@ -301,123 +324,133 @@ void doit(void)
       if (!r) break;
       if ((r == -1) && (errno != error_intr)) break;
       if (r == svcmain.pid)
-	svc = &svcmain;
+        svc = &svcmain;
       else if (r == svclog.pid)
-	svc = &svclog;
+        svc = &svclog;
       else
-	continue;
+        continue;
       killpid = svc->pid;
       svc->pid = 0;
-      if (((svc == &svcmain && svc->flagstatus == svstatus_starting) && (wait_crashed(wstat) || wait_exitcode(wstat) != 0))
-	    || (!wait_crashed(wstat) && wait_exitcode(wstat) == 100)) {
-	svc->flagwantup = 0;
-	svc->flagstatus = svstatus_failed;
+      if ((svc == &svcmain && svc->flagstatus == svstatus_starting) && (wait_crashed(wstat) || wait_exitcode(wstat) != 0)) {
+        svc->flagwantup = 0;
+        svc->flagstatus = svstatus_failed;
+      }
+      else if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
+        if (svc->flagwantup) {
+          svc->flagstatus = svstatus_starting;
+          taia_now(&svc->after);
+        }
+        else {
+          svc->flagstatus = svstatus_failed;
+        }
       }
       else if (svc == &svcmain && svc->flagstatus == svstatus_starting) {
       }
-      else if (!svc->flagwant || !svc->flagwantup)
-	svc->flagstatus = svstatus_stopped;
+      else if (!svc->flagwant || !svc->flagwantup) {
+        svc->flagstatus = svstatus_stopped;
+      }
       pidchange(svc, wait_crashed(wstat) ? "killed" : "exit",
-		wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat),
-		killpid);
+        wait_crashed(wstat) ? wait_stopsig(wstat) : wait_exitcode(wstat),
+        killpid);
       firstrun = 0;
       if ((svc->flagwant && svc->flagwantup) || (svc == &svcmain && svc->flagstatus == svstatus_starting)) {
-	if (!flagexit)
-	  trystart(svc);
+        if (!flagexit)
+          trystart(svc);
       }
       else if (svc->flagstatus != svstatus_failed)
-	trystop(svc);
+        trystop(svc);
       break;
     }
 
     svc = &svcmain;
     killpid = svc->pid;
-    while (read(fdcontrol,&ch,1) == 1)
+    while (read(fdcontrol,&ch,1) == 1) {
       switch(ch) {
         case '+':
-	  if (killpid > 0) killpid = -killpid;
-	  break;
+          if (killpid > 0) killpid = -killpid;
+          break;
         case '=':
-	  if (killpid < 0) killpid = -killpid;
-	  break;
+          if (killpid < 0) killpid = -killpid;
+          break;
         case 'L':
-	  svc = &svclog;
-	  killpid = svc->pid;
-	  break;
+          svc = &svclog;
+          killpid = svc->pid;
+          break;
         case 'l':
-	  svc = &svcmain;
-	  killpid = svc->pid;
-	  break;
-	case 'd':
-	  svc->flagwant = 1;
-	  svc->flagwantup = 0;
-	  if (killpid)
-	    stopsvc(killpid,svc);
-	  else
-	    trystop(svc);
-	  announce();
-	  break;
-	case 'u':
-	  if (svc == &svcmain)
-	    firstrun = !svcmain.flagwantup;
-	  svc->flagwant = 1;
-	  svc->flagwantup = 1;
-	  if (!svc->pid)
-	    svc->flagstatus = svstatus_starting;
-	  announce();
-	  if (!svc->pid) trystart(svc);
-	  break;
-	case 'o':
-	  svc->flagwant = 0;
-	  announce();
-	  if (!svc->pid) trystart(svc);
-	  break;
-	case 'a':
-	  if (killpid) kill(killpid,SIGALRM);
-	  break;
-	case 'h':
-	  if (killpid) kill(killpid,SIGHUP);
-	  break;
-	case 'k':
-	  if (killpid) kill(killpid,SIGKILL);
-	  break;
-	case 't':
-	  if (killpid) kill(killpid,SIGTERM);
-	  break;
-	case 'i':
-	  if (killpid) kill(killpid,SIGINT);
-	  break;
-	case 'q':
-	  if (killpid) kill(killpid,SIGQUIT);
-	  break;
-	case '1':
-	  if (killpid) kill(killpid,SIGUSR1);
-	  break;
-	case '2':
-	  if (killpid) kill(killpid,SIGUSR2);
-	  break;
-        case 'w':
-	  if (killpid) kill(killpid,SIGWINCH);
-	  break;
-	case 'p':
-	  svc->flagpaused = 1;
-	  announce();
-	  if (killpid) kill(killpid,SIGSTOP);
-	  break;
-	case 'c':
-	  svc->flagpaused = 0;
-	  announce();
-	  if (killpid) kill(killpid,SIGCONT);
-	  break;
-	case 'x':
-	  flagexit = 1;
-	  announce();
-	  break;
+          svc = &svcmain;
+          killpid = svc->pid;
+          break;
+        case 'd':
+          svc->flagwant = 1;
+          svc->flagwantup = 0;
+          if (killpid)
+            stopsvc(killpid,svc);
+          else
+            trystop(svc);
+          announce();
+          break;
+        case 'u':
+          if (svc == &svcmain)
+            firstrun = !svcmain.flagwantup;
+          svc->flagwant = 1;
+          svc->flagwantup = 1;
+          if (!svc->pid)
+            svc->flagstatus = svstatus_starting;
+          announce();
+          if (!svc->pid) trystart(svc);
+          break;
+        case 'o':
+          svc->flagwant = 0;
+          announce();
+          if (!svc->pid) trystart(svc);
+          break;
+        case 'a':
+          if (killpid) kill(killpid,SIGALRM);
+          break;
+        case 'h':
+          if (killpid) kill(killpid,SIGHUP);
+          break;
+        case 'k':
+          if (killpid) kill(killpid,SIGKILL);
+          break;
+        case 't':
+          if (killpid) kill(killpid,SIGTERM);
+          break;
+        case 'i':
+          if (killpid) kill(killpid,SIGINT);
+          break;
+        case 'q':
+          if (killpid) kill(killpid,SIGQUIT);
+          break;
+        case '1':
+          if (killpid) kill(killpid,SIGUSR1);
+          break;
+        case '2':
+          if (killpid) kill(killpid,SIGUSR2);
+          break;
+            case 'w':
+          if (killpid) kill(killpid,SIGWINCH);
+          break;
+        case 'p':
+          svc->flagpaused = 1;
+          announce();
+          if (killpid) kill(killpid,SIGSTOP);
+          break;
+        case 'c':
+          svc->flagpaused = 0;
+          announce();
+          if (killpid) kill(killpid,SIGCONT);
+          break;
+        case 'x':
+          flagexit = 1;
+          announce();
+          break;
       }
+    }
 
     if (flagexit
-	&& svcmain.flagstatus == svstatus_stopped
-	&& (svclog.flagstatus == svstatus_running || svclog.flagstatus == svstatus_started))
+    && svcmain.flagstatus == svstatus_stopped
+    && (svclog.flagstatus == svstatus_running || svclog.flagstatus == svstatus_started))
       stopsvc(svclog.pid,&svclog);
   }
 }
@@ -500,6 +533,15 @@ int main(int argc,char **argv)
   if (fdok == -1)
     strerr_die3sys(111,FATAL,"unable to read ",fntemp);
   closeonexec(fdok);
+
+  taia_now(&svclog.after);
+  svcmain.after = svclog.after;
+  svclog.stopafter = svclog.after;
+  svcmain.stopafter = svclog.stopafter;
+
+  half.sec.x = 0;
+  half.nano = 500000000;
+  half.atto = 0;
 
   if (!svclog.flagwant || svclog.flagwantup) trystart(&svclog);
   if (!svcmain.flagwant || svcmain.flagwantup) trystart(&svcmain);

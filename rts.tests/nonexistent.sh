@@ -1,4 +1,5 @@
 echo '--- svstat handles new and nonexistent directories'
+rm -rf test.sv/supervise
 ( echo '#!/bin/sh'; echo echo hi ) > test.sv/run
 chmod 755 test.sv/run
 touch test.sv/down

@@ -1,0 +1,21 @@
+--- svc -du works, service exits 0
+ok
+Caught CONT
+Caught TERM
+ok
+ok
+
+--- svc -du works, service exits 1
+ok
+Caught CONT
+Caught TERM
+ok
+ok
+
+--- svc -du works, service exits 100
+ok
+Caught CONT
+Caught TERM
+ok
+ok
+
