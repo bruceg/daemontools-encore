@@ -27,31 +27,19 @@ ok
 --- readproctitle is running
 ok
 
---- supervise svc0 is running
+--- svc0.log ready
 ok
 
---- supervise svc1 is running
+--- svc1-main.log ready
 ok
 
---- supervise svc1/log is running
+--- svc1-log.log ready
 ok
 
---- supervise svc2 is running
+--- svc2-main.log ready
 ok
 
---- svc0.log readable
-ok
-
---- svc1-main.log readable
-ok
-
---- svc1-log.log readable
-ok
-
---- svc2-main.log readable
-ok
-
---- svc2-log.log readable
+--- svc2-log.log ready
 ok
 
 --- sigterm sent
@@ -104,4 +92,3 @@ Caught TERM
 svc2-log ran
 Caught CONT
 Caught TERM
-

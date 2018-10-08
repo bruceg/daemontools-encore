@@ -12,6 +12,7 @@ cat fifo.out
 svc -c test.sv
 svc -h test.sv
 cat fifo.out
+svc -c test.sv
 svc -i test.sv
 cat fifo.out
 svc -t test.sv

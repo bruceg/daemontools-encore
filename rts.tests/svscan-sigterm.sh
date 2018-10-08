@@ -14,25 +14,23 @@ echo '--- svscan handles sigterm'
 echo
 
 rm -rf test.boot
-mkdir test.boot          || die "Could not create test.boot"
-mkdir test.boot/service  || die "Could not create test.boot/service"
-mkdir test.boot/svc0     || die "Could not create test.boot/svc0"
-mkdir test.boot/svc1     || die "Could not create test.boot/svc1"
-mkdir test.boot/svc1/log || die "Could not create test.boot/svc1/log"
-mkdir test.boot/svc2     || die "Could not create test.boot/svc2"
+mkdir test.boot
+cd test.boot
 
-cd test.boot || die "Could not change to test.boot"
+mkdir service svc0 svc1 svc1/log svc2
+makefifo svscan.pid readproctitle.pid
 
-ln -s ../svc0 service || die "Could not link svc0"
-ln -s ../svc1 service || die "Could not link svc1"
-ln -s ../svc2 service || die "Could not link svc2"
+ln -s ../svc0 service
+ln -s ../svc1 service
+ln -s ../svc2 service
 
 
-catexe svscan <<'EOF' || die "Could not create svscan wrapper"
+catexe svscan <<'EOF'
 #!/bin/sh
 PATH=`echo $PATH | cut -d':' -f2-`
-exec env - PATH=$PATH svscan $@ &
+env - PATH=$PATH svscan $@ &
 echo $! > svscan.pid
+wait
 EOF
 
 ## this doesnt work. get the pid in svscanboot instead.
@@ -45,7 +43,6 @@ EOF
 #echo $! > test.boot/readproctitle.pid
 #EOF
 
-test -x ../../svscanboot || die "Could not find svscanboot source"
 sed -r                                      \
   -e 's,PATH=/,PATH=.:..:../..:../../..:/,' \
   -e 's,^exec 2?>.+,,'                      \
@@ -59,60 +56,45 @@ echo $! > readproctitle.pid'                \
 wait'                                       \
 < ../../svscanboot                          \
 | catexe svscanboot
-test -x svscanboot || die "Could not create svscanboot stub"
 
 makefifo svc0.ready
-catexe svc0/run <<'EOF' || die "Could not create svc0/run script"
+catexe svc0/run <<'EOF'
 #!/bin/sh
 echo svc0 ran                          >> ../svc0.log
 exec ../../../sleeper -w ../svc0.ready >> ../svc0.log
 EOF
 
 makefifo svc1-main.ready
-catexe svc1/run <<'EOF' || die "Could not create svc1/run script"
+catexe svc1/run <<'EOF'
 #!/bin/sh
 echo svc1-main ran                          >> ../svc1-main.log
 exec ../../../sleeper -w ../svc1-main.ready >> ../svc1-main.log
 EOF
 
 makefifo svc1-log.ready
-catexe svc1/log/run <<'EOF' || die "Could not create svc1/log/run script"
+catexe svc1/log/run <<'EOF'
 #!/bin/sh
 echo svc1-log ran                                >> ../../svc1-log.log
 exec ../../../../sleeper -w ../../svc1-log.ready >> ../../svc1-log.log
 EOF
 
 makefifo svc2-main.ready
-catexe svc2/run <<'EOF' || die "Could not create svc2/run script"
+catexe svc2/run <<'EOF'
 #!/bin/sh
 echo svc2-main ran                          >> ../svc2-main.log
 exec ../../../sleeper -w ../svc2-main.ready >> ../svc2-main.log
 EOF
 
 makefifo svc2-log.ready
-catexe svc2/log <<'EOF' || die "Could not create svc2/log script"
+catexe svc2/log <<'EOF'
 #!/bin/sh
 echo svc2-log ran                          >> ../svc2-log.log
 exec ../../../sleeper -w ../svc2-log.ready >> ../svc2-log.log
 EOF
 
 
-timed_read() {
-  for i in 10 9 8 7 6 5 4 3 2 1 0; do
-    if [ -f $1 ]; then
-      head -n 1 $1
-      break
-    fi
-    if [ $i -eq 0 ]; then
-      echo 0
-      break
-    fi
-    sleep 1
-  done
-}
-
 echo '--- svscanboot started'
-./svscanboot service > svscanboot.log 2>&1 &
+./svscanboot > svscanboot.log 2>&1 &
 svscanbootpid=$!
 if [ "$svscanbootpid" != "0" ]; then
   echo ok
@@ -120,14 +102,14 @@ fi
 echo
 
 echo '--- svscan started'
-svscanpid=`timed_read svscan.pid`
+svscanpid=`head -n 1 svscan.pid`
 if [ "$svscanpid" != "0" ]; then
   echo ok
 fi
 echo
 
 echo '--- readproctitle started'
-readproctitlepid=`timed_read readproctitle.pid`
+readproctitlepid=`head -n 1 readproctitle.pid`
 if [ "$readproctitlepid" != "0" ]; then
   echo ok
 fi
@@ -139,6 +121,7 @@ check_pid_sanity() {
     || [ $1 -le 1 ]                                             \
     || [ $1 -ge 99999 ]
   then
+    echo pid = $1 >&2
     echo 0
   else
     echo $1
@@ -149,6 +132,8 @@ echo '--- svscanboot pid looks sane'
 svscanbootpid=`check_pid_sanity $svscanbootpid`
 if [ "$svscanbootpid" != "0" ]; then
   echo ok
+else
+  echo pid = $svscanbootpid
 fi
 echo
 
@@ -156,6 +141,8 @@ echo '--- svscan pid looks sane'
 svscanpid=`check_pid_sanity $svscanpid`
 if [ "$svscanpid" != "0" ]; then
   echo ok
+else
+  echo pid = $svscanpid
 fi
 echo
 
@@ -163,6 +150,8 @@ echo '--- readproctitle pid looks sane'
 readproctitlepid=`check_pid_sanity $readproctitlepid`
 if [ "$readproctitlepid" != "0" ]; then
   echo ok
+else
+  echo pid = $readprocpid
 fi
 echo
 
@@ -191,40 +180,24 @@ else
 fi
 echo
 
-echo '--- supervise svc0 is running'
-svok svc0 && echo ok
-echo
 
-echo '--- supervise svc1 is running'
-svok svc1 && echo ok
-echo
-
-echo '--- supervise svc1/log is running'
-svok svc1/log && echo ok
-echo
-
-echo '--- supervise svc2 is running'
-svok svc2 && echo ok
-echo
-
-
-echo '--- svc0.log readable'
+echo '--- svc0.log ready'
 cat svc0.ready
 echo
 
-echo '--- svc1-main.log readable'
+echo '--- svc1-main.log ready'
 cat svc1-main.ready
 echo
 
-echo '--- svc1-log.log readable'
+echo '--- svc1-log.log ready'
 cat svc1-log.ready
 echo
 
-echo '--- svc2-main.log readable'
+echo '--- svc2-main.log ready'
 cat svc2-main.ready
 echo
 
-echo '--- svc2-log.log readable'
+echo '--- svc2-log.log ready'
 cat svc2-log.ready
 echo
 
@@ -244,7 +217,7 @@ timed_stop() {
           kill -HUP $1
           break
         fi
-        sleep 1
+        sleep $2
       else
         echo ok
         break
@@ -254,15 +227,15 @@ timed_stop() {
 }
 
 echo '--- svscan is stopped'
-timed_stop $svscanpid
+timed_stop $svscanpid 1
 echo
 
 echo '--- readproctitle is stopped'
-timed_stop $readproctitlepid
+timed_stop $readproctitlepid 0
 echo
 
 echo '--- svscanboot is stopped'
-timed_stop $svscanbootpid
+timed_stop $svscanbootpid 0
 echo
 
 
@@ -320,7 +293,6 @@ echo
 
 echo '--- svc2 log log'
 cat svc2-log.log
-echo
 
 
 # just in case
