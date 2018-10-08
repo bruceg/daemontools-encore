@@ -3,6 +3,7 @@ ok
 Caught ALRM
 Caught CONT
 Caught HUP
+Caught CONT
 Caught INT
 Caught TERM
 Caught QUIT
