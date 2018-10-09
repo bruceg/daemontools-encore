@@ -14,7 +14,7 @@ then
     -l*)
       dashl="$dashl $line"
       baselib=`echo $line | sed -e 's/^-l/lib/'`
-      if test -e $baselib=l; then
+      if test -r $baselib=l; then
         libs="$libs $baselib.a"
       fi
       ;;

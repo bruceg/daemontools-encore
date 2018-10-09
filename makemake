@@ -28,7 +28,7 @@ formake() {
 }
 
 nosuchtarget() {
-    if [ -e "$target" ]; then
+    if [ -r "$target" ]; then
 	echo "$target" >>$S
     else
 	error "No such target: $target"
@@ -56,11 +56,11 @@ depend() {
 
 target() {
     target=$1
-    if [ -e $target -a ! -e ${target}.do ]; then
+    if [ -r $target -a ! -r ${target}.do ]; then
 	echo $target >>$S
 	return
     fi
-    if [ -e $t/$target.deps ]; then
+    if [ -r $t/$target.deps ]; then
     	return
     fi
     #c target: $target

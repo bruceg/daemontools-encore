@@ -18,13 +18,13 @@ done
 svc -o test.sv
 for c in 1 2 3 4 5 6 7 8
 do
-  if [ -e test.sv/out ]
+  if [ -r test.sv/out ]
   then
     break
   fi
   sleep 1
 done
-if [ -e test.sv/out ]
+if [ -r test.sv/out ]
 then
   cat test.sv/out
 else
