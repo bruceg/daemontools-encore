@@ -255,10 +255,16 @@ void trystop(struct svc *svc)
   deepsleep(1);
 }
 
-static void stopsvc(int killpid,struct svc *svc)
+static void killsvc(const struct svc *svc,int groupflag,int signo)
 {
-  kill(killpid,SIGTERM);
-  kill(killpid,SIGCONT);
+  if (svc->pid)
+    kill(svc->pid*groupflag,signo);
+}
+
+static void stopsvc(struct svc *svc,int groupflag)
+{
+  killsvc(svc,groupflag,SIGTERM);
+  killsvc(svc,groupflag,SIGCONT);
   svc->flagpaused = 0;
   svc->flagstatus = svstatus_stopping;
   svc->ranstop = 0;
@@ -326,7 +332,7 @@ static void controller(void)
       svc->flagwant = 1;
       svc->flagwantup = 0;
       if (svc->pid)
-        stopsvc(killgroup*svc->pid,svc);
+        stopsvc(svc,killgroup);
       else
         trystop(svc);
       announce();
@@ -346,42 +352,24 @@ static void controller(void)
       announce();
       if (!svc->pid) trystart(svc);
       break;
-    case 'a':
-      if (svc->pid) kill(killgroup*svc->pid,SIGALRM);
-      break;
-    case 'h':
-      if (svc->pid) kill(killgroup*svc->pid,SIGHUP);
-      break;
-    case 'k':
-      if (svc->pid) kill(killgroup*svc->pid,SIGKILL);
-      break;
-    case 't':
-      if (svc->pid) kill(killgroup*svc->pid,SIGTERM);
-      break;
-    case 'i':
-      if (svc->pid) kill(killgroup*svc->pid,SIGINT);
-      break;
-    case 'q':
-      if (svc->pid) kill(killgroup*svc->pid,SIGQUIT);
-      break;
-    case '1':
-      if (svc->pid) kill(killgroup*svc->pid,SIGUSR1);
-      break;
-    case '2':
-      if (svc->pid) kill(killgroup*svc->pid,SIGUSR2);
-      break;
-    case 'w':
-      if (svc->pid) kill(killgroup*svc->pid,SIGWINCH);
-      break;
+    case 'a': killsvc(svc,killgroup,SIGALRM); break;
+    case 'h': killsvc(svc,killgroup,SIGHUP); break;
+    case 'k': killsvc(svc,killgroup,SIGKILL); break;
+    case 't': killsvc(svc,killgroup,SIGTERM); break;
+    case 'i': killsvc(svc,killgroup,SIGINT); break;
+    case 'q': killsvc(svc,killgroup,SIGQUIT); break;
+    case '1': killsvc(svc,killgroup,SIGUSR1); break;
+    case '2': killsvc(svc,killgroup,SIGUSR2); break;
+    case 'w': killsvc(svc,killgroup,SIGWINCH); break;
     case 'p':
       svc->flagpaused = 1;
       announce();
-      if (svc->pid) kill(killgroup*svc->pid,SIGSTOP);
+      killsvc(svc,killgroup,SIGSTOP);
       break;
     case 'c':
       svc->flagpaused = 0;
       announce();
-      if (svc->pid) kill(killgroup*svc->pid,SIGCONT);
+      killsvc(svc,killgroup,SIGCONT);
       break;
     case 'x':
       flagexit = 1;
@@ -424,7 +412,7 @@ void doit(void)
     if (flagexit
 	&& svcmain.flagstatus == svstatus_stopped
 	&& (svclog.flagstatus == svstatus_running || svclog.flagstatus == svstatus_started))
-      stopsvc(svclog.pid,&svclog);
+      stopsvc(&svclog,1);
   }
 }
 
