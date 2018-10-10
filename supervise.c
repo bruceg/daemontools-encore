@@ -33,6 +33,8 @@ struct svc
   int flagpaused;
   struct taia when;
   int ranstop;
+  struct taia after;
+  struct taia stopafter;
 };
 
 const char *dir;
@@ -50,6 +52,7 @@ const char *runscript = 0;
 int logpipe[2] = {-1,-1};
 struct svc svcmain = {0,svstatus_stopped,1,1};
 struct svc svclog = {0,svstatus_stopped,1,0};
+struct taia half;
 
 static int stat_isexec(const char *path)
 {
@@ -204,11 +207,24 @@ void pidchange(struct svc *svc,const char *notice,int code,int oldpid)
   announce();
 }
 
+void pause_until(struct taia *when)
+{
+  struct taia now;
+  iopause_fd x;
+
+  for (;;) {
+    taia_now(&now);
+    if (taia_less(when,&now)) return;
+    iopause(&x,0,when,&now);
+  }
+}
+
 void trystart(struct svc *svc)
 {
   const char *argv[] = { 0,0 };
   int f;
   int fd;
+  struct taia now;
 
   if (svc == &svclog) {
     argv[0] = "./log";
@@ -228,16 +244,21 @@ void trystart(struct svc *svc)
     svcmain.flagstatus = firstrun ? svstatus_starting : svstatus_running;
     fd = 1;
   }
+  pause_until(&svc->after);
   if ((f = forkexecve(svc,argv,fd)) < 0)
     return;
   pidchange(svc,"start",0,f);
-  deepsleep(1);
+  taia_now(&now);
+  taia_add(&svc->after,&half,&now);
+  if (svc == &svclog)
+    svcmain.after = svclog.after;
 }
 
 void trystop(struct svc *svc)
 {
   const char *argv[] = { "./stop",0 };
   int f;
+  struct taia now;
 
   if (svc->ranstop
       || svc != &svcmain
@@ -247,12 +268,16 @@ void trystop(struct svc *svc)
     announce();
     return;
   }
+  pause_until(&svc->stopafter);
   runscript = argv[0];
   if ((f = forkexecve(svc,argv,1)) < 0)
     return;
   svc->ranstop = 1;
   pidchange(svc,"start",0,f);
-  deepsleep(1);
+  taia_now(&now);
+  taia_add(&svc->stopafter,&half,&now);
+  if (svc == &svclog)
+    svcmain.stopafter = svclog.stopafter;
 }
 
 static void killsvc(const struct svc *svc,int groupflag,int signo)
@@ -263,11 +288,18 @@ static void killsvc(const struct svc *svc,int groupflag,int signo)
 
 static void stopsvc(struct svc *svc,int groupflag)
 {
+  struct taia now;
+
+  pause_until(&svc->stopafter);
   killsvc(svc,groupflag,SIGTERM);
   killsvc(svc,groupflag,SIGCONT);
   svc->flagpaused = 0;
   svc->flagstatus = svstatus_stopping;
   svc->ranstop = 0;
+  taia_now(&now);
+  taia_add(&svc->stopafter,&half,&now);
+  if (svc == &svclog)
+    svcmain.stopafter = svclog.stopafter;
 }
 
 static void reaper(void)
@@ -290,8 +322,10 @@ static void reaper(void)
       svc->flagstatus = svstatus_failed;
     }
     else if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
-      if (svc->flagwantup)
+      if (svc->flagwantup) {
         svc->flagstatus = svstatus_starting;
+        taia_now(&svc->after);
+      }
       else
         svc->flagstatus = svstatus_failed;
     }
@@ -499,6 +533,15 @@ int main(int argc,char **argv)
   if (fdok == -1)
     strerr_die3sys(111,FATAL,"unable to read ",fntemp);
   closeonexec(fdok);
+
+  taia_now(&svclog.after);
+  svcmain.after = svclog.after;
+  svclog.stopafter = svclog.after;
+  svcmain.stopafter = svclog.stopafter;
+
+  half.sec.x = 0;
+  half.nano = 500000000;
+  half.atto = 0;
 
   if (!svclog.flagwant || svclog.flagwantup) trystart(&svclog);
   if (!svcmain.flagwant || svcmain.flagwantup) trystart(&svcmain);
