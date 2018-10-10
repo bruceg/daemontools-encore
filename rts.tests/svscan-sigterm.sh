@@ -61,34 +61,39 @@ wait'                                       \
 | catexe svscanboot
 test -x svscanboot || die "Could not create svscanboot stub"
 
+makefifo svc0.ready
 catexe svc0/run <<'EOF' || die "Could not create svc0/run script"
 #!/bin/sh
-echo svc0 ran         >> ../svc0.log
-exec ../../../sleeper >> ../svc0.log
+echo svc0 ran                          >> ../svc0.log
+exec ../../../sleeper -w ../svc0.ready >> ../svc0.log
 EOF
 
+makefifo svc1-main.ready
 catexe svc1/run <<'EOF' || die "Could not create svc1/run script"
 #!/bin/sh
-echo svc1-main ran    >> ../svc1-main.log
-exec ../../../sleeper >> ../svc1-main.log
+echo svc1-main ran                          >> ../svc1-main.log
+exec ../../../sleeper -w ../svc1-main.ready >> ../svc1-main.log
 EOF
 
+makefifo svc1-log.ready
 catexe svc1/log/run <<'EOF' || die "Could not create svc1/log/run script"
 #!/bin/sh
-echo svc1-log ran        >> ../../svc1-log.log
-exec ../../../../sleeper >> ../../svc1-log.log
+echo svc1-log ran                                >> ../../svc1-log.log
+exec ../../../../sleeper -w ../../svc1-log.ready >> ../../svc1-log.log
 EOF
 
+makefifo svc2-main.ready
 catexe svc2/run <<'EOF' || die "Could not create svc2/run script"
 #!/bin/sh
-echo svc2-main ran    >> ../svc2-main.log
-exec ../../../sleeper >> ../svc2-main.log
+echo svc2-main ran                          >> ../svc2-main.log
+exec ../../../sleeper -w ../svc2-main.ready >> ../svc2-main.log
 EOF
 
+makefifo svc2-log.ready
 catexe svc2/log <<'EOF' || die "Could not create svc2/log script"
 #!/bin/sh
-echo svc2-log ran     >> ../svc2-log.log
-exec ../../../sleeper >> ../svc2-log.log
+echo svc2-log ran                          >> ../svc2-log.log
+exec ../../../sleeper -w ../svc2-log.ready >> ../svc2-log.log
 EOF
 
 
@@ -203,49 +208,24 @@ svok svc2 && echo ok
 echo
 
 
-# be sure shells are running, otherwise signal can come before
-# sleeper execs, maybe even while shell is still starting.
-# would be better if sleeper could tell us when ready.
-# maybe sleeper could open/write a named pipe one time just
-# before main loop?
-#   sleeper -w wait.fifo
-# then here,
-#   cat wait.fifo > /dev/null
-# both sleeper and test would be forced to wait at their
-# respective read/write points until the other caught up.
-#
-# here signal can arrive while sleeper is starting. :(
-timed_readable() {
-  for i in 10 9 8 7 6 5 4 3 2 1 0; do
-    if [ -r $1 ]; then
-      echo ok
-      break
-    fi
-    if [ $i -eq 0 ]; then
-      break
-    fi
-    sleep 1
-  done
-}
-
 echo '--- svc0.log readable'
-timed_readable svc0.log
+cat svc0.ready
 echo
 
 echo '--- svc1-main.log readable'
-timed_readable svc1-main.log
+cat svc1-main.ready
 echo
 
 echo '--- svc1-log.log readable'
-timed_readable svc1-log.log
+cat svc1-log.ready
 echo
 
 echo '--- svc2-main.log readable'
-timed_readable svc2-main.log
+cat svc2-main.ready
 echo
 
 echo '--- svc2-log.log readable'
-timed_readable svc2-log.log
+cat svc2-log.ready
 echo
 
 
