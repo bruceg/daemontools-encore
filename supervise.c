@@ -285,10 +285,15 @@ static void reaper(void)
     else
       continue;
     svc->pid = 0;
-    if ((svc == &svcmain && svc->flagstatus == svstatus_starting && (wait_crashed(wstat) || wait_exitcode(wstat) != 0))
-        || (!wait_crashed(wstat) && wait_exitcode(wstat) == 100)) {
+    if (svc == &svcmain && svc->flagstatus == svstatus_starting && (wait_crashed(wstat) || wait_exitcode(wstat) != 0)) {
       svc->flagwantup = 0;
       svc->flagstatus = svstatus_failed;
+    }
+    else if (!wait_crashed(wstat) && wait_exitcode(wstat) == 100) {
+      if (svc->flagwantup)
+        svc->flagstatus = svstatus_starting;
+      else
+        svc->flagstatus = svstatus_failed;
     }
     else if (svc == &svcmain && svc->flagstatus == svstatus_starting) {
     }
