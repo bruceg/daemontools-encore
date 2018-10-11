@@ -1,0 +1,35 @@
+--- makefifo works
+makefifo: warning: can't make fifo fifo0: file already exists
+makefifo: warning: can't make fifo fifo1: file already exists
+makefifo: warning: can't make fifo fifo2: file already exists
+makefifo: warning: can't make fifo fifo3: file already exists
+makefifo: warning: can't make fifo fifo4: file already exists
+makefifo: warning: can't make fifo fifo5: file already exists
+makefifo: warning: can't make fifo fifo6: file already exists
+makefifo: warning: can't make fifo fifo7: file already exists
+makefifo: warning: can't make fifo fifo8: file already exists
+makefifo: warning: can't make fifo fifo9: file already exists
+makefifo: warning: can't make fifo fifoA: file already exists
+makefifo: warning: can't make fifo fifoB: file already exists
+makefifo: warning: can't make fifo fifoC: file already exists
+makefifo: warning: can't make fifo fifoD: file already exists
+makefifo: warning: can't make fifo fifoE: file already exists
+makefifo: warning: can't make fifo fifoF: file already exists
+makefifo: warning: can't make fifo fifo0: file already exists
+makefifo: usage: makefifo fifo1 [fifo2 ...]
+ok 0
+ok 1
+ok 2
+ok 3
+ok 4
+ok 5
+ok 6
+ok 7
+ok 8
+ok 9
+ok A
+ok B
+ok C
+ok D
+ok E
+ok F

@@ -1,28 +1,31 @@
-( echo '#!/bin/sh'; echo 'exec ../../sleeper' ) > test.sv/run
-chmod 755 test.sv/run
+makefifo fifo.out fifo.wait
+catexe test.sv/run <<EOF
+#!/bin/sh
+exec ../../sleeper -p ../fifo.out -w ../fifo.wait
+EOF
 
 echo '--- svc sends right signals'
 supervise test.sv &
-sleep 1
+cat fifo.wait
 svc -a test.sv
-sleep 1
+cat fifo.out
 svc -c test.sv
-sleep 1
 svc -h test.sv
-sleep 1
+cat fifo.out
+svc -c test.sv
 svc -i test.sv
-sleep 1
+cat fifo.out
 svc -t test.sv
-sleep 1
 svc -q test.sv
-sleep 1
+cat fifo.out
 svc -1 test.sv
-sleep 1
+cat fifo.out
 svc -2 test.sv
-sleep 1
+cat fifo.out
 svc -w test.sv
-sleep 1
+cat fifo.out
 svc -d test.sv
-sleep 1
+cat fifo.out
 svc -xk test.sv
 wait
+rm fifo.out fifo.wait

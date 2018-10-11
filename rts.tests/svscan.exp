@@ -1,5 +1,10 @@
 --- svscan setup
 --- svscan start
+go1log
+go2log
+go0
+go1
+go2
 --- svscan out
 ==> svc0/output <==
 svc0 ran

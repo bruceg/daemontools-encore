@@ -5,10 +5,17 @@
 # svscanboot
 
 echo '--- supervise starts, svok works, svup works, svstat works, svc -x works'
+rm -rf test.sv
+mkdir test.sv
+catexe test.sv/run <<EOF
+#!/bin/sh
+echo hi
+EOF
+touch test.sv/down
 supervise test.sv &
 until svok test.sv
 do
-  sleep 1
+  sleep 0
 done
 svup test.sv; echo $?
 svup -l test.sv; echo $?
@@ -22,7 +29,7 @@ echo '--- svc -ox works'
 supervise test.sv &
 until svok test.sv
 do
-  sleep 1
+  sleep 0
 done
 svc -ox test.sv
 wait
@@ -30,7 +37,6 @@ wait
 echo '--- svstat and svup work for up services'
 catexe test.sv/run <<EOF
 #!/bin/sh
-sleep 1
 svstat .
 echo $?
 svstat -l .
@@ -47,7 +53,7 @@ EOF
 supervise test.sv | filter_svstat &
 until svok test.sv
 do
-  sleep 1
+  sleep 0
 done
 svc -ox test.sv
 wait
@@ -55,7 +61,6 @@ wait
 echo '--- svstat and svup work for logged services'
 catexe test.sv/run <<EOF
 #!/bin/sh
-sleep 1
 svstat .
 echo $?
 svstat -l .
@@ -76,7 +81,7 @@ EOF
 supervise test.sv | filter_svstat &
 until svok test.sv
 do
-  sleep 1
+  sleep 0
 done
 svc -Lolox test.sv
 wait
@@ -85,12 +90,12 @@ rm -f test.sv/log
 echo '--- svc -u works'
 ( echo '#!/bin/sh'; echo echo first; echo mv run2 run ) > test.sv/run
 chmod 755 test.sv/run
-( echo '#!/bin/sh'; echo echo second; echo svc -x . ) > test.sv/run2
+( echo '#!/bin/sh'; echo echo second; echo svc -x .; echo exit 100 ) > test.sv/run2
 chmod 755 test.sv/run2
 supervise test.sv &
 until svok test.sv
 do
-  sleep 1
+  sleep 0
 done
 svc -u test.sv
 wait
