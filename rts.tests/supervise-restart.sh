@@ -19,6 +19,7 @@ mv run2 run
 exit $code
 EOF
     supervise test.sv &
+    waituntil svup test.sv
     sleep 3
     svc -xk test.sv
     wait

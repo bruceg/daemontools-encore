@@ -33,19 +33,13 @@ echo '--- svscan start'
 svscan `pwd`/service >svscan.log 2>&1 &
 svscanpid=$!
 
-until svok svc0 && svok svc1 && svok svc2 && svok svc2/log
-do
-  sleep 1
-done
+waitok svc0 svc1 svc2 svc2/log
 
 # stop svscan and clean up
 kill $svscanpid
 wait >/dev/null 2>&1
 
-while svok svc0 || svok svc1 || svok svc2 || svok svc2/log
-do
-  sleep 1
-done
+waitnotok svc0 svc1 svc2 svc2/log
 
 echo '--- svscan out'
 head -n 1 svc[0-9]/output

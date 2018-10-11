@@ -17,10 +17,7 @@ touch test.sv/down
 supervise test.sv &
 svpid=$!
 
-until svok test.sv
-do
-  sleep 1
-done
+waitok test.sv
 
 svstat test.sv \
 | sed -r 's, \(.+\),,' \

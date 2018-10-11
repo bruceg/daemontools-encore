@@ -1,9 +1,6 @@
 echo '--- supervise leaves locked service intact'
 supervise test.sv &
-until svok test.sv
-do
-  sleep 1
-done
+waitok test.sv
 ( cd test.sv/supervise && ls -dl * | awk '{ print $1, $5, $9 }' )
 supervise test.sv; echo $?
 ( cd test.sv/supervise && ls -dl * | awk '{ print $1, $5, $9 }' )

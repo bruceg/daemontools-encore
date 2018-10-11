@@ -17,6 +17,34 @@ filter_svstat() {
     sed -e 's/[0-9]* seconds/x seconds/' -e 's/pid [0-9]*/pid x/'
 }
 
+waituntil() {
+    until "$@"
+    do
+        :
+    done
+}
+
+waitwhile() {
+    while "$@"
+    do
+        :
+    done
+}
+
+waitok() {
+    for svc in $*
+    do
+        waituntil svok $svc
+    done
+}
+
+waitnotok() {
+    for svc in $*
+    do
+        waitwhile svok $svc
+    done
+}
+
 rm -rf rts-tmp || die "Could not clean up old rts-tmp"
 mkdir rts-tmp || die "Could not create new rts-tmp"
 cd rts-tmp || die "Could not change to rts-tmp"
