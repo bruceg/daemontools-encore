@@ -1,0 +1,14 @@
+--- supervise restarts service exiting 0
+started
+running
+rerunning
+
+--- supervise restarts service exiting 1
+started
+running
+rerunning
+
+--- supervise restarts service exiting 100
+started
+running
+
