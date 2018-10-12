@@ -1,0 +1,8 @@
+--- supervise runs notify properly
+run exit 1
+run start 0
+start exit 0
+start start 0
+stop exit 0
+stop start 0
+
