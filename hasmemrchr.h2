@@ -1,4 +1,5 @@
 /* Public domain. */
 
+#define _GNU_SOURCE
 /* sysdep: +hasmemrchr */
 #define HASMEMRCHR 1

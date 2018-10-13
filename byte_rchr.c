@@ -1,7 +1,7 @@
 /* Public domain. */
 
-#include "byte.h"
 #include "hasmemrchr.h"
+#include "byte.h"
 
 unsigned int byte_rchr(const char *s,unsigned int n,int c)
 {
