@@ -20,8 +20,8 @@ svpid=$!
 waitok test.sv
 
 svstat test.sv \
-| sed -r 's, \(.+\),,' \
-| sed -r 's, ([0-9]|1[0-9]) second.+$, ok,'
+| sed 's, (..*),,' \
+| sed 's! 1\{0,1\}[0-9] second..*$! ok!'
 
 kill $svpid
 wait
