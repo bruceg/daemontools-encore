@@ -4,6 +4,11 @@
 #include "sig.h"
 #include "hassgprm.h"
 
+// Use POSIX complaint functions when using non-Glibc system
+#ifndef __GLIBC__
+#define HASSIGPROCMASK 0
+#endif
+
 void sig_block(int sig)
 {
 #ifdef HASSIGPROCMASK
