@@ -11,6 +11,6 @@ void sig_pause(void)
   sigemptyset(&ss);
   sigsuspend(&ss);
 #else
-  sigpause(0);
+  sigsuspend(0);
 #endif
 }
