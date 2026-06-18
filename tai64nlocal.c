@@ -54,14 +54,18 @@ int main()
       }
       secs -= 4611686018427387914ULL;
       t = localtime(&secs);
-      i = fmt_ulong(num,1900UL + t->tm_year);
-      num[i++] = '-'; i += fmt_uint0(num+i,1 + t->tm_mon,2);
-      num[i++] = '-'; i += fmt_uint0(num+i,t->tm_mday,2);
-      num[i++] = ' '; i += fmt_uint0(num+i,t->tm_hour,2);
-      num[i++] = ':'; i += fmt_uint0(num+i,t->tm_min,2);
-      num[i++] = ':'; i += fmt_uint0(num+i,t->tm_sec,2);
-      num[i++] = '.'; i += fmt_uint0(num+i,nanosecs,9);
-      out(num,i);
+      if (!t)
+        out("!",1);
+      else {
+        i = fmt_ulong(num,1900UL + t->tm_year);
+        num[i++] = '-'; i += fmt_uint0(num+i,1 + t->tm_mon,2);
+        num[i++] = '-'; i += fmt_uint0(num+i,t->tm_mday,2);
+        num[i++] = ' '; i += fmt_uint0(num+i,t->tm_hour,2);
+        num[i++] = ':'; i += fmt_uint0(num+i,t->tm_min,2);
+        num[i++] = ':'; i += fmt_uint0(num+i,t->tm_sec,2);
+        num[i++] = '.'; i += fmt_uint0(num+i,nanosecs,9);
+        out(num,i);
+      }
     }
     out(&ch,1);
     if (ch != '\n')
